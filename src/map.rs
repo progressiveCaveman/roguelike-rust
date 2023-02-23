@@ -1,0 +1,343 @@
+use serde;
+use serde::{Serialize, Deserialize};
+use hecs::*;
+use rltk::{self};
+use rltk::{Algorithm2D, BaseMap, Point};
+// use rand::seq::SliceRandom;
+
+use crate::components::{Position, Faction};
+use crate::{State};
+
+use crate::{MAPWIDTH, MAPHEIGHT};
+
+pub const MAPCOUNT: usize = MAPWIDTH * MAPHEIGHT;
+pub const OFFSET_X: usize = 0;
+pub const OFFSET_Y: usize = 11;
+
+#[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, Floor, StairsDown, StairsUp, Grass, Wheat, Dirt, Water, WoodWall, WoodDoor, WoodFloor
+}
+
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct Map {
+    pub tiles: Vec<TileType>,
+    pub width: i32,
+    pub height: i32,
+    pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
+    pub fire_turns: Vec<i32>,
+    pub depth: i32,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content : Vec<Vec<Entity>>,
+
+    // vec of numbers for debug. If it's not set, shouldn't affect anything
+    pub dijkstra_map: Vec<f32>,
+
+    // TODO Maybe this doesn't belong here, a system would be better practice (but uglier)
+    pub influence_maps: Vec<Vec<f32>>
+}
+
+impl Map {
+    pub fn new(new_depth: i32, tile_type: TileType) -> Map {
+        Map {
+            tiles: vec![tile_type; MAPCOUNT],
+            width: MAPWIDTH as i32,
+            height: MAPHEIGHT as i32,
+            revealed_tiles: vec![false; MAPCOUNT],
+            visible_tiles: vec![false; MAPCOUNT],
+            blocked: vec![false; MAPCOUNT],
+            fire_turns: vec![0; MAPCOUNT],
+            tile_content: vec![Vec::new(); MAPCOUNT],
+            depth: new_depth,
+            dijkstra_map: vec![-1.0; MAPCOUNT],
+            influence_maps:vec![vec![0.0; MAPCOUNT]; 2] // todo magic numbers
+        }
+    }
+
+    pub fn set_tile(&mut self, x: i32, y: i32, value: TileType) {
+        let idx = self.xy_idx(x, y);
+        self.tiles[idx] = value;
+    }
+
+    pub fn xy_idx(&self, x: i32, y: i32) -> usize {
+        (y as usize * self.width as usize) + x as usize
+    }
+    
+    pub fn idx_xy(&self, idx: usize) -> (i32, i32) {
+        (idx as i32 % self.width, idx as i32 / self.width)
+    }
+
+    pub fn in_bounds(&self, x: i32, y: i32) -> bool {
+        x >= 0 && x < self.width && y >= 0 && y < self.height
+    }
+
+    pub fn is_wall(&self, x: i32, y: i32) -> bool {
+        let idx = self.xy_idx(x, y);
+        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+    }
+
+    pub fn is_flammable(&self, idx: usize) -> bool {
+        self.tiles[idx] == TileType::Grass || self.tiles[idx] == TileType::Wheat || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+    }
+
+    pub fn blocks_movement(&self, idx: usize) -> bool {
+        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::Water || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+    }
+
+    pub fn set_blocked(&mut self) {
+        for (i, _t) in self.tiles.iter().enumerate() {
+            self.blocked[i] = self.blocks_movement(i);
+        }
+    }
+    
+    pub fn clear_tile_content(&mut self) {
+        for content in self.tile_content.iter_mut() {
+            content.clear();
+        }
+    }
+
+    pub fn transform_mouse_pos(&self, mouse_pos: (i32, i32)) -> (i32, i32) {
+        (mouse_pos.0 - OFFSET_X as i32, mouse_pos.1 - OFFSET_Y as i32)
+    }
+
+    pub fn mouse_in_bounds(&self, mouse_pos: (i32, i32)) -> bool {
+        mouse_pos.0 >= 0  && mouse_pos.0 <= self.width && mouse_pos.1 >= 0 && mouse_pos.1 <= self.height
+    }
+
+    fn is_exit_valid(&self, x:i32, y:i32) -> bool {
+        if x < 1 || x >= self.width || y < 1 || y >= self.height { return false; }
+        let idx = self.xy_idx(x, y);
+        !self.blocked[idx]
+    }
+
+    pub fn reveal_map(&mut self) {
+        self.revealed_tiles.iter_mut().for_each(|i| *i = true);
+    }
+
+    pub fn refresh_influence_maps(&mut self, gs: &State, turn: i32){
+        if turn % 10 == 0 {
+            let unit_str = 100;
+
+            let mut f1: Vec<(Point, f32)> = Vec::new();
+            let mut f2: Vec<(Point, f32)> = Vec::new();
+
+            for (_, (pos, faction)) in gs.world.query::<(&Position, &Faction)>().iter() {
+                for p in pos.ps.iter() {
+                    match faction.faction {
+                        1 => f1.push((*p, unit_str as f32)),
+                        2 => f2.push((*p, unit_str as f32)),
+                        _ => {}
+                    }
+                }
+            }
+            
+            self.repopulate_influence_map(f1, 0.9, 0);
+            self.repopulate_influence_map(f2, 0.9, 1);
+        }
+    }
+
+    pub fn repopulate_influence_map(&mut self, pois: Vec<(Point, f32)>, spread: f32, imap_index: usize) {        
+        for i in 0..self.influence_maps[imap_index].len() {
+            self.influence_maps[imap_index][i] = 0.0;
+        }
+
+        // let vals = &mut self.influence_maps[Inf_map_index];
+
+        // add poi vals to map
+        for poi in pois.iter() {
+            let idx = self.xy_idx(poi.0.x, poi.0.y);
+            self.influence_maps[imap_index][idx] = poi.1;
+        }
+
+        // return;
+
+        // iterate on the map and blur all influence
+        let num_iterations = 10;
+        for _ in 0..num_iterations {
+            // buffer to hold the changes for this step
+            let mut buf = vec![0.0; self.influence_maps[imap_index].len()];
+
+            let mut max_inf: f32 = 0.0;
+
+            // reduce each tile 
+            for (i, el) in self.influence_maps[imap_index].iter().enumerate() {
+                max_inf = f32::max(max_inf, *el);
+                let neighbors = self.get_available_exits(i);
+
+                // get amount to decay by
+                let decay_amount:f32 = self.influence_maps[imap_index][i] * spread;
+                buf[i] = buf[i] - decay_amount;
+
+                // distribute decay amongst the neighborhood
+                for n in neighbors.iter() {
+                    if n.0 >= buf.len() {
+                        continue;
+                    }
+
+                    //  float inf = m_Influences[c.neighbor] * expf(-c.dist * m_fDecay);
+                    buf[n.0] = buf[n.0] + decay_amount / neighbors.len() as f32;
+                }
+            }
+
+            // apply change buffer to values
+            for i in 0..buf.len() {
+                self.influence_maps[imap_index][i] += buf[i];
+            }
+        }
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::Wheat || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor // TODO make fire block too?
+    }
+
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(idx1 % w, idx1 / w);
+        let p2 = Point::new(idx2 % w, idx2 / w);
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
+    }
+
+    fn get_available_exits(&self, idx: usize) -> rltk::SmallVec<[(usize, f32); 10]> {
+        let mut exits = rltk::SmallVec::new();
+        let (x, y) = self.idx_xy(idx);
+        let w = self.width as usize;
+
+        if self.is_exit_valid(x - 1, y) { exits.push((idx - 1, 1.0)) };
+        if self.is_exit_valid(x + 1, y) { exits.push((idx + 1, 1.0)) };
+        if self.is_exit_valid(x, y - 1) { exits.push((idx - w, 1.0)) };
+        if self.is_exit_valid(x, y + 1) { exits.push((idx + w, 1.0)) };
+
+        if self.is_exit_valid(x - 1, y - 1) { exits.push((idx - w - 1, 1.45)) };
+        if self.is_exit_valid(x + 1, y - 1) { exits.push((idx - w + 1, 1.45)) };
+        if self.is_exit_valid(x - 1, y + 1) { exits.push((idx + w - 1, 1.45)) };
+        if self.is_exit_valid(x + 1, y + 1) { exits.push((idx + w + 1, 1.45)) };
+
+        exits
+    }
+}
+
+// fn wall_glyph(map: &Map, x: i32, y: i32) -> char {
+//     if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 { return 'x' }
+//     let mut mask: u8 = 0;
+
+//     if map.is_wall(x, y - 1) { mask += 1 }
+//     if map.is_wall(x, y + 1) { mask += 2 }
+//     if map.is_wall(x - 1, y) { mask += 4 }
+//     if map.is_wall(x + 1, y) { mask += 8 }
+
+//     match mask {
+//         0 => { '■' }
+//         1 => { '│' }
+//         2 => { '│' }
+//         3 => { '│' }
+//         4 => { '─' }
+//         5 => { '┘' }
+//         6 => { '┐' }
+//         7 => { '┤' }
+//         8 => { '─' }
+//         9 => { '└' }
+//         10 => { '┌' }
+//         11 => { '├' }
+//         12 => { '─' }
+//         13 => { '┴' }
+//         14 => { '┬' }
+//         15 => { '┼' }
+//         _ => { 'x' }
+//     }
+// }
+
+// TODO move this to gui
+// pub fn draw_map(map: &Map, ctx : &mut Rltk) {
+//     for (idx, tile) in map.tiles.iter().enumerate() {
+//         if !USE_LOS || map.revealed_tiles[idx] {
+//             let mut glyph = rltk::to_cp437(' ');
+//             let mut fg = Palette::MAIN_FG;
+//             let mut bg = Palette::MAIN_BG;
+//             let (x, y) = map.idx_xy(idx);
+//             match tile {
+//                 TileType::Floor => {
+//                     fg = Palette::COLOR_GREEN_DARK;
+//                     if map.dijkstra_map[idx] >= 0.0 {
+//                         let val = (map.dijkstra_map[idx] % 10.0) as u8;
+//                         let cha = (val + b'0') as char;
+//                         glyph = rltk::to_cp437(cha);
+//                     }else{
+//                         glyph = rltk::to_cp437('.');
+//                     }
+//                 }
+//                 TileType::Wall => {
+//                     fg = Palette::MAIN_FG;
+//                     glyph = rltk::to_cp437('#');
+//                 }
+//                 TileType::StairsDown => {
+//                     fg = Palette::MAIN_FG;
+//                     glyph = rltk::to_cp437('>');
+//                 }
+//                 TileType::StairsUp => {
+//                     fg = Palette::MAIN_FG;
+//                     glyph = rltk::to_cp437('<');
+//                 }
+//                 TileType::Grass => {
+//                     fg = Palette::COLOR_GRASS;
+//                     glyph = rltk::to_cp437(',');
+//                 }
+//                 TileType::Wheat => {
+//                     fg = Palette::COLOR_AMBER;
+//                     // let gs = vec!['|', '{', '}'];
+//                     // let c = gs.choose(&mut rand::thread_rng()).unwrap();
+//                     let c = '{';
+//                     glyph = rltk::to_cp437(c);
+//                 }
+//                 TileType::Dirt => {
+//                     fg = Palette::COLOR_DIRT;
+//                     glyph = rltk::to_cp437('.');
+//                 }
+//                 TileType::Water => {
+//                     fg = Palette::COLOR_WATER;
+//                     glyph = rltk::to_cp437('~');
+//                 }
+//                 TileType::WoodWall => {
+//                     fg = Palette::COLOR_WOOD;
+//                     glyph = rltk::to_cp437('#');
+//                 },
+//                 TileType::WoodDoor => {
+//                     fg = Palette::COLOR_WOOD;
+//                     glyph = rltk::to_cp437('+');
+//                 },
+//                 TileType::WoodFloor => {
+//                     fg = Palette::COLOR_WOOD;
+//                     glyph = rltk::to_cp437('.');
+//                 },
+//             }
+
+//             if map.visible_tiles[idx] && map.fire_turns[idx] > 0 {
+//                 bg = Palette::COLOR_FIRE;
+//                 glyph = rltk::to_cp437('^');
+//             }
+
+//             if USE_LOS && !map.visible_tiles[idx] {
+//                 fg.scale(0.5);
+//                 bg.scale(0.5);
+//                 // fg = fg.to_greyscale();
+//                 // bg = bg.to_greyscale();
+//             }
+
+//             // let f1val = map.influence_maps[0][idx];
+//             // fg.scale(f1val);
+
+//             ctx.set(x as usize + OFFSET_X, y as usize + OFFSET_Y, fg, bg, glyph);
+//         }
+//     }
+// }
