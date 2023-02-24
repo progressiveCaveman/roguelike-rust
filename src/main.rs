@@ -2,7 +2,7 @@
 extern crate lazy_static;
 
 use map::TileType;
-use rltk::RGB;
+use rltk::{RGB, RGBA};
 use rltk::{Rltk, GameState, RltkBuilder, Point};
 use hecs::*;
 use resources::Resources;
@@ -19,6 +19,7 @@ mod components;
 mod movement;
 mod rect;
 mod gamelog;
+mod input_handler;
 mod entity_factory;
 mod weighted_table;
 mod dijkstra_utils;
@@ -64,7 +65,7 @@ const MAPWIDTH: usize = 200;
 const MAPHEIGHT: usize = 100;
 const WINDOWWIDTH: usize = 160;
 const WINDOWHEIGHT: usize = 100;
-const SCALE: f32 = 0.9;
+const SCALE: f32 = 1.;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameMode{
@@ -100,7 +101,9 @@ pub enum RenderOrder {
 pub struct State {
     world: World,
     resources: Resources,
-    mapgen_data: MapGenData
+    mapgen_data: MapGenData, 
+    autorun: bool,
+    wait_frames: i32
 }
 
 impl State {
@@ -246,7 +249,15 @@ impl GameState for State {
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
-                new_runstate = player::player_input(self, ctx);
+                new_runstate = input_handler::handle_input(self, ctx);
+
+                if new_runstate == RunState::AwaitingInput && self.autorun {
+                    self.wait_frames += 1;
+                    if self.wait_frames >= 10 {
+                        self.wait_frames = 0;
+                        new_runstate = RunState::PlayerTurn
+                    }
+                }
             }
             RunState::PlayerTurn => {
                 self.run_systems();
@@ -447,7 +458,9 @@ fn main() -> rltk::BError {
     let mut gs = State {
         world: World::new(),
         resources: Resources::default(),
-        mapgen_data: MapGenData{history: Vec::new(), timer: 0.0, index: 0}
+        mapgen_data: MapGenData{history: Vec::new(), timer: 0.0, index: 0},
+        autorun: false,
+        wait_frames: 0
     };
 
     gs.resources.insert(Map::new(1, TileType::Wall));

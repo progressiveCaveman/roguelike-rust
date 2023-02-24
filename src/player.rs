@@ -35,7 +35,7 @@ pub fn get_item(world: &mut World, res: &mut Resources){
     }
 }
 
-fn autoexplore(gs: &mut State){
+pub fn autoexplore(gs: &mut State){
     let player_pos: Point;
 
     // TODO Check for adjacent enemies and attack them
@@ -93,14 +93,14 @@ fn autoexplore(gs: &mut State){
     try_move_entity(player_id, dx, dy, gs);
 }
 
-fn reveal_map(gs: &mut State){
+pub fn reveal_map(gs: &mut State){
     let res = &gs.resources;
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
     map.reveal_map();
 }
 
-fn try_next_level(_world: &mut World, res: &mut Resources) -> bool {
+pub fn try_next_level(_world: &mut World, res: &mut Resources) -> bool {
     let player_pos = res.get::<Point>().unwrap();
     let map = res.get::<Map>().unwrap();
     let player_idx = map.xy_idx(player_pos.x, player_pos.y);
@@ -114,7 +114,7 @@ fn try_next_level(_world: &mut World, res: &mut Resources) -> bool {
     }
 }
 
-fn skip_turn(world: &mut World, res: &mut Resources) -> RunState {
+pub fn skip_turn(world: &mut World, res: &mut Resources) -> RunState {
     let player_id = res.get::<Entity>().unwrap();
     let mut stats = world.get_mut::<CombatStats>(*player_id).unwrap();
 
@@ -128,32 +128,32 @@ fn skip_turn(world: &mut World, res: &mut Resources) -> RunState {
     RunState::PlayerTurn
 }
 
-pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
-    let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
+// pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+//     let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
 
-    match ctx.key {
-        None => { return RunState::AwaitingInput }
-        Some(key) => match key {
-            VirtualKeyCode::Left => try_move_entity(player_id, -1, 0, gs),
-            VirtualKeyCode::Right => try_move_entity(player_id, 1, 0, gs),
-            VirtualKeyCode::Up => try_move_entity(player_id, 0, -1, gs),
-            VirtualKeyCode::Down => try_move_entity(player_id, 0, 1, gs),
-            VirtualKeyCode::Y => try_move_entity(player_id, -1, -1, gs),
-            VirtualKeyCode::U => try_move_entity(player_id, 1, -1, gs),
-            VirtualKeyCode::N => try_move_entity(player_id, 1, 1, gs),
-            VirtualKeyCode::B => try_move_entity(player_id, -1, 1, gs),
-            VirtualKeyCode::G => get_item(&mut gs.world, &mut gs.resources),
-            VirtualKeyCode::X => autoexplore(gs),
-            VirtualKeyCode::R => reveal_map(gs),
-            VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: entity_factory::tmp_fireball(&mut gs.world) },
-            VirtualKeyCode::I => return RunState::ShowInventory,
-            VirtualKeyCode::W => return skip_turn(&mut gs.world, &mut gs.resources),
-            VirtualKeyCode::Escape => return RunState::SaveGame,
-            VirtualKeyCode::Period => {
-                if try_next_level(&mut gs.world, &mut gs.resources) { return RunState::NextLevel; }
-            }
-            _ => { return RunState::AwaitingInput }
-        }
-    }
-    RunState::PlayerTurn
-}
+//     match ctx.key {
+//         None => { return RunState::AwaitingInput }
+//         Some(key) => match key {
+//             VirtualKeyCode::Left => try_move_entity(player_id, -1, 0, gs),
+//             VirtualKeyCode::Right => try_move_entity(player_id, 1, 0, gs),
+//             VirtualKeyCode::Up => try_move_entity(player_id, 0, -1, gs),
+//             VirtualKeyCode::Down => try_move_entity(player_id, 0, 1, gs),
+//             VirtualKeyCode::Y => try_move_entity(player_id, -1, -1, gs),
+//             VirtualKeyCode::U => try_move_entity(player_id, 1, -1, gs),
+//             VirtualKeyCode::N => try_move_entity(player_id, 1, 1, gs),
+//             VirtualKeyCode::B => try_move_entity(player_id, -1, 1, gs),
+//             VirtualKeyCode::G => get_item(&mut gs.world, &mut gs.resources),
+//             VirtualKeyCode::X => autoexplore(gs),
+//             VirtualKeyCode::R => reveal_map(gs),
+//             VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: entity_factory::tmp_fireball(&mut gs.world) },
+//             VirtualKeyCode::I => return RunState::ShowInventory,
+//             VirtualKeyCode::W => return skip_turn(&mut gs.world, &mut gs.resources),
+//             VirtualKeyCode::Escape => return RunState::SaveGame,
+//             VirtualKeyCode::Period => {
+//                 if try_next_level(&mut gs.world, &mut gs.resources) { return RunState::NextLevel; }
+//             }
+//             _ => { return RunState::AwaitingInput }
+//         }
+//     }
+//     RunState::PlayerTurn
+// }
