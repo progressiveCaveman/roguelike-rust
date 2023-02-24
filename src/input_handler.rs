@@ -1,4 +1,4 @@
-use crate::{State, RunState, GameMode, components::Player, movement, entity_factory, player};
+use crate::{State, RunState, GameMode, movement, entity_factory, player};
 use hecs::Entity;
 use rltk::{Rltk, VirtualKeyCode};
 

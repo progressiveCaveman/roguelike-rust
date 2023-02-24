@@ -16,8 +16,8 @@ pub struct Position {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Renderable {
     pub glyph: rltk::FontCharType,
-    pub fg: rltk::RGB,
-    pub bg: rltk::RGB,
+    pub fg: rltk::RGBA,
+    pub bg: rltk::RGBA,
     pub render: bool,
     pub always_render: bool,
     pub order: RenderOrder
@@ -27,8 +27,8 @@ impl Default for Renderable {
     fn default() -> Self {
         Renderable {
             glyph: rltk::to_cp437(' '),
-            fg: rltk::RGB{r: 1., g: 1., b: 1.},
-            bg: rltk::RGB{r: 0., g: 0., b: 0.},
+            fg: rltk::RGBA{r: 1., g: 1., b: 1., a: 1.},
+            bg: rltk::RGBA{r: 0., g: 0., b: 0., a: 1.},
             render: true,
             always_render: false,
             order: RenderOrder::Player

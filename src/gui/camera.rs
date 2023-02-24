@@ -3,7 +3,7 @@ use resources::Resources;
 use crate::{gui::Palette, Scale, map::{OFFSET_X, OFFSET_Y, TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH};
 
 use super::{Map,Position};
-use rltk::{Point, Rltk, RGB};
+use rltk::{Point, Rltk, RGB, RGBA};
 
 const SHOW_BOUNDARIES : bool = true;
 
@@ -116,7 +116,7 @@ pub fn render_camera(world: &World, res: &Resources, ctx : &mut Rltk) {
     ctx.set_active_console(0);
 }
 
-fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
+fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
     let mut glyph = rltk::to_cp437(' ');
     let mut fg = Palette::MAIN_FG;
     let mut bg = Palette::MAIN_BG;
@@ -146,7 +146,7 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
         }
         TileType::Grass => {
             fg = Palette::COLOR_GREEN;
-            bg = Palette::COLOR_GREEN;
+            // bg = Palette::COLOR_GREEN;
             glyph = rltk::to_cp437('"');
         }
         TileType::Wheat => {

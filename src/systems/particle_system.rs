@@ -1,6 +1,6 @@
 use hecs::{Entity, World};
 use resources::Resources;
-use rltk::{FontCharType, RGB, Rltk, Point};
+use rltk::{FontCharType, Rltk, Point, RGBA};
 
 use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}};
 
@@ -9,8 +9,8 @@ struct ParticleRequest {
     y: i32,
     vel_x: f32,
     vel_y: f32,
-    fg: RGB,
-    bg: RGB,
+    fg: RGBA,
+    bg: RGBA,
     glyph: FontCharType,
     lifetime_ms: f32
 }
@@ -24,7 +24,7 @@ impl ParticleBuilder {
         ParticleBuilder{ requests: Vec::new() }
     }
 
-    pub fn request(&mut self, x: i32, y: i32, vel_x: f32, vel_y: f32, fg: RGB, bg: RGB, glyph: FontCharType, lifetime_ms: f32) {
+    pub fn request(&mut self, x: i32, y: i32, vel_x: f32, vel_y: f32, fg: RGBA, bg: RGBA, glyph: FontCharType, lifetime_ms: f32) {
         self.requests.push(
             ParticleRequest {
                 x, y, vel_x, vel_y, fg, bg, glyph, lifetime_ms

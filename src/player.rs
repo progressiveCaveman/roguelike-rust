@@ -1,8 +1,8 @@
-use rltk::{Rltk, VirtualKeyCode, Point, DijkstraMap};
+use rltk::{Point, DijkstraMap};
 use hecs::*;
 use resources::*;
 
-use crate::{State, RunState, entity_factory};
+use crate::{State, RunState};
 use crate::map::{Map, TileType};
 use crate::components::{Position, CombatStats, Item, WantsToPickupItem, Fire};
 use crate::gamelog::GameLog;

@@ -2,7 +2,7 @@
 extern crate lazy_static;
 
 use map::TileType;
-use rltk::{RGB, RGBA};
+use rltk::{RGBA};
 use rltk::{Rltk, GameState, RltkBuilder, Point};
 use hecs::*;
 use resources::Resources;
@@ -49,7 +49,7 @@ trait Scale {
     fn scale(&mut self, amount: f32);
 }
 
-impl Scale for RGB {
+impl Scale for RGBA {
     fn scale(&mut self, amount: f32) {
         self.r *= amount;
         self.g *= amount;
@@ -227,6 +227,12 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.set_active_console(1);
         ctx.cls();
+        let (x, y) = ctx.get_char_size();
+        for ix in 0..x{
+            for iy in 0..y{
+                ctx.set(ix, iy, RGBA::from_u8(0, 0, 0, 0), RGBA::from_u8(0, 0, 0, 0), 32)
+            }
+        }
         ctx.set_active_console(0);
         ctx.cls();
         
@@ -268,10 +274,10 @@ impl GameState for State {
                     let mut turn = self.resources.get_mut::<i32>().unwrap();
                     *turn += 1;
 
-                    let map = &mut self.resources.get_mut::<Map>().unwrap();
+                    // let map = &mut self.resources.get_mut::<Map>().unwrap();
                     let gamemode = *self.resources.get::<GameMode>().unwrap();
                     if gamemode == GameMode::Sim{
-                        map.refresh_influence_maps(self, *turn);
+                        // map.refresh_influence_maps(self, *turn);
                     }
                 }
                 self.run_systems();
@@ -425,19 +431,6 @@ impl GameState for State {
 }
 
 fn main() -> rltk::BError {
-    // let context = RltkBuilder::new()
-    //     .with_title("roguelike")
-    //     .with_fps_cap(30.0)
-    //     .with_dimensions(WINDOWWIDTH, WINDOWHEIGHT)
-    //     .with_tile_dimensions(32, 32)
-    //     .with_resource_path("resources/")
-    //     .with_font("dungeonfont.png", 32, 32)
-    //     .with_font("terminal8x8.png", 8, 8)
-    //     .with_simple_console(DISPLAY_WIDTH, DISPLAY_HEIGHT, "dungeonfont.png")
-    //     .with_simple_console_no_bg(DISPLAY_WIDTH, DISPLAY_HEIGHT, "dungeonfont.png")
-    //     .with_simple_console_no_bg(SCREEN_WIDTH*2, SCREEN_HEIGHT*2, "terminal8x8.png")
-    //     .build()?;
-
     let xscaled = (WINDOWWIDTH  as f32 / SCALE) as i32;
     let yscaled = (WINDOWHEIGHT as f32 / SCALE) as i32;
         
@@ -445,14 +438,8 @@ fn main() -> rltk::BError {
         .with_tile_dimensions(TILE_SIZE, TILE_SIZE)
         .with_title("Roguelike")
         .with_fps_cap(30.0)
-        // .with_automatic_console_resize(true)
         .with_fitscreen(true)
-        .with_simple_console_no_bg(xscaled, yscaled, "terminal8x8.png")
-        // .with_tile_dimensions(8, 8)
-        // .with_simple_console_no_bg(MAPWIDTH, MAPHEIGHT, "terminal8x8.png")
-        // .with_tile_dimensions(10, 10)
-        // .with_simple_console_no_bg(MAPWIDTH, MAPHEIGHT, "terminal8x8.png")
-        // .with_tile_dimensions(12, 12)
+        .with_simple_console(xscaled, yscaled, "terminal8x8.png") // map layer
         .build()?;
 
     let mut gs = State {
