@@ -4,17 +4,16 @@ use rltk::{RandomNumberGenerator, Point};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use std::cmp;
-use std::num;
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
 use crate::{MAPWIDTH, MAPHEIGHT};
 
 use super::common::apply_drunkards_corrider;
 use super::{MapBuilder, Map, Rect, TileType, Position};
 
-pub const min_x: i32 = 0;
-pub const min_y: i32 = 0;
-pub const max_x: i32 = MAPWIDTH as i32;
-pub const max_y: i32 = MAPHEIGHT as i32;
+pub const MIN_X: i32 = 0;
+pub const MIN_Y: i32 = 0;
+pub const MAX_X: i32 = MAPWIDTH as i32;
+pub const MAX_Y: i32 = MAPHEIGHT as i32;
 
 pub struct DrunkardsBombingRunBuilder {
     map: Map,
@@ -197,45 +196,38 @@ impl DrunkardsBombingRunBuilder {
 
         let iteration_number = candidates.len() as f32 * 1.8;
 
-        for i in 0..iteration_number as i32 {
-            let mut random_offset = 0;
-            let mut tile_variation = 0;
+        for _ in 0..iteration_number as i32 {
+            let mut random_offset: usize;
 
             // println!("cand len {}", candidates.len());
 
             // 1/3 chance that we will use as a bombing point one of the last 15 positions
             if rng.range(0, 3) == 0 {
                 random_offset = rng.range(candidates.len() - cmp::min(2, 15), candidates.len() - 1);
-                tile_variation = 1;
-            }
-            else {
+            } else {
                 // otherwise use lower half of remaining tiles
                 random_offset = rng.range(0, candidates.len() / 2);
-                tile_variation = 2;
             }
         
             // check boundaries
             if random_offset >= candidates.len() {
                 random_offset = candidates.len() - 1;
             }
-            if random_offset < 0 {
-                random_offset = 0;
-            }
         
-            let mut idx = candidates[random_offset];
-            let mut tx = self.map.idx_xy(idx as usize).0;
-            let mut ty = self.map.idx_xy(idx as usize).1;
-            let mut map_width = MAPWIDTH;
-            let mut map_height = MAPHEIGHT;
-            let mut use_borders = true;
+            let idx = candidates[random_offset];
+            let tx = self.map.idx_xy(idx as usize).0;
+            let ty = self.map.idx_xy(idx as usize).1;
+            let map_width = MAPWIDTH;
+            let map_height = MAPHEIGHT;
+            let use_borders = true;
             
             // we will use bombs of radius 1 mostly with smaller chance (1/20)
             // that radius will be of size 2
-            let mut bomb_radius = 1;//random_gen_get_i(20) != 0 ? 1 : 2;
+            let bomb_radius = 1;//random_gen_get_i(20) != 0 ? 1 : 2;
             
             // bomb    
             for x in cmp::max(0, tx - bomb_radius - 1)..cmp::max(map_width as i32, tx + bomb_radius) {
-                for y in cmp::max(0, ty - bomb_radius - 1)..cmp::max(map_width as i32, ty + bomb_radius) {
+                for y in cmp::max(0, ty - bomb_radius - 1)..cmp::max(map_height as i32, ty + bomb_radius) {
             
                     // println!("bomb check {tx} {ty} {x} {y}");
 
@@ -243,16 +235,16 @@ impl DrunkardsBombingRunBuilder {
                     if (x - tx)*(x - tx) + (y - ty)*(y - ty) < bomb_radius * bomb_radius +  bomb_radius {
             
                         if use_borders {
-                            if x < min_x {
+                            if x < MIN_X {
                                 continue;
                             }
-                            if x >= max_x {
+                            if x >= MAX_X {
                                 continue;
                             }
-                            if y < min_y {
+                            if y < MIN_Y {
                                 continue;
                             }
-                            if y >= max_y {
+                            if y >= MAX_Y {
                                 continue;
                             }
                         }
@@ -283,7 +275,6 @@ impl DrunkardsBombingRunBuilder {
         // new_color: i32,
     ) -> (Vec<bool>, i32) {
         use std::collections::VecDeque;
-        use std::convert::TryFrom;
 
         // let sr = usize::try_from(sr).unwrap();
         // let sc = usize::try_from(sc).unwrap();
