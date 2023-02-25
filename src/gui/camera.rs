@@ -104,10 +104,12 @@ pub fn render_camera(world: &World, res: &Resources, ctx : &mut Rltk) {
         for pos in pos.ps.iter() {
             let idx = map.xy_idx(pos.x, pos.y);
             if pos.y > min_y - 1 && pos.x > min_x - 1 && (gamemode == GameMode::Sim || map.visible_tiles[idx]) { 
+                let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
+
                 let entity_screen_x = xoff as i32 + pos.x - min_x;
                 let entity_screen_y = yoff as i32 + pos.y - min_y;
                 if entity_screen_x > -1 && entity_screen_x < size.0 as i32 && entity_screen_y > 0 && entity_screen_y < size.1 as i32 {
-                    ctx.set(entity_screen_x, entity_screen_y, render.fg, render.bg, render.glyph);
+                    ctx.set(entity_screen_x, entity_screen_y, render.fg, bgcolor, render.glyph);
                 }
             }
         }
@@ -145,9 +147,9 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
             glyph = rltk::to_cp437('<');
         }
         TileType::Grass => {
-            fg = Palette::COLOR_GREEN;
-            // bg = Palette::COLOR_GREEN;
-            glyph = rltk::to_cp437('"');
+            // fg = Palette::COLOR_GREEN;
+            bg = Palette::COLOR_GREEN_DARK;
+            // glyph = rltk::to_cp437('"');
         }
         TileType::Wheat => {
             fg = Palette::COLOR_AMBER;

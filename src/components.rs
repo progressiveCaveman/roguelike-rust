@@ -8,9 +8,7 @@ use crate::RenderOrder;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
-    pub ps: Vec<Point>,
-    // pub x: i32,
-    // pub y: i32,
+    pub ps: Vec<Point>
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
