@@ -44,11 +44,7 @@ impl MapBuilder for BspFarmBuilder {
 
     fn take_snapshot(&mut self) {
         if SHOW_MAPGEN_ANIMATION {
-            let mut snapshot = self.map.clone();
-            for revealed in snapshot.revealed_tiles.iter_mut() {
-                *revealed = true;
-            }
-            self.history.push(snapshot);
+            self.history.push(self.map.clone());
         }
     }
 }

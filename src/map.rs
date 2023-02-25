@@ -3,7 +3,6 @@ use serde::{Serialize, Deserialize};
 use hecs::*;
 use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
-// use rand::seq::SliceRandom;
 
 use crate::components::{Position, Faction};
 use crate::{State};
@@ -24,8 +23,6 @@ pub struct Map {
     pub tiles: Vec<TileType>,
     pub width: i32,
     pub height: i32,
-    pub revealed_tiles: Vec<bool>,
-    pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
     pub fire_turns: Vec<i32>,
     pub depth: i32,
@@ -47,8 +44,6 @@ impl Map {
             tiles: vec![tile_type; MAPCOUNT],
             width: MAPWIDTH as i32,
             height: MAPHEIGHT as i32,
-            revealed_tiles: vec![false; MAPCOUNT],
-            visible_tiles: vec![false; MAPCOUNT],
             blocked: vec![false; MAPCOUNT],
             fire_turns: vec![0; MAPCOUNT],
             tile_content: vec![Vec::new(); MAPCOUNT],
@@ -112,10 +107,6 @@ impl Map {
         if x < 1 || x >= self.width || y < 1 || y >= self.height { return false; }
         let idx = self.xy_idx(x, y);
         !self.blocked[idx]
-    }
-
-    pub fn reveal_map(&mut self) {
-        self.revealed_tiles.iter_mut().for_each(|i| *i = true);
     }
 
     pub fn refresh_influence_maps(&mut self, gs: &State, turn: i32){

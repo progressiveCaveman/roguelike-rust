@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 use serde::{Serialize, Deserialize};
 use hecs::*;
 use rltk::{self, Point};
 
-use crate::RenderOrder;
+use crate::{RenderOrder, map::TileType};
 
 /// Basic UI components
 
@@ -39,6 +41,18 @@ pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
     pub dirty: bool
+}
+
+impl Viewshed {
+    pub fn is_visible(&self, idx: Point) -> bool {
+        for p in self.visible_tiles.iter() {
+            if p.x == idx.x && p.y == idx.y {
+                return true
+            }
+        }
+
+        false
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -124,6 +138,11 @@ pub struct CombatStats {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct HasInventory {
     pub capacity: i32
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SpatialKnowledge {
+    pub tiles: HashMap<usize, (TileType, Vec<Entity>)>,
 }
 
 /// Entity intents

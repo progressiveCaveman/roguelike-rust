@@ -1,14 +1,43 @@
+use std::collections::HashMap;
+
 use rltk::{Point, DijkstraMap};
 use hecs::*;
 use resources::*;
 
 use crate::{State, RunState};
 use crate::map::{Map, TileType};
-use crate::components::{Position, CombatStats, Item, WantsToPickupItem, Fire};
+use crate::components::{Position, CombatStats, Item, WantsToPickupItem, Fire, SpatialKnowledge, Viewshed};
 use crate::gamelog::GameLog;
 use crate::movement::try_move_entity;
 
 use crate::dijkstra_utils::dijkstra_backtrace;
+
+pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Entity>)>{
+    let world = &gs.world;
+    let res = &gs.resources;
+    let player_id = res.get::<Entity>().unwrap();
+
+    if let Ok(space) =  world.get_mut::<SpatialKnowledge>(*player_id) {
+        space.tiles.clone()
+    } else {
+        HashMap::new()
+    }
+}
+
+pub fn get_player_viewshed(gs: &State) -> Viewshed {
+    let world = &gs.world;
+    let res = &gs.resources;
+    let player_id = res.get::<Entity>().unwrap();
+
+    let vs = world.get_mut::<Viewshed>(*player_id).unwrap();
+
+    vs.clone()
+    // if let Ok(vs) = world.get_mut::<Viewshed>(*player_id).unwrap() {
+    //     &vs
+    // } else {
+    //     unreachable!()
+    // }
+}
 
 pub fn get_item(world: &mut World, res: &mut Resources){
     let player_id = res.get::<Entity>().unwrap();
@@ -44,15 +73,16 @@ pub fn autoexplore(gs: &mut State){
     let mut target = (0, std::f32::MAX); // tile_idx, distance
     let dijkstra_map: DijkstraMap;
     {
-        let res = &mut gs.resources;
+        let res = &gs.resources;
         player_pos = res.get::<Point>().unwrap().clone();
         let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
         let mut log = res.get_mut::<GameLog>().unwrap();
         let player_idx = map.xy_idx(player_pos.x, player_pos.y);
+        let player_knowledge = get_player_map_knowledge(gs);
         let starts = vec![player_idx];
         dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, map, 200.0);
         for (i, tile) in map.tiles.iter().enumerate() {
-            if *tile != TileType::Wall && !map.revealed_tiles[i] {
+            if *tile != TileType::Wall && !player_knowledge.contains_key(&i) {
                 let distance_to_start = dijkstra_map.map[i];
 
                 if distance_to_start < target.1 {
@@ -94,10 +124,17 @@ pub fn autoexplore(gs: &mut State){
 }
 
 pub fn reveal_map(gs: &mut State){
+    let world = &gs.world;
     let res = &gs.resources;
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
+    let player_id = res.get::<Entity>().unwrap();
 
-    map.reveal_map();
+
+    if let Ok(mut space) =  world.get_mut::<SpatialKnowledge>(*player_id) {
+        for i in 0..map.tiles.len() {
+            space.tiles.insert(i, (map.tiles[i], map.tile_content[i].clone()));
+        }
+    }
 }
 
 pub fn try_next_level(_world: &mut World, res: &mut Resources) -> bool {

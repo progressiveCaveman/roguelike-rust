@@ -1,7 +1,8 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
 use hecs::*;
 use resources::*;
-use crate::{WINDOWWIDTH};
+use crate::player::get_player_map_knowledge;
+use crate::{WINDOWWIDTH, GameMode, State};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire};
 use crate::gamelog::GameLog;
 use crate::map::{OFFSET_Y};
@@ -47,7 +48,10 @@ impl Palette {
     pub const FACTION_COLORS: [RGBA; 2] = [RGBA{r: 1.0, g:0., b:0., a: 1.}, RGBA{r: 0.0, g:0.0, b:1.0, a: 1.}];
 }
 
-pub fn draw_gui(world: &World, res: &Resources, ctx: &mut Rltk) {
+pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
+
+    let world = &gs.world;
+    let res = &gs.resources;
 
     let player_id: &Entity = &res.get::<Entity>().unwrap();
     let player_stats = world.get::<CombatStats>(*player_id).unwrap();
@@ -93,19 +97,25 @@ pub fn draw_gui(world: &World, res: &Resources, ctx: &mut Rltk) {
     if mouse_pos != (0, 0) {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_3);
     }
-    draw_tooltips(&world, &res, ctx);
+    draw_tooltips(gs, ctx);
 }
 
-pub fn draw_tooltips(world: &World, res: &Resources, ctx: &mut Rltk) {
+pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
+    let world = &gs.world;
+    let res = &gs.resources;
+
     let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(world, res, ctx);
     let map = res.get::<Map>().unwrap();
+    let gamemode = *res.get::<GameMode>().unwrap();
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
     map_mouse_pos.0 += min_x;
     map_mouse_pos.1 += min_y;
     if map_mouse_pos.0 >= map.width-1 || map_mouse_pos.1 >= map.height-1 || map_mouse_pos.0 < 1 || map_mouse_pos.1 < 1 { return; }
-    if !map.visible_tiles[map.xy_idx(map_mouse_pos.0, map_mouse_pos.1)] { return; }
+    
+    let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
+    if gamemode != GameMode::Sim && get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
     let mut tooltip: Vec<String> = Vec::new();
 

@@ -244,8 +244,8 @@ impl GameState for State {
             RunState::MainMenu{..} => {}
             RunState::GameOver => {}
             _ => {
-                camera::render_camera(&self.world, &self.resources, ctx);
-                gui::draw_gui(&self.world, &self.resources, ctx);
+                camera::render_camera(self, ctx);
+                gui::draw_gui(self, ctx);
             }
         }
 
@@ -275,10 +275,10 @@ impl GameState for State {
                     *turn += 1;
 
                     // let map = &mut self.resources.get_mut::<Map>().unwrap();
-                    let gamemode = *self.resources.get::<GameMode>().unwrap();
-                    if gamemode == GameMode::Sim{
-                        // map.refresh_influence_maps(self, *turn);
-                    }
+                    // let gamemode = *self.resources.get::<GameMode>().unwrap();
+                    // if gamemode == GameMode::Sim{
+                    //     map.refresh_influence_maps(self, *turn);
+                    // }
                 }
                 self.run_systems();
                 new_runstate = RunState::AwaitingInput;
@@ -409,8 +409,9 @@ impl GameState for State {
                     new_runstate = RunState::PreRun;
                 }else{
                     ctx.cls();
+                    // todo bring back mapgen rendering
                     // map::draw_map(&self.mapgen_data.history[self.mapgen_data.index], ctx);
-                    camera::render_camera(&self.world, &self.resources, ctx);
+                    camera::render_camera(self, ctx);
 
                     self.mapgen_data.timer += ctx.frame_time_ms;
                     if self.mapgen_data.timer > MAPGEN_FRAME_TIME {
