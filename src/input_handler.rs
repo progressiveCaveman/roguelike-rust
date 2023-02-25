@@ -32,7 +32,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     _ => { return RunState::AwaitingInput }
                 }
             }
-            RunState::PlayerTurn   
+            RunState::AwaitingInput   
         },
         GameMode::RL => {
             let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
