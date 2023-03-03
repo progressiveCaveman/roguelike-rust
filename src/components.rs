@@ -147,6 +147,7 @@ pub struct SpatialKnowledge {
 
 /// Entity intents
 
+#[derive(Clone, Copy)]
 pub struct WantsToAttack {
     pub target: Entity
 }
