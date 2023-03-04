@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, Tree};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -121,6 +121,32 @@ fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
 }
 
 /// Monsters
+
+pub fn villager(world: &mut World, x: i32, y:i32) -> Entity {
+    world.spawn((
+        Position {ps: vec![Point{ x, y }]},
+        Renderable {
+            glyph: rltk::to_cp437('v'),
+            fg: Palette::COLOR_RED,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::NPC,
+            ..Default::default()
+        },
+        Viewshed {
+            visible_tiles: Vec::new(),
+            range: 20,
+            dirty: true
+        },
+        // Monster {},
+        Locomotive {},
+        Name {name: "Villager".to_string() },
+        BlocksTile {},
+        // CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0},
+        Inventory { capacity: 5, items: Vec::new() },
+        SpatialKnowledge { tiles: HashMap::new() },
+        Villager { },
+    ))
+}
 
 pub fn orc(world: &mut World, x: i32, y:i32) -> Entity{
     monster(world, x, y, rltk::to_cp437('o'), "Orc".to_string())
@@ -351,7 +377,8 @@ pub fn tree(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Tree".to_string()},
-        Flammable {}
+        Flammable {},
+        Tree {}
     ))
 }
 

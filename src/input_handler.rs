@@ -27,6 +27,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::U => movement::try_move_entity(player_id, 1 * movement_mod, -1 * movement_mod, gs),
                     VirtualKeyCode::N => movement::try_move_entity(player_id, 1 * movement_mod, 1 * movement_mod, gs),
                     VirtualKeyCode::B => movement::try_move_entity(player_id, -1 * movement_mod, 1 * movement_mod, gs),
+                    VirtualKeyCode::W => return RunState::PlayerTurn,
                     VirtualKeyCode::Escape => return RunState::SaveGame,
                     VirtualKeyCode::Space => gs.autorun = !gs.autorun,
                     _ => { return RunState::AwaitingInput }

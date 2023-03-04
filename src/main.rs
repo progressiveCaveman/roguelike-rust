@@ -9,6 +9,8 @@ use resources::Resources;
 
 mod inventory_system;
 
+pub mod ai;
+
 pub mod gui;
 use gui::gui_menus;
 use gui::camera;
@@ -28,7 +30,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::cleanup_system;
+use systems::{cleanup_system, villager_ai_system};
 use systems::fire_system;
 use systems::map_indexing_system;
 use systems::melee_combat_system;
@@ -112,6 +114,7 @@ impl State {
         visibility_system::visibility(&mut self.world, &mut self.resources);
         spawner_ai::run(&mut self.world, &mut self.resources);
         monster_ai_system::monster_ai(self);
+        villager_ai_system::villager_ai(self);
         map_indexing_system::map_indexing(&mut self.world, &mut self.resources);
         melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
         inventory_system::inventory(&mut self.world, &mut self.resources);
@@ -432,6 +435,10 @@ impl GameState for State {
 }
 
 fn main() -> rltk::BError {
+    println!("=========================");
+    println!("==== Start game =========");
+    println!("=========================");
+
     let xscaled = (WINDOWWIDTH  as f32 / SCALE) as i32;
     let yscaled = (WINDOWHEIGHT as f32 / SCALE) as i32;
         

@@ -47,6 +47,9 @@ impl MapBuilder for VillageBuilder {
         entity_factory::chief_house(world, 30, self.map.height - 27, 20, 8);
         entity_factory::lumber_mill(world, 60, self.map.height - 27, 8, 8);
         entity_factory::fish_cleaner(world, 115, self.map.height - 17, 5, 5);
+
+        entity_factory::villager(world, 15, self.map.height - 25);
+
     }
 
     fn get_map_history(&self) -> Vec<Map> {

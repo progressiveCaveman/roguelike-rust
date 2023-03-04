@@ -81,9 +81,7 @@ pub enum VillagerIntent {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Villager {
-    pub home: Entity,
-    pub intent: VillagerIntent,
-    pub target: Point
+
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -228,6 +226,10 @@ pub struct Confusion {
 
 pub struct AreaOfEffect {
     pub radius: i32
+}
+
+#[derive(Clone, Copy)]
+pub struct Log { // like a tree
 }
 
 /// Fire components

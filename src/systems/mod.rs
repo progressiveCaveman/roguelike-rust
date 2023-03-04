@@ -5,4 +5,5 @@ pub mod melee_combat_system;
 pub mod monster_ai_system;
 pub mod particle_system;
 pub mod spawner_ai;
+pub mod villager_ai_system;
 pub mod visibility_system;
