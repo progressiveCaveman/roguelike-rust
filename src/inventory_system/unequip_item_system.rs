@@ -1,7 +1,7 @@
 use hecs::*;
 use resources::*;
 
-use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem}, gamelog::GameLog};
+use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem, Inventory}, gamelog::GameLog};
 
 pub fn unequip_item(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
@@ -9,7 +9,7 @@ pub fn unequip_item(world: &mut World, res: &mut Resources) {
     let mut to_unequip: Vec<(Entity, Entity)> = Vec::new();
     let mut to_remove_wants_unequip: Vec<Entity> = Vec::new();
 
-    for (id, wants_unequip) in world.query::<&WantsToUnequipItem>().iter() {
+    for (id, (_, wants_unequip)) in world.query::<(&Inventory, &WantsToUnequipItem)>().iter() {
         to_remove_wants_unequip.push(id);
         to_unequip.push((id, wants_unequip.item));
 
@@ -19,7 +19,7 @@ pub fn unequip_item(world: &mut World, res: &mut Resources) {
         }
     }
 
-    for (id, item_id) in to_unequip {
+    for (id, item_id) in to_unequip { //todo will .iter() break this
         world.remove_one::<Equipped>(item_id).unwrap();
         world.insert_one(item_id, InBackpack{owner: id}).unwrap();
     }

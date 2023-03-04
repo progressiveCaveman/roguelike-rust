@@ -4,15 +4,14 @@ use rltk::Point;
 use crate::State;
 use crate::gui::Palette;
 use crate::{RunState, systems::particle_system::ParticleBuilder};
-use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion};
+use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, Item, WantsToPickupItem, Name};
 use crate::map::Map;
 use crate::movement::try_move_entity;
 
-// pub fn monster_ai(sworld: &mut SubWorld, #[resource] ppos: &Point, #[resource] map: &mut Map) {
-// pub fn monster_ai(world: &mut World, res: &mut Resources) {
 pub fn monster_ai(gs: &mut State) {
 
     let mut needs_wants_to_attack: Vec<Entity> = Vec::new();
+    let mut needs_wants_to_pick_up: Vec<(Entity, Entity)> = Vec::new();
     let mut to_update_confusion: Vec<(Entity, Confusion)> = Vec::new();
 
     let mut to_try_move: Vec<(Entity, Point)> = Vec::new();
@@ -47,11 +46,59 @@ pub fn monster_ai(gs: &mut State) {
                 }
             }
 
+            // don't do anything if player is out of sight
+            if !vs.visible_tiles.contains(&*ppos) {
+                continue;
+            }
+
+            let mut retargeted = false;
+            let mut target = *ppos;
+
+            // find an item and try to pick it up
+            // for tile in vs.visible_tiles.iter() {
+            //     let idx = map.xy_idx(tile.x, tile.y);
+            //     let entities = &map.tile_content[idx];
+            //     for e in entities.iter() {
+            //         if let Ok(name) = world.get::<Name>(*e){
+            //             dbg!(&name.name);
+            //         }
+
+            //         if let Ok(item) = world.get::<Item>(*e){
+            //             if let Ok(p) = world.get::<Position>(*e){
+            //                 println!("Found an item");
+
+            //                 // visible_items.push(*e);
+            //                 let p = p.ps[0];
+
+            //                 dbg!(p);
+            //                 dbg!(pos.ps[0]);
+
+            //                 if p == pos.ps[0] {
+            //                     println!("Needs want pickup");
+            //                     //add wants to pick up intent and return
+            //                     needs_wants_to_pick_up.push((id, *e));
+            //                     break;
+            //                 } else {
+            //                     retargeted = true;
+            //                     target = p.clone();
+            //                 }
+            //             }
+            //         }
+
+            //         // match world.get::<(Item, Position)>(*e) {
+            //         //     Err(_e) => {},
+            //         //     Ok(awe) => {
+
+            //         //     }
+            //         // }
+            //     }
+            // }
+
             // TODO mutlitile monsters currently only attack from their first position
-            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*ppos, Point::new(pos.ps[0].x, pos.ps[0].y));
-            if distance < 1.5 {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, Point::new(pos.ps[0].x, pos.ps[0].y));
+            if distance < 1.5 && !retargeted {
                 needs_wants_to_attack.push(id);
-            } else if vs.visible_tiles.contains(&*ppos){
+            } else if vs.visible_tiles.contains(&target){
 
                 // in order to stop multi-tile monsters from blocking themselves, make them not block before running A*
                 for pos in pos.ps.iter() {
@@ -61,7 +108,7 @@ pub fn monster_ai(gs: &mut State) {
 
                 let path = rltk::a_star_search(
                     map.xy_idx(pos.ps[0].x, pos.ps[0].y) as i32,
-                    map.xy_idx(ppos.x, ppos.y) as i32,
+                    map.xy_idx(target.x, target.y) as i32,
                     &mut *map
                 );
 
@@ -85,6 +132,10 @@ pub fn monster_ai(gs: &mut State) {
     for id in needs_wants_to_attack.iter() {
         let player_id: &Entity = &res.get::<Entity>().unwrap();
         world.insert_one(*id, WantsToAttack {target: *player_id}).unwrap();
+    }
+
+    for (id, item) in needs_wants_to_pick_up.iter() {
+        world.insert_one(*id, WantsToPickupItem{ collected_by: *id, item: *item }).unwrap();
     }
 
     for (id, _confusion) in to_update_confusion.iter() {

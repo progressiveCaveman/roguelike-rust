@@ -3,7 +3,7 @@ use resources::*;
 use crate::effects::add_effect;
 use crate::gui::Palette;
 use crate::{components::Position, gamelog::GameLog, systems::particle_system::ParticleBuilder};
-use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Consumable, DealsDamage, AreaOfEffect, Confusion, Equippable, Equipped, InBackpack, Fire};
+use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Consumable, DealsDamage, AreaOfEffect, Confusion, Equippable, Equipped, InBackpack, Fire, Inventory};
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};
 
@@ -12,7 +12,7 @@ pub fn item_use(world: &mut World, res: &mut Resources) {
     let player_id = res.get::<Entity>().unwrap();
     let map = res.get::<Map>().unwrap();
     let mut p_builder = res.get_mut::<ParticleBuilder>().unwrap();
-    let mut to_remove: Vec<Entity> = Vec::new();
+    let mut to_remove: Vec<(Entity, Entity)> = Vec::new();
     let mut to_remove_wants_use: Vec<Entity> = Vec::new();
     let mut to_heal: Vec<(Entity, ProvidesHealing)> = Vec::new();
     let mut to_unequip: Vec<(Entity, Name, Entity)> = Vec::new();
@@ -166,7 +166,7 @@ pub fn item_use(world: &mut World, res: &mut Resources) {
             Err(_e) => {}
             Ok(_) => {
                 if used_item {
-                    to_remove.push(use_item.item);
+                    to_remove.push((id, use_item.item));
                 }
             }
         }
@@ -192,8 +192,14 @@ pub fn item_use(world: &mut World, res: &mut Resources) {
         }
     }
 
-    for id in to_remove {
-        world.despawn(id).unwrap();
+    for (id, item) in to_remove {
+        if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+            if let Some(pos) = inv.items.iter().position(|x| *x == item) {
+                inv.items.remove(pos);
+            }
+        }
+
+        world.despawn(item).unwrap();
     }
 
     for id in to_remove_wants_use {

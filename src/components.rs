@@ -135,9 +135,10 @@ pub struct CombatStats {
     pub regen_rate: i32,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct HasInventory {
-    pub capacity: i32
+#[derive(Clone, Debug, PartialEq)]
+pub struct Inventory {
+    pub capacity: i32,
+    pub items: Vec<Entity>
 }
 
 #[derive(Clone, Debug, PartialEq)]

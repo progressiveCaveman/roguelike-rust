@@ -51,14 +51,6 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
 
     ctx.set_active_console(1);
 
-    // make console clear so it doesn't block
-    // let (xsize, ysize) = ctx.get_char_size();
-    // for x in 0..xsize {
-    //     for y in 0..ysize {
-    //         ctx.set(x, y, RGBA::from_u8(0, 0, 0, 255), RGBA::from_u8(0, 0, 0, 255), rltk::to_cp437(' '));                
-    //     }
-    // }
-
     let scale: f32 = SCALE;
     let xoff:f32 = (OFFSET_X as f32 / scale).ceil();
     let yoff:f32 = (OFFSET_Y as f32 / scale).ceil();

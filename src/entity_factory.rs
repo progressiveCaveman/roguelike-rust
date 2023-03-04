@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -36,6 +36,10 @@ pub fn player(world: &mut World, pos: (i32, i32)) -> Entity {
         CombatStats {max_hp: 30, hp: 30, defense: 2, power: 5, regen_rate: 1},
         SpatialKnowledge {
             tiles: HashMap::new(),
+        },
+        Inventory {
+            capacity: 20,
+            items: Vec::new(),
         }
     ))
 }
@@ -145,7 +149,8 @@ pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, nam
         Locomotive {},
         Name {name},
         BlocksTile {},
-        CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0}
+        CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0},
+        Inventory { capacity: 5, items: Vec::new() }
     ))
 }
 

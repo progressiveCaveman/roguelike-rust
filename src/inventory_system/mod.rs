@@ -9,7 +9,7 @@ pub use unequip_item_system::unequip_item;
 
 use hecs::*;
 use resources::*;
-use crate::components::{WantsToPickupItem, Position, InBackpack, Name};
+use crate::components::{WantsToPickupItem, Position, InBackpack, Name, Inventory};
 use crate::gamelog::{GameLog};
 
 pub fn inventory(world: &mut World, res: &mut Resources) {
@@ -17,11 +17,15 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
     let player_id = res.get::<Entity>().unwrap();
     let mut need_in_backpack: Vec<(Entity, WantsToPickupItem)> = Vec::new();
 
-    for (id, wants_pickup) in &mut world.query::<&WantsToPickupItem>() {
+    for (id, (_, wants_pickup)) in &mut world.query::<(&Inventory, &WantsToPickupItem)>() {
         need_in_backpack.push((id, *wants_pickup));
     }
 
     for (id, wants_pickup) in need_in_backpack.iter() {
+        if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
+            inv.items.push(wants_pickup.item);
+        }
+
         let _res = world.remove_one::<Position>(wants_pickup.item);
         let _r = world.insert_one(wants_pickup.item, InBackpack {owner: wants_pickup.collected_by});
 
