@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, Tree, Log};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -217,7 +217,7 @@ pub fn health_potion(world: &mut World, x: i32, y:i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Health potion".to_string()},
-        Item {},
+        Item {typ: ItemType::Potion},
         ProvidesHealing { heal: 8 },
         Consumable {}
     ))
@@ -234,7 +234,7 @@ pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Magic missile scroll".to_string()},
-        Item {},
+        Item {typ: ItemType::Scroll},
         Consumable {},
         DealsDamage {damage: 8},
         Ranged {range:6}
@@ -252,7 +252,7 @@ pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Fireball scroll".to_string()},
-        Item {},
+        Item {typ: ItemType::Scroll},
         Consumable {},
         DealsDamage {damage: 20},
         Ranged {range: 6},
@@ -271,7 +271,7 @@ pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Confusion scroll".to_string()},
-        Item {},
+        Item { typ: ItemType::Scroll },
         Consumable {},
         Ranged {range: 6},
         Confusion {turns: 4}
@@ -291,7 +291,7 @@ pub fn dagger(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Dagger".to_string()},
-        Item {},
+        Item {typ: ItemType::Weapon},
         Equippable {slot: EquipmentSlot::RightHand},
         MeleePowerBonus {power: 4}
     ))
@@ -308,7 +308,7 @@ pub fn longsword(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Dagger".to_string()},
-        Item {},
+        Item {typ: ItemType::Shield},
         Equippable {slot: EquipmentSlot::RightHand},
         MeleePowerBonus {power: 8}
     ))
@@ -325,7 +325,7 @@ pub fn shield(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Shield".to_string()},
-        Item {},
+        Item {typ: ItemType::Shield},
         Equippable {slot: EquipmentSlot::LeftHand},
         MeleeDefenseBonus {defense: 4}
     ))
@@ -342,7 +342,7 @@ pub fn tower_shield(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Shield".to_string()},
-        Item {},
+        Item {typ: ItemType::Shield},
         Equippable {slot: EquipmentSlot::LeftHand},
         MeleeDefenseBonus {defense: 8}
     ))
@@ -359,8 +359,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Logs".to_string()},
-        Item {},
-        Log {},
+        Item {typ: ItemType::Log},
         Flammable {}
     ))
 }
@@ -508,7 +507,7 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 pub fn tmp_fireball(world: &mut World) -> Entity {
     world.spawn((
         Name {name: "Fireball".to_string()},
-        Item {},
+        Item {typ: ItemType::Scroll},
         Consumable {},
         DealsDamage {damage: 20},
         Ranged {range: 6},

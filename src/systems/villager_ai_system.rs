@@ -4,7 +4,7 @@ use rltk::Point;
 use crate::{State, movement};
 use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs, Target, Intent, Task, ResponseCurveType};
 use crate::{RunState};
-use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Log};
+use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType};
 use crate::map::Map;
 
 pub fn villager_ai(gs: &mut State) {
@@ -109,8 +109,10 @@ fn update_decisions(gs: &mut State) {
 
         let mut has_log = false;
         for e in inv.items.iter() {
-            if let Ok(_) = world.get::<Log>(*e) {
-                has_log = true;
+            if let Ok(item) = world.get::<Item>(*e) {
+                if item.typ == ItemType::Log {
+                    has_log = true;
+                }
             }
         }
 
@@ -122,8 +124,10 @@ fn update_decisions(gs: &mut State) {
                 if let Ok(_) = world.get::<Tree>(*e) {
                     trees.push(*e);
                 }
-                if let Ok(_) = world.get::<Log>(*e) {
-                    logs.push(*e);
+                if let Ok(item) = world.get::<Item>(*e) {
+                    if item.typ == ItemType::Log {
+                        logs.push(*e);
+                    }
                 }
             }
         }

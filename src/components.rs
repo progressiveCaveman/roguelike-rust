@@ -69,27 +69,14 @@ pub struct Player {}
 pub struct Monster {}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Tree {}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum VillagerIntent {
-    ChopWood,
-    Fish,
-    CleanFish,
-    Idle
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Villager {
-
-}
+pub struct Villager {}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Faction {
     pub faction: i32
 }
 
-/// buildings
+/// Structures
 
 // #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct PlankHouse {
@@ -113,6 +100,9 @@ pub struct FishCleaner {
 pub struct Spawner {
     pub rate: i32
 }
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Tree {}
 
 /// Labors?
 
@@ -193,7 +183,19 @@ pub struct InBackpack {
 /// Item properties
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Item {}
+pub enum ItemType {
+    Tree,
+    Log,
+    Shield,
+    Weapon,
+    Potion,
+    Scroll
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Item {
+    pub typ: ItemType
+}
 
 pub struct Consumable {}
 
@@ -226,10 +228,6 @@ pub struct Confusion {
 
 pub struct AreaOfEffect {
     pub radius: i32
-}
-
-#[derive(Clone, Copy)]
-pub struct Log { // like a tree
 }
 
 /// Fire components

@@ -66,3 +66,7 @@ pub fn village_builder(new_depth: i32) -> Box<dyn MapBuilder> {
 pub fn rl_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     Box::new(DrunkardsBombingRunBuilder::new(new_depth))
 }
+
+pub fn arena_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    Box::new(AernaBuilder::new(new_depth))
+}
