@@ -10,7 +10,7 @@ use crate::components::{Position, CombatStats, Item, WantsToPickupItem, Fire, Sp
 use crate::gamelog::GameLog;
 use crate::movement::try_move_entity;
 
-use crate::dijkstra_utils::dijkstra_backtrace;
+use crate::utils::dijkstra_backtrace;
 
 pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Entity>)>{
     let world = &gs.world;

@@ -353,7 +353,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('='),
-            fg: Palette::COLOR_4,
+            fg: Palette::COLOR_CEDAR,
             bg: Palette::MAIN_BG,
             order: RenderOrder::Items,
             ..Default::default()

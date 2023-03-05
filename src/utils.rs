@@ -1,4 +1,4 @@
-use rltk::{DijkstraMap, BaseMap};
+use rltk::{DijkstraMap, BaseMap, Point, RGBA};
 
 use crate::map::Map;
 
@@ -19,4 +19,26 @@ pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, m
     }
 
     target
+}
+
+pub trait Scale {
+    fn scale(&mut self, amount: f32);
+}
+
+impl Scale for RGBA {
+    fn scale(&mut self, amount: f32) {
+        self.r *= amount;
+        self.g *= amount;
+        self.b *= amount;
+    }
+}
+
+pub trait InvalidPoint {
+    fn invalid_point() -> Point;
+}
+
+impl InvalidPoint for Point {
+    fn invalid_point() -> Point {
+        Point { x: 0, y: 0 }
+    }
 }

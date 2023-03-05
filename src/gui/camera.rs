@@ -1,4 +1,4 @@
-use crate::{gui::Palette, Scale, map::{OFFSET_X, OFFSET_Y, TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH, State, player::{get_player_map_knowledge, get_player_viewshed}};
+use crate::{utils::Scale, gui::Palette, map::{OFFSET_X, OFFSET_Y, TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH, State, player::{get_player_map_knowledge, get_player_viewshed}};
 
 use super::{Map,Position};
 use rltk::{Point, Rltk, RGB, RGBA};

@@ -24,7 +24,7 @@ mod gamelog;
 mod input_handler;
 mod entity_factory;
 mod weighted_table;
-mod dijkstra_utils;
+mod utils;
 
 pub mod map_builders;
 use map_builders::MapGenData;
@@ -45,19 +45,6 @@ use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, InBackpack, 
 use map::Map;
 use gamelog::GameLog;
 use inventory_system::{drop_item, item_use, unequip_item};
-
-// TODO move to a utils file
-trait Scale {
-    fn scale(&mut self, amount: f32);
-}
-
-impl Scale for RGBA {
-    fn scale(&mut self, amount: f32) {
-        self.r *= amount;
-        self.g *= amount;
-        self.b *= amount;
-    }
-}
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;

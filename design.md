@@ -14,6 +14,7 @@ Make all system functions start with `run`
 Make run_systems check run state before calling thing
 rename all systems to start with `system`
 Modify autoexplore to take an arbitrary enttity
+Add a global range fireball button for sim mode
 
 # PNW thing notes
 

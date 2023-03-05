@@ -1,6 +1,7 @@
 use hecs::*;
 use rltk::Point;
 use crate::ai::decisions::{Intent, Task, Target};
+use crate::utils::InvalidPoint;
 use crate::{entity_factory, State};
 use crate::components::{Position, Tree};
 
@@ -40,8 +41,15 @@ pub fn run_dissasemble_system(gs: &mut State) {
                     spawn_log = true;
                 }
 
+                let tpoint = if let Ok(p) = world.get::<Position>(e) { 
+                    p.ps[0]
+                }else{
+                    dbg!("No position");
+                    Point::invalid_point()
+                };
+
                 if spawn_log {
-                    entity_factory::log(world, p.x, p.y);
+                    entity_factory::log(world, tpoint.x, tpoint.y);
                 }
 
                 dbg!("removing intent");
