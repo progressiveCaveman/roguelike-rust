@@ -3,8 +3,9 @@ use resources::*;
 use rltk::Point;
 use crate::components::{Equipped, InBackpack, Name, Position, WantsToDropItem, Inventory};
 use crate::gamelog::GameLog;
+use crate::utils::InvalidPoint;
 
-pub fn drop_item(world: &mut World, res: &mut Resources) {
+pub fn system_drop_item(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get_mut::<Entity>().unwrap();
     let mut to_drop: Vec<(Entity, Entity)> = Vec::new();
@@ -28,14 +29,24 @@ pub fn drop_item(world: &mut World, res: &mut Resources) {
     }
 
     for (id, item) in to_drop.iter() {
-        if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
-            if let Some(pos) = inv.items.iter().position(|x| *x == *item) {
-                inv.items.remove(pos);
-            }
-        }
-        
-        let _in_bp = world.remove_one::<InBackpack>(*id);
-        let _equipped = world.remove_one::<Equipped>(*id);
-        world.insert_one(*id, Position { ps:vec![pos]}).unwrap();
+        drop_item(world, id, item);
     }
+}
+
+pub fn drop_item(world: &mut World, id: &Entity, item: &Entity) {
+    let pos = if let Ok(p) = world.get::<Position>(*id) {
+        p.any_point()
+    }else{
+        Point::invalid_point()
+    };
+
+    if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
+        if let Some(pos) = inv.items.iter().position(|x| *x == *item) {
+            inv.items.remove(pos);
+        }
+    }
+    
+    let _in_bp = world.remove_one::<InBackpack>(*id);
+    let _equipped = world.remove_one::<Equipped>(*id);
+    world.insert_one(*id, Position { ps:vec![pos]}).unwrap();
 }

@@ -1,5 +1,5 @@
 mod drop_item_system;
-pub use drop_item_system::drop_item;
+pub use drop_item_system::system_drop_item;
 
 mod item_use_system;
 pub use item_use_system::item_use;
@@ -16,14 +16,18 @@ use crate::gamelog::{GameLog};
 pub fn inventory(world: &mut World, res: &mut Resources) {
     let mut need_in_backpack: Vec<(Entity, WantsToPickupItem)> = Vec::new();
     let mut need_pickup: Vec<(Entity, Intent)> = Vec::new();
+    let mut to_deposit: Vec<(Entity, Inventory, Intent)> = Vec::new();
 
     for (id, (_, wants_pickup)) in &mut world.query::<(&Inventory, &WantsToPickupItem)>() {
         need_in_backpack.push((id, *wants_pickup));
     }
 
-    for (id, (_, intent)) in &mut world.query::<(&Inventory, &Intent)>() {
+    for (id, (inv, intent)) in &mut world.query::<(&Inventory, &Intent)>() {
         if intent.task == Task::PickUpItem {
             need_pickup.push((id, intent.clone()));
+        }
+        if intent.task == Task::DepositItemToInventory {
+            to_deposit.push((id, inv.clone(), intent.clone()));
         }
     }
 
@@ -36,6 +40,15 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
             pick_up(world, res, id, e);
         }
     }
+
+    for (id, inv, intent) in to_deposit.iter() {
+        if let Target::ENTITY(item) = intent.target[0] {
+            if let Target::ENTITY(target) = intent.target[1] {
+                drop_item_system::drop_item(world, id, &item);
+                pick_up(world, res, &target, item);
+            }   
+        }
+    }
 }
 
 fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
@@ -44,6 +57,8 @@ fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
 
     if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
         inv.items.push(item);
+    } else {
+        dbg!("Entity has no inventory");
     }
 
     let _res = world.remove_one::<Position>(item);

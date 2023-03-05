@@ -44,7 +44,7 @@ pub mod effects;
 use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, InBackpack, Player, Viewshed, Equipped, WantsToUnequipItem};
 use map::Map;
 use gamelog::GameLog;
-use item_system::{drop_item, item_use, unequip_item};
+use item_system::{system_drop_item, item_use, unequip_item};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
@@ -106,7 +106,7 @@ impl State {
         melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
         item_system::inventory(&mut self.world, &mut self.resources);
         dissasemble_system::run_dissasemble_system(self);
-        drop_item(&mut self.world, &mut self.resources);
+        system_drop_item(&mut self.world, &mut self.resources);
         unequip_item(&mut self.world, &mut self.resources);
         item_use(&mut self.world, &mut self.resources);
         effects::run_effects_queue(&mut self.world, &mut self.resources);
