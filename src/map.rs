@@ -6,7 +6,7 @@ use rltk::{Algorithm2D, BaseMap, Point};
 
 use crate::components::{Position, Faction};
 use crate::gui::{OFFSET_X, OFFSET_Y};
-use crate::{State};
+use crate::{State, SCALE};
 
 use crate::{MAPWIDTH, MAPHEIGHT};
 
@@ -98,8 +98,9 @@ impl Map {
         }
     }
 
+    // this only works if ctx.set_active_console is set correctly
     pub fn transform_mouse_pos(&self, mouse_pos: (i32, i32)) -> (i32, i32) {
-        (mouse_pos.0 - OFFSET_X as i32, mouse_pos.1 - OFFSET_Y as i32)
+        (mouse_pos.0 - (OFFSET_X as f32 / SCALE).ceil() as i32, mouse_pos.1 - (OFFSET_Y as f32 / SCALE).ceil() as i32)
     }
 
     pub fn mouse_in_bounds(&self, mouse_pos: (i32, i32)) -> bool {

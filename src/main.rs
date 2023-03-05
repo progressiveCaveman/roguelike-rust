@@ -50,11 +50,11 @@ const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
 
 const TILE_SIZE: usize = 10;
-const MAPWIDTH: usize = 200;
-const MAPHEIGHT: usize = 100;
+const MAPWIDTH: usize = 150;
+const MAPHEIGHT: usize = 80;
 const WINDOWWIDTH: usize = 160;
-const WINDOWHEIGHT: usize = 100;
-const SCALE: f32 = 1.;
+const WINDOWHEIGHT: usize = 80;
+const SCALE: f32 = 1.0;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameMode{

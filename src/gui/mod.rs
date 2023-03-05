@@ -93,12 +93,16 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
         y += 1;
     }
 
+    ctx.set_active_console(1);
+
     // draw mouse pos
     let mouse_pos = ctx.mouse_pos();
     if mouse_pos != (0, 0) {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_3);
     }
     draw_tooltips(gs, ctx);
+
+    ctx.set_active_console(0);
 }
 
 pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
