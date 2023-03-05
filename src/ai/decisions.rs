@@ -210,14 +210,6 @@ impl Inputs {
 
         return count as f32;
     }
-
-    pub fn has_item(world: &World, res: &Resources, f: Target, item_type: ItemType) -> f32 {
-        0.
-    }
-
-    // pub fn has_inventory_space(world: &World, res: &Resources, ) -> f32 {
-
-    // }
 }
 
 

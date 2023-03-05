@@ -217,8 +217,8 @@ fn update_decisions(gs: &mut State) {
                                 t: ResponseCurveType::Linear, 
                                 m: -1.0 / 100.0, 
                                 k: 1.0, 
-                                c: 1.0, 
-                                b: 0.0 
+                                c: 0.0, 
+                                b: 1.0 
                             }
                         ),
                         // Consideration::new(
@@ -242,7 +242,7 @@ fn update_decisions(gs: &mut State) {
         // if wood in inventory
         // for each LumberMill
         for lm in lumber_mills {
-            if logs_in_inv > 3 {
+            if logs_in_inv > 0 {
                 potential_actions.push(Action {
                     name: "deliver logs".to_string(),
                     cons: vec!(
@@ -251,9 +251,9 @@ fn update_decisions(gs: &mut State) {
                             Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
                             ConsiderationParam { 
                                 t: ResponseCurveType::Linear, 
-                                m: 0.0, 
-                                k: 0.0, 
-                                c: 0.0, 
+                                m: -1.0 / 100.0, 
+                                k: 1.0, 
+                                c: 1.0, 
                                 b: 0.0 
                             }
                         ),
@@ -262,10 +262,10 @@ fn update_decisions(gs: &mut State) {
                             Inputs::inventory_count(world, lm, ItemType::Log),
                             ConsiderationParam { 
                                 t: ResponseCurveType::Linear, 
-                                m: 0.0, 
-                                k: 0.0, 
+                                m: -1. / 50.0, 
+                                k: 1.0, 
                                 c: 0.0, 
-                                b: 0.0 
+                                b: 1.0 
                             }
                         ),
                         Consideration::new(
@@ -273,8 +273,8 @@ fn update_decisions(gs: &mut State) {
                             Inputs::inventory_count(world, id, ItemType::Log),
                             ConsiderationParam { 
                                 t: ResponseCurveType::Linear, 
-                                m: 0.0, 
-                                k: 0.0, 
+                                m: 1. / 5.0, 
+                                k: 1.0, 
                                 c: 0.0, 
                                 b: 0.0 
                             }
