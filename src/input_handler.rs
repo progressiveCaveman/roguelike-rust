@@ -50,7 +50,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::N => movement::try_move_entity(player_id, 1, 1, gs),
                     VirtualKeyCode::B => movement::try_move_entity(player_id, -1, 1, gs),
                     VirtualKeyCode::G => player::get_item(&mut gs.world, &mut gs.resources),
-                    VirtualKeyCode::X => player::autoexplore(gs),
+                    VirtualKeyCode::X => movement::autoexplore(gs, player_id),
                     VirtualKeyCode::R => player::reveal_map(gs),
                     VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: entity_factory::tmp_fireball(&mut gs.world) },
                     VirtualKeyCode::I => return RunState::ShowInventory,

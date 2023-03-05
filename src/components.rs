@@ -4,13 +4,27 @@ use serde::{Serialize, Deserialize};
 use hecs::*;
 use rltk::{self, Point};
 
-use crate::{RenderOrder, map::TileType};
+use crate::{RenderOrder, map::{TileType, Map}, utils::InvalidPoint};
 
 /// Basic UI components
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub ps: Vec<Point>
+}
+
+impl Position {
+    pub fn any_point(&self) -> Point {
+        if self.ps.len() > 0 {
+            *self.ps.first().unwrap()
+        } else {
+            Point::invalid_point()
+        }
+    }
+
+    pub fn idxes(&self, map: &Map) -> Vec<usize> {
+        self.ps.iter().map(|it| map.point_idx(*it)).collect()
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

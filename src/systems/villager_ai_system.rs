@@ -5,7 +5,6 @@ use crate::{State, movement};
 use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs, Target, Intent, Task, ResponseCurveType};
 use crate::{RunState};
 use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType, LumberMill};
-use crate::map::Map;
 
 pub fn villager_ai(gs: &mut State) {
 
@@ -65,10 +64,9 @@ pub fn villager_ai(gs: &mut State) {
     }
 
     for e in to_explore {
-        movement::try_move_entity(e, 0, -1, gs);
+        movement::autoexplore(gs, e);
         let world = &mut gs.world;
         let _res = world.remove_one::<Intent>(e);
-
     }
 
     for (e, from, to) in to_move_from_to {

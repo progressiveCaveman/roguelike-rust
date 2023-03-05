@@ -61,6 +61,10 @@ impl Map {
     pub fn xy_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
     }
+
+    pub fn point_idx(&self, point: Point) -> usize {
+        (point.y as usize * self.width as usize) + point.x as usize
+    }
     
     pub fn idx_xy(&self, idx: usize) -> (i32, i32) {
         (idx as i32 % self.width, idx as i32 / self.width)
