@@ -23,7 +23,7 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
 
     for (id, (_, intent)) in &mut world.query::<(&Inventory, &Intent)>() {
         if intent.task == Task::PickUpItem {
-            need_pickup.push((id, *intent));
+            need_pickup.push((id, intent.clone()));
         }
     }
 
@@ -32,8 +32,8 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
     }
 
     for (id, intent) in need_pickup.iter() {
-        if let Some(Target::ENTITY(e)) = &intent.target {
-            pick_up(world, res, id, *e);
+        if let Target::ENTITY(e) = intent.target[0] {
+            pick_up(world, res, id, e);
         }
     }
 }

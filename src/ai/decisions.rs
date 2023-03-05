@@ -17,14 +17,14 @@ pub enum Task {
     EquipItem,
     UnequipItem,
     UseWorkshop,
-    DepositItem,
+    DepositItemToInventory,
     Attack
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug)]
 pub struct Intent {
     pub task: Task,
-    pub target: Option<Target>,
+    pub target: Vec<Target>,
     // action_score: f32,
     pub turn: i32, // turn this intent originated
 }
@@ -35,7 +35,7 @@ pub struct AI {
 }
 
 impl AI {
-    pub fn choose_action(actions: Vec<Action>) -> (Entity, Task, Option<Target>) {
+    pub fn choose_action(actions: Vec<Action>) -> (Entity, Task, Vec<Target>) {
         let mut scores: Vec<f32> = vec!();
         let mut best_i = 0;
         let mut best_score = 0.;
@@ -62,7 +62,7 @@ pub struct Action {
     pub name: String,
     pub cons: Vec<Consideration>,
     pub priority: f32,
-    pub action: (Entity, Task, Option<Target>) // the intent to attach 
+    pub action: (Entity, Task, Vec<Target>) // the intent to attach 
 }
 
 impl Action {
@@ -70,7 +70,12 @@ impl Action {
         // get average of all consideration scores
         let mut scores: Vec<f32> = vec!();
         for c in self.cons.iter() {
-            scores.push(c.get_score());
+            let s = c.get_score();
+            if s == 0. {
+                return 0.
+            }
+
+            scores.push(s);
         }
 
         let ave = average(&scores);
@@ -114,6 +119,20 @@ impl Consideration {
                 let e = std::f64::consts::E as f32;
                 k * 1./(1.+(1000.*e*m).powf(-1. * self.input +c)) + b
             },
+            ResponseCurveType::GreaterThan => {
+                if self.input > m {
+                    1.
+                }else{
+                    0.
+                }
+            },
+            ResponseCurveType::LessThan => {
+                if self.input < m {
+                    1.
+                }else{
+                    0.
+                }
+            },
         };
 
         return score.clamp(0., 1.);
@@ -146,7 +165,9 @@ pub enum ResponseCurveType {
     Const,
     Linear,
     Quadratic,
-    Logistic
+    Logistic,
+    GreaterThan,
+    LessThan
 }
 
 #[derive(Clone, Debug, PartialEq)]

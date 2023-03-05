@@ -12,7 +12,7 @@ pub fn run_dissasemble_system(gs: &mut State) {
 
     for (id, (pos, intent)) in &mut world.query::<(&Position, &Intent)>() {
         if intent.task == Task::Destroy {
-            wants_to_destroy.push((id, pos.ps.to_vec(), *intent));
+            wants_to_destroy.push((id, pos.ps.to_vec(), intent.clone()));
         }
     }
 
@@ -20,7 +20,7 @@ pub fn run_dissasemble_system(gs: &mut State) {
     let mut wants_despawn: Vec<Entity> = vec![];
 
     for (id, pos, intent) in wants_to_destroy.iter() {
-        let target = if let Some(target) = &intent.target {
+        let target = if let target = &intent.target[0] {
             target.get_point(world)
         }else {
             dbg!("ERROR: No target");
@@ -35,7 +35,7 @@ pub fn run_dissasemble_system(gs: &mut State) {
                 continue;
             }
 
-            if let Some(Target::ENTITY(e)) = intent.target {
+            if let Target::ENTITY(e) = intent.target[0] {
                 let mut spawn_log = false;
                 if let Ok(_) = world.get::<Tree>(e) { 
                     spawn_log = true;
@@ -51,8 +51,6 @@ pub fn run_dissasemble_system(gs: &mut State) {
                 if spawn_log {
                     entity_factory::log(world, tpoint.x, tpoint.y);
                 }
-
-                dbg!("removing intent");
 
                 wants_remove_intent.push(*id);
                 wants_despawn.push(e);

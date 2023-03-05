@@ -36,16 +36,16 @@ pub fn villager_ai(gs: &mut State) {
                 },
                 Task::ExchangeInfo => todo!(),
                 Task::MoveTo => {
-                    if let Some(Target::ENTITY(target)) = intent.target {
+                    if let Target::ENTITY(target) = intent.target[0] {
                         if let Ok(target_pos) = world.get::<Position>(target) {
                             to_move_from_to.push((id, pos.ps[0], target_pos.ps[0]));
                         }
-                    } else if let Some(Target::LOCATION(loc)) = intent.target {
+                    } else if let Target::LOCATION(loc) = intent.target[0] {
                         to_move_from_to.push((id, pos.ps[0], loc));
                     }
                 },
                 Task::Destroy => {
-                    dbg!("Destroy");
+
                 },
                 Task::PickUpItem => {
                     // if let Some(Target::ENTITY(t)) = intent.target {
@@ -57,7 +57,9 @@ pub fn villager_ai(gs: &mut State) {
                 Task::EquipItem => todo!(),
                 Task::UnequipItem => todo!(),
                 Task::UseWorkshop => todo!(),
-                Task::DepositItem => todo!(),
+                Task::DepositItemToInventory => {
+                    
+                },
                 Task::Attack => todo!(),
             }
         }
@@ -107,10 +109,12 @@ fn update_decisions(gs: &mut State) {
         let has_inventory_space = inv.capacity > inv.items.len() as i32;
 
         let mut logs_in_inv = 0;
+        let mut inventory_log: Entity = id; // initialization is messy here but correct as long as logs_in_inv > 0
         for e in inv.items.iter() {
             if let Ok(item) = world.get::<Item>(*e) {
                 if item.typ == ItemType::Log {
                     logs_in_inv += 1;
+                    inventory_log = *e;
                 }
             }
         }
@@ -130,7 +134,9 @@ fn update_decisions(gs: &mut State) {
                     }
                 }
                 if let Ok(_) = world.get::<LumberMill>(*e) {
-                    lumber_mills.push(*e);
+                    if !lumber_mills.contains(e) { //multitile
+                        lumber_mills.push(*e);
+                    }
                 }
             }
         }
@@ -167,7 +173,7 @@ fn update_decisions(gs: &mut State) {
                         // )
                     ),
                     priority: 1.0,
-                    action: (id, Task::MoveTo, Some(Target::from(tree))),
+                    action: (id, Task::MoveTo, vec!(Target::from(tree))),
                 });
 
                 potential_actions.push(Action {
@@ -177,8 +183,8 @@ fn update_decisions(gs: &mut State) {
                             "Distance".to_string(), 
                             Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
                             ConsiderationParam { 
-                                t: ResponseCurveType::Linear, 
-                                m: -1.0, 
+                                t: ResponseCurveType::LessThan, 
+                                m: 2., 
                                 k: 1.0, 
                                 c: 1.0, 
                                 b: 1.0 
@@ -197,23 +203,23 @@ fn update_decisions(gs: &mut State) {
                         // )
                     ),
                     priority: 2.0,
-                    action: (id, Task::Destroy, Some(Target::from(tree))),
+                    action: (id, Task::Destroy, vec!(Target::from(tree))),
                 });
             }
         }
 
         // for each wood found
-        for log in logs {
+        for log in logs.iter() {
             if has_inventory_space {
                 potential_actions.push(Action {
                     name: "pick up wood".to_string(),
                     cons: vec!(
                         Consideration::new(
                             "Distance".to_string(), 
-                            Inputs::distance(world, res, Target::from(pos), Target::from(log)),
+                            Inputs::distance(world, res, Target::from(pos), Target::from(*log)),
                             ConsiderationParam { 
-                                t: ResponseCurveType::Linear, 
-                                m: -1.0 / 100.0, 
+                                t: ResponseCurveType::LessThan, 
+                                m: 2., 
                                 k: 1.0, 
                                 c: 0.0, 
                                 b: 1.0 
@@ -232,7 +238,7 @@ fn update_decisions(gs: &mut State) {
                         // )
                     ),
                     priority: 1.0,
-                    action: (id, Task::PickUpItem, Some(Target::from(log))),
+                    action: (id, Task::PickUpItem, vec!(Target::from(*log))),
                 });
             }
         }
@@ -249,7 +255,7 @@ fn update_decisions(gs: &mut State) {
                             Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
                             ConsiderationParam { 
                                 t: ResponseCurveType::Linear, 
-                                m: -1.0 / 100.0, 
+                                m: 1. - 1./20., 
                                 k: 1.0, 
                                 c: 1.0, 
                                 b: 0.0 
@@ -279,19 +285,21 @@ fn update_decisions(gs: &mut State) {
                         )
                     ),
                     priority: 1.0,
-                    action: (id, Task::MoveTo, Some(Target::from(lm))),
+                    action: (id, Task::MoveTo, vec!(Target::from(lm))),
                 });
+
+                dbg!(Inputs::distance(world, res, Target::from(pos), Target::from(lm)));
 
                 potential_actions.push(Action {
                     name: "deposit logs at lumber mill".to_string(),
                     cons: vec!(
                         Consideration::new(
-                            "Distance".to_string(), 
+                            "Distance to lm".to_string(), 
                             Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
                             ConsiderationParam { 
-                                t: ResponseCurveType::Linear, 
-                                m: -1.0, 
-                                k: 1.0, 
+                                t: ResponseCurveType::LessThan, 
+                                m: 2., 
+                                k: 2.0, 
                                 c: 1.0, 
                                 b: 0.0 
                             }
@@ -320,7 +328,7 @@ fn update_decisions(gs: &mut State) {
                         )
                     ),
                     priority: 2.0,
-                    action: (id, Task::DepositItem, Some(Target::from(lm))),
+                    action: (id, Task::DepositItemToInventory, vec!(Target::from(inventory_log), Target::from(lm))),
                 });
 
             }
@@ -337,7 +345,7 @@ fn update_decisions(gs: &mut State) {
                 ),
             ),
             priority: 1.0,
-            action: (id, Task::Explore, None),
+            action: (id, Task::Explore, vec![]),
         });
 
         let best = AI::choose_action(potential_actions);
