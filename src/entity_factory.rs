@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, Tree};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, Tree, Log};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -345,6 +345,23 @@ pub fn tower_shield(world: &mut World, x: i32, y: i32) -> Entity {
         Item {},
         Equippable {slot: EquipmentSlot::LeftHand},
         MeleeDefenseBonus {defense: 8}
+    ))
+}
+
+pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
+    world.spawn((
+        Position {ps: vec![Point{ x, y }]},
+        Renderable {
+            glyph: rltk::to_cp437('='),
+            fg: Palette::COLOR_4,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::Items,
+            ..Default::default()
+        },
+        Name {name: "Logs".to_string()},
+        Item {},
+        Log {},
+        Flammable {}
     ))
 }
 

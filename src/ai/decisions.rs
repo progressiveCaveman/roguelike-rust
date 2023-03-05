@@ -4,7 +4,7 @@ use rltk::{Point, BaseMap};
 
 use crate::{map::Map, components::Position};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Task {
     Fish,
     Explore,
@@ -21,7 +21,7 @@ pub enum Task {
     Attack
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct Intent {
     pub task: Task,
     pub target: Option<Target>,
@@ -242,7 +242,7 @@ Use:
     }
  */
 
- #[derive(Clone, Debug)]
+ #[derive(Clone, Debug, Copy)]
  pub enum Target {
     LOCATION(Point),
     ENTITY(Entity),
@@ -257,6 +257,22 @@ impl From<Point> for Target {
 impl From<Entity> for Target {
     fn from(n: Entity) -> Self {
         Target::ENTITY(n)
+    }
+}
+
+impl Target {
+    pub fn get_point(&self, world: &World) -> Point {
+        match self {
+            Target::LOCATION(loc) => *loc,
+            Target::ENTITY(entity) => {
+                if let Ok(pos) = world.get::<Position>(*entity) {
+                    pos.ps[0]
+                } else {
+                    println!("ERROR: Target::ENTITY position not found");
+                    Point { x: 0, y: 0 }
+                }
+            },
+        }
     }
 }
 

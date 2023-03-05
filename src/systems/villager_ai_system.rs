@@ -21,6 +21,7 @@ pub fn villager_ai(gs: &mut State) {
 
     let mut to_explore: Vec<Entity> = vec![];
     let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
+    let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
 
     {
         let world = &mut gs.world;
@@ -50,7 +51,7 @@ pub fn villager_ai(gs: &mut State) {
                     }
                 },
                 Task::Destroy => {
-
+                    dbg!("Destroy");
                 },
                 Task::PickUpItem => {
                     // if let Some(Target::ENTITY(t)) = intent.target {
@@ -70,6 +71,9 @@ pub fn villager_ai(gs: &mut State) {
 
     for e in to_explore {
         movement::try_move_entity(e, 0, -1, gs);
+        let world = &mut gs.world;
+        let _res = world.remove_one::<Intent>(e);
+
     }
 
     for (e, from, to) in to_move_from_to {
@@ -80,6 +84,8 @@ pub fn villager_ai(gs: &mut State) {
         if dy != 0 { dy = dy / dy.abs(); }
 
         movement::try_move_entity(e, dx, dy, gs);
+        let world = &mut gs.world;
+        let _res = world.remove_one::<Intent>(e);
     }
 }
 
@@ -199,7 +205,7 @@ fn update_decisions(gs: &mut State) {
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(id), Target::from(log)),
+                        Inputs::distance(world, res, Target::from(pos), Target::from(log)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1.0, 
@@ -272,14 +278,9 @@ fn update_decisions(gs: &mut State) {
         let best = AI::choose_action(potential_actions);
         dbg!(best.clone());
         wants_intent.push((best.0, Intent { task: best.1, target: best.2, turn: *turn }));
-
-
-        // todo do something with it
-        // best_action.perform_action(world);
     }
 
     for (id, intent) in wants_intent {
         let _r = world.insert_one(id, intent);
-
     }
 }

@@ -1,4 +1,5 @@
 pub mod cleanup_system;
+pub mod dissasemble_system;
 pub mod fire_system;
 pub mod map_indexing_system;
 pub mod melee_combat_system;

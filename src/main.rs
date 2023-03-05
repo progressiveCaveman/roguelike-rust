@@ -30,7 +30,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::{cleanup_system, villager_ai_system};
+use systems::{cleanup_system, villager_ai_system, dissasemble_system};
 use systems::fire_system;
 use systems::map_indexing_system;
 use systems::melee_combat_system;
@@ -118,6 +118,7 @@ impl State {
         map_indexing_system::map_indexing(&mut self.world, &mut self.resources);
         melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
         inventory_system::inventory(&mut self.world, &mut self.resources);
+        dissasemble_system::run_dissasemble_system(&mut self.world, &mut self.resources);
         drop_item(&mut self.world, &mut self.resources);
         unequip_item(&mut self.world, &mut self.resources);
         item_use(&mut self.world, &mut self.resources);

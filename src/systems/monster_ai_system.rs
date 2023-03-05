@@ -95,7 +95,7 @@ pub fn monster_ai(gs: &mut State) {
             // }
 
             // TODO mutlitile monsters currently only attack from their first position
-            let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, Point::new(pos.ps[0].x, pos.ps[0].y));
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, pos.ps[0]);
             if distance < 1.5 && !retargeted {
                 needs_wants_to_attack.push(id);
             } else if vs.visible_tiles.contains(&target){
