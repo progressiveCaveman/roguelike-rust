@@ -8,7 +8,7 @@ use crate::map::{Map, TileType};
 use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, Locomotive, BlocksTile, SpatialKnowledge};
 
 pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
-    let map = gs.resources.get::<Map>().unwrap();
+    let mut map = gs.resources.get_mut::<Map>().unwrap();
     let mode = gs.resources.get::<GameMode>().unwrap();
     let mut needs_wants_to_attack: Option<(Entity, WantsToAttack)> = None;
 
@@ -66,6 +66,7 @@ pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
 
                         match &gs.world.get::<BlocksTile>(*potential_blocker) {
                             Ok(_cs) => {
+                                dbg!("Trying to move somewhere that blocks");
                                 is_blocked = true;
                                 break;
                             }
@@ -75,7 +76,7 @@ pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
                 }
             }
 
-
+            // do movement
             if is_camera || is_blocked == false {                
                 if let Ok(mut vs) = gs.world.get_mut::<Viewshed>(entity) {
                     vs.dirty = true;
@@ -83,8 +84,13 @@ pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
 
                 // for pos in pos.ps.iter_mut() {
                 for i in 0..pos.ps.len() {
-                    pos.ps[i].x = min(MAPWIDTH as i32 - 1, max(0, pos.ps[i].x + dx));
-                    pos.ps[i].y = min(MAPHEIGHT as i32 - 1, max(0, pos.ps[i].y + dy));   
+                    let newx = min(MAPWIDTH as i32 - 1, max(0, pos.ps[i].x + dx)); 
+                    let newy = min(MAPHEIGHT as i32 - 1, max(0, pos.ps[i].y + dy));
+                    pos.ps[i].x = newx;
+                    pos.ps[i].y = newy; 
+
+                    let idx = map.xy_idx(newx, newy);
+                    map.blocked[idx] = true;
                 }
     
                 // If this is a player, change the position in resources according to first in pos.ps

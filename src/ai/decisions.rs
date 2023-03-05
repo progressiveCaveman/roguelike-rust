@@ -43,7 +43,7 @@ impl AI {
             let action = &actions[i];
             let score = action.get_action_score();
 
-            println!("Action: {}, score: {}", action.name, score);
+            // println!("Action: {}, score: {}", action.name, score);
 
             scores.push(action.get_action_score());
 

@@ -102,8 +102,6 @@ fn update_decisions(gs: &mut State) {
             }
         }
 
-        println!("update_decisions");
-
         let pos = pos.ps[0];
 
         let has_inventory_space = inv.capacity > inv.items.len() as i32;
@@ -288,8 +286,6 @@ fn update_decisions(gs: &mut State) {
                     action: (id, Task::MoveTo, vec!(Target::from(lm))),
                 });
 
-                dbg!(Inputs::distance(world, res, Target::from(pos), Target::from(lm)));
-
                 potential_actions.push(Action {
                     name: "deposit logs at lumber mill".to_string(),
                     cons: vec!(
@@ -349,7 +345,7 @@ fn update_decisions(gs: &mut State) {
         });
 
         let best = AI::choose_action(potential_actions);
-        dbg!(best.clone());
+        // dbg!(best.clone());
         wants_intent.push((best.0, Intent { task: best.1, target: best.2, turn: *turn }));
     }
 
