@@ -2,7 +2,6 @@ use std::cmp::{max, min};
 use hecs::*;
 use rltk::{Point, DijkstraMap};
 
-use crate::gamelog::GameLog;
 use crate::utils::{dijkstra_backtrace};
 use crate::{State, MAPWIDTH, MAPHEIGHT, GameMode};
 use crate::map::{Map, TileType};

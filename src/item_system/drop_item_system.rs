@@ -11,10 +11,7 @@ pub fn system_drop_item(world: &mut World, res: &mut Resources) {
     let mut to_drop: Vec<(Entity, Entity)> = Vec::new();
     let mut to_remove_wants_drop: Vec<Entity> = Vec::new();
 
-    let mut pos: Point = Point{x: 0, y: 0};
     for (id, wants_drop) in &mut world.query::<&WantsToDropItem>().iter() {
-        let p = world.get::<Position>(id).unwrap();
-        pos = *p.ps.first().unwrap();
         to_remove_wants_drop.push(id);
         to_drop.push((id, wants_drop.item));
 

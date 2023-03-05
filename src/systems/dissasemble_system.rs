@@ -20,12 +20,7 @@ pub fn run_dissasemble_system(gs: &mut State) {
     let mut wants_despawn: Vec<Entity> = vec![];
 
     for (id, pos, intent) in wants_to_destroy.iter() {
-        let target = if let target = &intent.target[0] {
-            target.get_point(world)
-        }else {
-            dbg!("ERROR: No target");
-            return;
-        };
+        let target = intent.target[0].get_point(world);
         
         // check distance
         for p in pos {
