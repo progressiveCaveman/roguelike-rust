@@ -1,11 +1,12 @@
 use hecs::*;
-use resources::Resources;
 use rltk::Point;
 use crate::ai::decisions::{Intent, Task, Target};
-use crate::entity_factory;
+use crate::{entity_factory, State};
 use crate::components::{Position, Tree};
 
-pub fn run_dissasemble_system(world: &mut World, res: &mut Resources) {
+pub fn run_dissasemble_system(gs: &mut State) {
+    let world = &mut gs.world;
+
     let mut wants_to_destroy: Vec<(Entity, Vec<Point>, Intent)> = vec![];
 
     for (id, (pos, intent)) in &mut world.query::<(&Position, &Intent)>() {

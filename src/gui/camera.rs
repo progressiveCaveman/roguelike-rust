@@ -1,5 +1,3 @@
-use hecs::World;
-use resources::Resources;
 use crate::{gui::Palette, Scale, map::{OFFSET_X, OFFSET_Y, TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH, State, player::{get_player_map_knowledge, get_player_viewshed}};
 
 use super::{Map,Position};
@@ -8,8 +6,7 @@ use rltk::{Point, Rltk, RGB, RGBA};
 const SHOW_BOUNDARIES : bool = true;
 const RENDER_DJIKSTRA: bool = false;
 
-pub fn get_map_coords_for_screen(world: &World, res: &Resources, ctx: &mut Rltk) -> (i32, i32, i32, i32) {
-    let player_pos = &res.get::<Point>().unwrap();
+pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32, i32) {
     let (mut x_chars, mut y_chars) = ctx.get_char_size();
     x_chars -= (OFFSET_X as f32 / SCALE).ceil() as u32;
     y_chars -= (OFFSET_Y as f32 / SCALE).ceil() as u32;
@@ -17,10 +14,10 @@ pub fn get_map_coords_for_screen(world: &World, res: &Resources, ctx: &mut Rltk)
     let center_x = (x_chars as f32 / 2.0) as i32;
     let center_y = (y_chars as f32 / 2.0) as i32;
 
-    let mut min_x = player_pos.x - center_x;
-    let mut max_x = player_pos.x + center_x;
-    let mut min_y = player_pos.y - center_y;
-    let mut max_y = player_pos.y + center_y;
+    let mut min_x = focus.x - center_x;
+    let mut max_x = focus.x + center_x;
+    let mut min_y = focus.y - center_y;
+    let mut max_y = focus.y + center_y;
 
     let w = MAPWIDTH as i32;
     let h = MAPHEIGHT as i32;
@@ -58,9 +55,10 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
 
     let map = res.get::<Map>().unwrap();
     let gamemode = *res.get::<GameMode>().unwrap();
+    let player_pos = *res.get::<Point>().unwrap();
     let player_knowledge = get_player_map_knowledge(gs);
 
-    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(world, res, ctx);
+    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
 
     let map_width = map.width;
     let map_height = map.height;

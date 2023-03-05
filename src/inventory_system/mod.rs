@@ -32,13 +32,6 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
     }
 
     for (id, intent) in need_pickup.iter() {
-        let target = if let Some(target) = &intent.target {
-            target.get_point(world)
-        }else {
-            dbg!("ERROR: No target");
-            return;
-        };
-
         if let Some(Target::ENTITY(e)) = &intent.target {
             pick_up(world, res, id, *e);
         }

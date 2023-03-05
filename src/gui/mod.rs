@@ -103,8 +103,9 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
     let res = &gs.resources;
+    let player_pos = *res.get::<Point>().unwrap();
 
-    let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(world, res, ctx);
+    let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
     let map = res.get::<Map>().unwrap();
     let gamemode = *res.get::<GameMode>().unwrap();
 
@@ -157,18 +158,18 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
 
 pub fn ranged_target(world: &mut World, res: &mut Resources, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
     let map = res.get::<Map>().unwrap();
-    let player_id = res.get::<Entity>().unwrap();
-    let player_pos = res.get::<Point>().unwrap();
+    let player_id = *res.get::<Entity>().unwrap();
+    let player_pos = *res.get::<Point>().unwrap();
     ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
 
-    let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(world, res, ctx);
+    let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
 
     let mut valid_cells: Vec<Point> = Vec::new();
-    match world.get::<Viewshed>(*player_id) {
+    match world.get::<Viewshed>(player_id) {
         Err(_e) => {return (ItemMenuResult::Cancel, None)},
         Ok(player_vs) => {
             for pt in player_vs.visible_tiles.iter() {
-                let dist = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *pt);
+                let dist = rltk::DistanceAlg::Pythagoras.distance2d(player_pos, *pt);
                 if dist as i32 <= range {
                     let screen_x = pt.x - min_x;
                     let screen_y = pt.y - min_y + OFFSET_Y as i32; // TODO why is offset needed here??

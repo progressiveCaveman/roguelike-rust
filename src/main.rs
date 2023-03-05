@@ -118,7 +118,7 @@ impl State {
         map_indexing_system::map_indexing(&mut self.world, &mut self.resources);
         melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
         inventory_system::inventory(&mut self.world, &mut self.resources);
-        dissasemble_system::run_dissasemble_system(&mut self.world, &mut self.resources);
+        dissasemble_system::run_dissasemble_system(self);
         drop_item(&mut self.world, &mut self.resources);
         unequip_item(&mut self.world, &mut self.resources);
         item_use(&mut self.world, &mut self.resources);

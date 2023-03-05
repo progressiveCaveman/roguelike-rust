@@ -7,7 +7,7 @@ use crate::gamelog::GameLog;
 
 pub fn delete_the_dead(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
-    let mut dead: Vec<(Entity)> = vec![];
+    let mut dead: Vec<Entity> = vec![];
     let mut to_drop_items: Vec<(Entity, Point)> = vec![];
 
     for (id, (stats, pos, inv)) in &mut world.query::<(&CombatStats, &Position, Option<&Inventory>)>() {

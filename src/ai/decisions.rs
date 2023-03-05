@@ -32,31 +32,9 @@ pub struct Intent {
 ////////////////////////////////////////////////////
 
 pub struct AI {
-    entity: Entity
 }
 
 impl AI {
-    fn example_action(&self, world: &World, res: &Resources) {
-
-        // get my info
-        // if let Ok(space) =  world.get_mut::<SpatialKnowledge>(self.entity) {
-        // let space =  world.get_mut::<SpatialKnowledge>(self.entity);
-        // let pos =  world.get_mut::<Position>(self.entity);
-        // let inventory =  world.get_mut::<>(self.entity);
-
-
-
-        // if let Ok(space) =  world.get_mut::<SpatialKnowledge>(self.entity) {
-
-        // let is =  world.get_mut::<(Position, SpatialKnowledge)>(self.entity);
-
-        // get locations of potential targets
-
-        // for (id, (wants_attack)) in &mut world.query::<(&WantsToAttack)>() {
-        // }
-
-    }
-
     pub fn choose_action(actions: Vec<Action>) -> (Entity, Task, Option<Target>) {
         let mut scores: Vec<f32> = vec!();
         let mut best_i = 0;
@@ -100,10 +78,6 @@ impl Action {
         // multiply by priorities
         ave * self.priority
     }
-
-    pub fn perform_action(&self, world: &World) {
-        // this is mostly apply intents I guess?
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -129,9 +103,7 @@ impl Consideration {
         let c = self.params.c;
         let b = self.params.b;
 
-        let mut score = 0.;
-
-        score = match t {
+        let score = match t {
             ResponseCurveType::Const => {
                 m * self.input
             },

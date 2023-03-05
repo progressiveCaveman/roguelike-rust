@@ -3,11 +3,9 @@ use rltk;
 use rltk::Point;
 use crate::{State, movement};
 use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs, Target, Intent, Task, ResponseCurveType};
-use crate::gui::Palette;
-use crate::{RunState, systems::particle_system::ParticleBuilder};
-use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, Item, WantsToPickupItem, Name, Villager, SpatialKnowledge, Inventory, Tree, Log};
+use crate::{RunState};
+use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Log};
 use crate::map::Map;
-use crate::movement::try_move_entity;
 
 pub fn villager_ai(gs: &mut State) {
 
@@ -21,13 +19,10 @@ pub fn villager_ai(gs: &mut State) {
 
     let mut to_explore: Vec<Entity> = vec![];
     let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
-    let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
 
     {
         let world = &mut gs.world;
         let res = &mut gs.resources;
-        let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
-        let turn = res.get::<i32>().unwrap();
 
         let runstate: &RunState = &res.get::<RunState>().unwrap();
         if *runstate != RunState::AiTurn { return; }

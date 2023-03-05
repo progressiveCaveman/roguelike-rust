@@ -4,7 +4,7 @@ use rltk::Point;
 use crate::State;
 use crate::gui::Palette;
 use crate::{RunState, systems::particle_system::ParticleBuilder};
-use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, Item, WantsToPickupItem, Name};
+use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, WantsToPickupItem};
 use crate::map::Map;
 use crate::movement::try_move_entity;
 
