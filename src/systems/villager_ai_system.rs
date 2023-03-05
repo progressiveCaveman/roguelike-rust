@@ -4,7 +4,7 @@ use rltk::Point;
 use crate::{State, movement};
 use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs, Target, Intent, Task, ResponseCurveType};
 use crate::{RunState};
-use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType};
+use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType, LumberMill};
 use crate::map::Map;
 
 pub fn villager_ai(gs: &mut State) {
@@ -106,12 +106,13 @@ fn update_decisions(gs: &mut State) {
 
         let pos = pos.ps[0];
 
+        let has_inventory_space = inv.capacity > inv.items.len() as i32;
 
-        let mut has_log = false;
+        let mut logs_in_inv = 0;
         for e in inv.items.iter() {
             if let Ok(item) = world.get::<Item>(*e) {
                 if item.typ == ItemType::Log {
-                    has_log = true;
+                    logs_in_inv += 1;
                 }
             }
         }
@@ -119,6 +120,7 @@ fn update_decisions(gs: &mut State) {
         // populate all our info
         let mut trees: Vec<Entity> = vec![];
         let mut logs: Vec<Entity> = vec![];
+        let mut lumber_mills: Vec<Entity> = vec![];
         for (_, entities) in space.tiles.values() {
             for e in entities.iter() {
                 if let Ok(_) = world.get::<Tree>(*e) {
@@ -129,6 +131,9 @@ fn update_decisions(gs: &mut State) {
                         logs.push(*e);
                     }
                 }
+                if let Ok(_) = world.get::<LumberMill>(*e) {
+                    lumber_mills.push(*e);
+                }
             }
         }
 
@@ -136,129 +141,150 @@ fn update_decisions(gs: &mut State) {
 
         // for each tree found
         for tree in trees{
-            potential_actions.push(Action {
-                name: "go to tree".to_string(),
-                cons: vec!(
-                    Consideration::new(
-                        "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1.0 / 100.0, 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 1.0 
-                        }
+            if has_inventory_space {
+                potential_actions.push(Action {
+                    name: "go to tree".to_string(),
+                    cons: vec!(
+                        Consideration::new(
+                            "Distance".to_string(), 
+                            Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: -1.0 / 100.0, 
+                                k: 1.0, 
+                                c: 1.0, 
+                                b: 1.0 
+                            }
+                        ),
+                        // Consideration::new(
+                        //     "wood in stockpile".to_string(), 
+                        //     Inputs::item_stockpile_count(world, stock, item_type),
+                        //     ConsiderationParam { 
+                        //         t: todo!(), 
+                        //         m: 0.0, 
+                        //         k: 0.0, 
+                        //         c: 0.0, 
+                        //         b: 0.0 
+                        //     }
+                        // )
                     ),
-                    // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
-                    //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
-                    //     }
-                    // )
-                ),
-                priority: 1.0,
-                action: (id, Task::MoveTo, Some(Target::from(tree))),
-            });
+                    priority: 1.0,
+                    action: (id, Task::MoveTo, Some(Target::from(tree))),
+                });
 
-            potential_actions.push(Action {
-                name: "chop tree".to_string(),
-                cons: vec!(
-                    Consideration::new(
-                        "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1.0, 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 1.0 
-                        }
+                potential_actions.push(Action {
+                    name: "chop tree".to_string(),
+                    cons: vec!(
+                        Consideration::new(
+                            "Distance".to_string(), 
+                            Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: -1.0, 
+                                k: 1.0, 
+                                c: 1.0, 
+                                b: 1.0 
+                            }
+                        ),
+                        // Consideration::new(
+                        //     "wood in stockpile".to_string(), 
+                        //     Inputs::item_stockpile_count(world, stock, item_type),
+                        //     ConsiderationParam { 
+                        //         t: todo!(), 
+                        //         m: 0.0, 
+                        //         k: 0.0, 
+                        //         c: 0.0, 
+                        //         b: 0.0 
+                        //     }
+                        // )
                     ),
-                    // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
-                    //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
-                    //     }
-                    // )
-                ),
-                priority: 2.0,
-                action: (id, Task::Destroy, Some(Target::from(tree))),
-            });
+                    priority: 2.0,
+                    action: (id, Task::Destroy, Some(Target::from(tree))),
+                });
+            }
         }
 
         // for each wood found
         for log in logs {
-            potential_actions.push(Action {
-                name: "pick up wood".to_string(),
-                cons: vec!(
-                    Consideration::new(
-                        "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(log)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1.0, 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 0.0 
-                        }
+            if has_inventory_space {
+                potential_actions.push(Action {
+                    name: "pick up wood".to_string(),
+                    cons: vec!(
+                        Consideration::new(
+                            "Distance".to_string(), 
+                            Inputs::distance(world, res, Target::from(pos), Target::from(log)),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: -1.0 / 100.0, 
+                                k: 1.0, 
+                                c: 1.0, 
+                                b: 0.0 
+                            }
+                        ),
+                        // Consideration::new(
+                        //     "wood in stockpile".to_string(), 
+                        //     Inputs::item_stockpile_count(world, stock, item_type),
+                        //     ConsiderationParam { 
+                        //         t: todo!(), 
+                        //         m: 0.0, 
+                        //         k: 0.0, 
+                        //         c: 0.0, 
+                        //         b: 0.0 
+                        //     }
+                        // )
                     ),
-                    // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
-                    //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
-                    //     }
-                    // )
-                ),
-                priority: 1.0,
-                action: (id, Task::PickUpItem, Some(Target::from(log))),
-            });
+                    priority: 1.0,
+                    action: (id, Task::PickUpItem, Some(Target::from(log))),
+                });
+            }
         }
 
         // if wood in inventory
-        // potential_actions.push(Action {
-        //     name: "deliver wood".to_string(),
-        //     cons: vec!(
-        //         Consideration::new(
-        //             "Distance".to_string(), 
-        //             Inputs::distance(world, f, t),
-        //             ConsiderationParam { 
-        //                 t: todo!(), 
-        //                 m: 0.0, 
-        //                 k: 0.0, 
-        //                 c: 0.0, 
-        //                 b: 0.0 
-        //             }
-        //         ),
-        //         Consideration::new(
-        //             "wood in stockpile".to_string(), 
-        //             Inputs::item_stockpile_count(world, stock, item_type),
-        //             ConsiderationParam { 
-        //                 t: todo!(), 
-        //                 m: 0.0, 
-        //                 k: 0.0, 
-        //                 c: 0.0, 
-        //                 b: 0.0 
-        //             }
-        //         )
-        //     ),
-        //     priority: 1.0,
-        // });
+        // for each LumberMill
+        for lm in lumber_mills {
+            if logs_in_inv > 3 {
+                potential_actions.push(Action {
+                    name: "deliver logs".to_string(),
+                    cons: vec!(
+                        Consideration::new(
+                            "Distance".to_string(), 
+                            Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: 0.0, 
+                                k: 0.0, 
+                                c: 0.0, 
+                                b: 0.0 
+                            }
+                        ),
+                        Consideration::new(
+                            "logs in stockpile".to_string(), 
+                            Inputs::inventory_count(world, lm, ItemType::Log),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: 0.0, 
+                                k: 0.0, 
+                                c: 0.0, 
+                                b: 0.0 
+                            }
+                        ),
+                        Consideration::new(
+                            "logs in iventory".to_string(), 
+                            Inputs::inventory_count(world, id, ItemType::Log),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: 0.0, 
+                                k: 0.0, 
+                                c: 0.0, 
+                                b: 0.0 
+                            }
+                        )
+                    ),
+                    priority: 1.0,
+                    action: (id, Task::MoveTo, Some(Target::from(lm))),
+                });
+            }
+        }
 
         // wander action
         potential_actions.push(Action {

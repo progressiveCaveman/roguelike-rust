@@ -184,7 +184,6 @@ pub struct InBackpack {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ItemType {
-    Tree,
     Log,
     Shield,
     Weapon,

@@ -498,7 +498,8 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
         Name {name: "lumber_mill".to_string()},
         Flammable {},
         LumberMill {},
-        BlocksTile {}
+        BlocksTile {},
+        Inventory { capacity: 50, items: Vec::new() }
     ))
 }
 

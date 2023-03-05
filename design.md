@@ -13,7 +13,7 @@ Add debugging game modes, for example arena with controls to spawn monsters, ite
 Make all system functions start with `run`
 Make run_systems check run state before calling thing
 rename all systems to start with `system`
-Modify autoexplore to take an arbitrary enttity
+Modify autoexplore to take an arbitrary entity
 Add a global range fireball button for sim mode
 
 # PNW thing notes

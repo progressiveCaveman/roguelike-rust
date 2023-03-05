@@ -7,7 +7,7 @@ use rltk::{Rltk, GameState, RltkBuilder, Point};
 use hecs::*;
 use resources::Resources;
 
-mod inventory_system;
+mod item_system;
 
 pub mod ai;
 
@@ -44,7 +44,7 @@ pub mod effects;
 use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, InBackpack, Player, Viewshed, Equipped, WantsToUnequipItem};
 use map::Map;
 use gamelog::GameLog;
-use inventory_system::{drop_item, item_use, unequip_item};
+use item_system::{drop_item, item_use, unequip_item};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
@@ -104,7 +104,7 @@ impl State {
         villager_ai_system::villager_ai(self);
         map_indexing_system::map_indexing(&mut self.world, &mut self.resources);
         melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
-        inventory_system::inventory(&mut self.world, &mut self.resources);
+        item_system::inventory(&mut self.world, &mut self.resources);
         dissasemble_system::run_dissasemble_system(self);
         drop_item(&mut self.world, &mut self.resources);
         unequip_item(&mut self.world, &mut self.resources);

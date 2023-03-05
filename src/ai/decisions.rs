@@ -2,7 +2,7 @@ use hecs::{Entity, World};
 use resources::Resources;
 use rltk::{Point, BaseMap};
 
-use crate::{map::Map, components::Position};
+use crate::{map::Map, components::{Position, ItemType, Inventory, Item}};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Task {
@@ -193,14 +193,31 @@ impl Inputs {
         map.get_pathing_distance(idx1, idx2)
     }
 
-    pub fn item_stockpile_count(world: &World, res: &Resources, stock: Target, item_type: Target) -> f32 {
-        // tood fix item type
+    pub fn inventory_count(world: &World, holder: Entity, item_type: ItemType) -> f32 {
+        let mut to_count_type: Vec<Entity> = vec![];
+        if let Ok(mut inv) = world.get_mut::<Inventory>(holder) {
+            to_count_type.append(&mut inv.items);
+        }
+
+        let mut count = 0;
+        for e in to_count_type {
+            if let Ok(item) = world.get::<Item>(e) {
+                if item.typ == item_type {
+                    count += 1;
+                }
+            }
+        }
+
+        return count as f32;
+    }
+
+    pub fn has_item(world: &World, res: &Resources, f: Target, item_type: ItemType) -> f32 {
         0.
     }
 
-    pub fn has_item(world: &World, res: &Resources, f: Target, item_type: Target) -> f32 {
-        0.
-    }
+    // pub fn has_inventory_space(world: &World, res: &Resources, ) -> f32 {
+
+    // }
 }
 
 
