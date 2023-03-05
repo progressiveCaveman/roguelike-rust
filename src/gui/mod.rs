@@ -2,10 +2,9 @@ use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
 use hecs::*;
 use resources::*;
 use crate::player::get_player_map_knowledge;
-use crate::{WINDOWWIDTH, GameMode, State};
+use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire};
 use crate::gamelog::GameLog;
-use crate::map::{OFFSET_Y};
 use crate::map::Map;
 
 pub mod camera;
@@ -24,6 +23,9 @@ Glyph color is modified by some statuses?
  */
 
 // https://dwarffortresswiki.org/index.php/Character_table
+
+pub const OFFSET_X: usize = 21;
+pub const OFFSET_Y: usize = 11;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum ItemMenuResult {Cancel, NoResponse, Selected}
@@ -60,7 +62,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     let turn = res.get::<i32>().unwrap();
 
     // horizontal line
-    ctx.print_color(0, 10, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
+    ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
 
     // player stats
     ctx.print_color(0, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
@@ -77,10 +79,9 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
         Err(_) => {},
     }
 
-    for y in 0..10 {
-        ctx.print_color(20, y, Palette::MAIN_FG, Palette::MAIN_BG, "│");
+    for y in 0..WINDOWHEIGHT {
+        ctx.print_color(OFFSET_X - 1, y, Palette::MAIN_FG, Palette::MAIN_BG, "│");
     }
-    ctx.print_color(20, 10, Palette::MAIN_FG, Palette::MAIN_BG, "┴");
 
     // message log
     let log = res.get::<GameLog>().unwrap();
@@ -171,7 +172,7 @@ pub fn ranged_target(world: &mut World, res: &mut Resources, ctx: &mut Rltk, ran
             for pt in player_vs.visible_tiles.iter() {
                 let dist = rltk::DistanceAlg::Pythagoras.distance2d(player_pos, *pt);
                 if dist as i32 <= range {
-                    let screen_x = pt.x - min_x;
+                    let screen_x = pt.x - min_x + OFFSET_X as i32;
                     let screen_y = pt.y - min_y + OFFSET_Y as i32; // TODO why is offset needed here??
                     if screen_x > 1 && screen_x < (max_x - min_x)-1 && screen_y > 1 && screen_y < (max_y - min_y)-1 {
                         ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));

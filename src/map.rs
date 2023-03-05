@@ -5,13 +5,12 @@ use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
 
 use crate::components::{Position, Faction};
+use crate::gui::{OFFSET_X, OFFSET_Y};
 use crate::{State};
 
 use crate::{MAPWIDTH, MAPHEIGHT};
 
 pub const MAPCOUNT: usize = MAPWIDTH * MAPHEIGHT;
-pub const OFFSET_X: usize = 0;
-pub const OFFSET_Y: usize = 11;
 
 #[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum TileType {
