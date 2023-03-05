@@ -169,28 +169,38 @@ impl Inputs {
         let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
         
         let idx1 = match f {
-            Target::LOCATION(l) => map.xy_idx(l.x, l.y),
+            Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
             Target::ENTITY(e) => {
                 if let Ok(p) = world.get::<Position>(e){
-                    map.xy_idx(p.ps[0].x, p.ps[0].y)
+                    p.idxes(map)
                 }else{
-                    0
+                    vec!(0)
                 }
             },
         };
 
         let idx2 = match t {
-            Target::LOCATION(l) => map.xy_idx(l.x, l.y),
+            Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
             Target::ENTITY(e) => {
                 if let Ok(p) = world.get::<Position>(e){
-                    map.xy_idx(p.ps[0].x, p.ps[0].y)
+                    p.idxes(map)
                 }else{
-                    0
+                    vec!(0)
                 }
             },
         };
 
-        map.get_pathing_distance(idx1, idx2)
+        let mut min = f32::MAX;
+        for i1 in idx1.iter() {
+            for i2 in idx2.iter() {
+                let dist = map.get_pathing_distance(*i1, *i2);
+                if dist < min {
+                    min = dist;
+                }
+            }
+        }
+
+        min
     }
 
     pub fn inventory_count(world: &World, holder: Entity, item_type: ItemType) -> f32 {

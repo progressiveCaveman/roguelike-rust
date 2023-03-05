@@ -143,6 +143,21 @@ pub struct Inventory {
     pub items: Vec<Entity>
 }
 
+impl Inventory {
+    pub fn count_type(&self, world: &World, item_type: ItemType) -> i32 {
+        let mut count = 0;
+        for e in self.items.iter() {
+            if let Ok(item) = world.get::<Item>(*e) {
+                if item.typ == item_type {
+                    count += 1;
+                }
+            }
+        }
+
+        return count;
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpatialKnowledge {
     pub tiles: HashMap<usize, (TileType, Vec<Entity>)>,

@@ -242,7 +242,7 @@ fn update_decisions(gs: &mut State) {
         for lm in lumber_mills {
             if logs_in_inv > 0 {
                 potential_actions.push(Action {
-                    name: "deliver logs".to_string(),
+                    name: "move to lumber mill".to_string(),
                     cons: vec!(
                         Consideration::new(
                             "Distance".to_string(), 
@@ -268,7 +268,7 @@ fn update_decisions(gs: &mut State) {
                         ),
                         Consideration::new(
                             "logs in iventory".to_string(), 
-                            Inputs::inventory_count(world, id, ItemType::Log),
+                            inv.count_type(world, ItemType::Log) as f32,
                             ConsiderationParam { 
                                 t: ResponseCurveType::Linear, 
                                 m: 1. / 5.0, 
@@ -281,6 +281,48 @@ fn update_decisions(gs: &mut State) {
                     priority: 1.0,
                     action: (id, Task::MoveTo, Some(Target::from(lm))),
                 });
+
+                potential_actions.push(Action {
+                    name: "deposit logs at lumber mill".to_string(),
+                    cons: vec!(
+                        Consideration::new(
+                            "Distance".to_string(), 
+                            Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: -1.0, 
+                                k: 1.0, 
+                                c: 1.0, 
+                                b: 0.0 
+                            }
+                        ),
+                        Consideration::new(
+                            "logs in stockpile".to_string(), 
+                            Inputs::inventory_count(world, lm, ItemType::Log),
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: -1. / 50.0, 
+                                k: 1.0, 
+                                c: 0.0, 
+                                b: 1.0 
+                            }
+                        ),
+                        Consideration::new(
+                            "logs in iventory".to_string(), 
+                            inv.count_type(world, ItemType::Log) as f32,
+                            ConsiderationParam { 
+                                t: ResponseCurveType::Linear, 
+                                m: 1. / 5.0, 
+                                k: 1.0, 
+                                c: 0.0, 
+                                b: 0.0 
+                            }
+                        )
+                    ),
+                    priority: 2.0,
+                    action: (id, Task::DepositItem, Some(Target::from(lm))),
+                });
+
             }
         }
 
