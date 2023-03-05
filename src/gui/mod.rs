@@ -3,7 +3,7 @@ use hecs::*;
 use resources::*;
 use crate::player::get_player_map_knowledge;
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
-use crate::components::{CombatStats, Name, Position, Viewshed, Fire};
+use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::gamelog::GameLog;
 use crate::map::Map;
 
@@ -24,7 +24,7 @@ Glyph color is modified by some statuses?
 
 // https://dwarffortresswiki.org/index.php/Character_table
 
-pub const OFFSET_X: usize = 21;
+pub const OFFSET_X: usize = 31;
 pub const OFFSET_Y: usize = 11;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -65,16 +65,16 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
 
     // player stats
-    ctx.print_color(0, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
-    ctx.print_color(0, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {}", *turn));
-    ctx.print_color(0, 9, Palette::MAIN_FG, Palette::MAIN_BG, format!("Depth: {}", map.depth));
+    ctx.print_color(1, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
+    ctx.print_color(1, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {}", *turn));
+    ctx.print_color(1, 9, Palette::MAIN_FG, Palette::MAIN_BG, format!("Depth: {}", map.depth));
 
 
     // On fire display
     let fire = world.get::<Fire>(*player_id);
     match fire {
         Ok(_) => {
-            ctx.print_color(0, 2, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE"); 
+            ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE"); 
         },
         Err(_) => {},
     }
@@ -88,7 +88,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     let mut y = 1;
     for m in log.messages.iter().rev() {
         if y < 9 {
-            ctx.print_color(21, y, Palette::MAIN_FG, Palette::MAIN_BG, m);
+            ctx.print_color(OFFSET_X + 1, y, Palette::MAIN_FG, Palette::MAIN_BG, m);
         }
         y += 1;
     }
@@ -121,44 +121,89 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     if map_mouse_pos.0 >= map.width-1 || map_mouse_pos.1 >= map.height-1 || map_mouse_pos.0 < 1 || map_mouse_pos.1 < 1 { return; }
     
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if gamemode != GameMode::Sim && get_player_map_knowledge(gs).contains_key(&idx) { return; }
+    if gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
-    let mut tooltip: Vec<String> = Vec::new();
+    let mut ypos = OFFSET_Y + 2;
+    let mut xpos: usize = 1;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
-    for (_id, (name, pos)) in world.query::<(&Name, &Position)>().iter() {
-        for pos in pos.ps.iter() {
-            if pos.x == map_mouse_pos.0 && pos.y == map_mouse_pos.1 {
-                tooltip.push(name.name.to_string());
+    ypos += 1;
+    ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", map.tiles[idx]));
+
+    ypos += 2;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Entities:");
+    
+    for e in map.tile_content[idx].iter() {
+        if let Ok(name) = world.get::<Name>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Name: {}", name.name));
+        }
+
+        if let Ok(stats) = world.get::<CombatStats>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("HP: {}/{}", stats.hp, stats.max_hp));
+        }
+
+        if let Ok(inv) = world.get::<Inventory>(*e) {
+            if inv.items.len() > 0 {
+                ypos += 1;
+                ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Inventory:"));
+    
+                for item in inv.items.iter() {
+                    if let Ok(name) = world.get::<Name>(*item) {
+                        ypos += 1;
+                        ctx.print_color(3, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{}", name.name));    
+                    }
+                }
             }
         }
+
+        ypos += 1;
     }
 
-    if !tooltip.is_empty() {
-        let mut width: i32 = 0;
-        for s in tooltip.iter() {
-            if width < s.len() as i32 { width = s.len() as i32; }
-        }
-        width += 3;
 
-        let mut sign = 1;
-        let mut arrow_pos = Point::new(mouse_pos.0 + 1, mouse_pos.1);
-        let mut left_x = mouse_pos.0 + 4;
-        let mut y = mouse_pos.1;
-        if mouse_pos.0 > map.width / 2 {
-            sign = -1;
-            arrow_pos = Point::new(mouse_pos.0 - 2, mouse_pos.1);
-            left_x = mouse_pos.0 - width;
-        }
+    // let mut tooltip: Vec<String> = Vec::new();
 
-        if sign == -1 {ctx.fill_region(rltk::Rect{x1: left_x, x2: left_x - 3 + width, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
-        else {ctx.fill_region(rltk::Rect{x1: left_x - 1, x2: left_x + width - 4, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
+    // for e in map.tile_content[idx].iter() {
+    //     if let Ok(name) = world.get::<Name>(*e) {
+    //         tooltip.push(name.name.to_string());
+    //     }
+    // }
 
-        for s in tooltip.iter() {
-            ctx.print_color(left_x, y, Palette::MAIN_FG, Palette::COLOR_3, s);
-            y += 1;
-        }
-        ctx.print_color(arrow_pos.x, arrow_pos.y, Palette::MAIN_FG, Palette::COLOR_3, "->");
-    }
+    // // for (_id, (name, pos)) in world.query::<(&Name, &Position)>().iter() {
+    // //     for pos in pos.ps.iter() {
+    // //         if pos.x == map_mouse_pos.0 && pos.y == map_mouse_pos.1 {
+    // //             tooltip.push(name.name.to_string());
+    // //         }
+    // //     }
+    // // }
+
+    // if !tooltip.is_empty() {
+    //     let mut width: i32 = 0;
+    //     for s in tooltip.iter() {
+    //         if width < s.len() as i32 { width = s.len() as i32; }
+    //     }
+    //     width += 3;
+
+    //     let mut sign = 1;
+    //     let mut arrow_pos = Point::new(mouse_pos.0 + 1, mouse_pos.1);
+    //     let mut left_x = mouse_pos.0 + 4;
+    //     let mut y = mouse_pos.1;
+    //     if mouse_pos.0 > map.width / 2 {
+    //         sign = -1;
+    //         arrow_pos = Point::new(mouse_pos.0 - 2, mouse_pos.1);
+    //         left_x = mouse_pos.0 - width;
+    //     }
+
+    //     if sign == -1 {ctx.fill_region(rltk::Rect{x1: left_x, x2: left_x - 3 + width, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
+    //     else {ctx.fill_region(rltk::Rect{x1: left_x - 1, x2: left_x + width - 4, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
+
+    //     for s in tooltip.iter() {
+    //         ctx.print_color(left_x, y, Palette::MAIN_FG, Palette::COLOR_3, s);
+    //         y += 1;
+    //     }
+    //     ctx.print_color(arrow_pos.x, arrow_pos.y, Palette::MAIN_FG, Palette::COLOR_3, "->");
+    // }
 }
 
 pub fn ranged_target(world: &mut World, res: &mut Resources, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {

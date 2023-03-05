@@ -358,7 +358,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
             order: RenderOrder::Items,
             ..Default::default()
         },
-        Name {name: "Logs".to_string()},
+        Name {name: "Log".to_string()},
         Item {typ: ItemType::Log},
         Flammable {}
     ))

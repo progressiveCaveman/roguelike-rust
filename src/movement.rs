@@ -135,7 +135,7 @@ pub fn autoexplore(gs: &mut State, entity: Entity){
 
         entity_point = e_pos.any_point();
         let starts: Vec<usize> = e_pos.idxes(map);
-        dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, map, 200.0);
+        dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, map, 800.0);
         for (i, tile) in map.tiles.iter().enumerate() {
             if *tile != TileType::Wall && !e_space.tiles.contains_key(&i) {
                 let distance_to_start = dijkstra_map.map[i];
