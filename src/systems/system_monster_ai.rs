@@ -3,7 +3,7 @@ use rltk;
 use rltk::Point;
 use crate::State;
 use crate::gui::Palette;
-use crate::{RunState, systems::system_particle::ParticleBuilder};
+use crate::{systems::system_particle::ParticleBuilder};
 use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, WantsToPickupItem};
 use crate::map::Map;
 use crate::movement::try_move_entity;
@@ -20,11 +20,7 @@ pub fn run_monster_ai_system(gs: &mut State) {
     let res = &mut gs.resources;
 
 
-    {    
-        // Check if it is the monsters turn
-        let runstate: &RunState = &res.get::<RunState>().unwrap();
-        if *runstate != RunState::AiTurn { return; }
-        
+    {
         let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
         let ppos: &Point = &res.get::<Point>().unwrap();
         let mut particle_builder = res.get_mut::<ParticleBuilder>().unwrap();

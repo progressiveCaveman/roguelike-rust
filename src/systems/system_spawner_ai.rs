@@ -1,13 +1,10 @@
 use hecs::*;
 use resources::Resources;
 use rltk::Point;
-use crate::{entity_factory, RunState};
+use crate::{entity_factory};
 use crate::components::{Position, Spawner, Faction};
 
-pub fn run_spawner_system(world: &mut World, res: &mut Resources) {
-    let runstate: &RunState = &res.get::<RunState>().unwrap();
-    if *runstate != RunState::AiTurn { return; }
-    
+pub fn run_spawner_system(world: &mut World, res: &mut Resources) {    
     // let mut log = res.get_mut::<GameLog>().unwrap();
     let turn = res.get::<i32>().unwrap();
 

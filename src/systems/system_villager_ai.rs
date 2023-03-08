@@ -7,12 +7,6 @@ use crate::{RunState};
 use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType, LumberMill};
 
 pub fn run_villager_ai_system(gs: &mut State) {
-
-    {
-        let res = &mut gs.resources;
-        let runstate: &RunState = &res.get::<RunState>().unwrap();
-        if *runstate != RunState::AiTurn { return; }
-    }
     
     update_decisions(gs);
 
