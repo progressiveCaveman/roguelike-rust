@@ -2,7 +2,7 @@ use hecs::*;
 use resources::*;
 use crate::effects::add_effect;
 use crate::gui::Palette;
-use crate::{components::Position, gamelog::GameLog, systems::particle_system::ParticleBuilder};
+use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
 use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Consumable, DealsDamage, AreaOfEffect, Confusion, Equippable, Equipped, InBackpack, Fire, Inventory};
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};

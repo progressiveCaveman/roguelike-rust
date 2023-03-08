@@ -30,14 +30,14 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::{cleanup_system, villager_ai_system, dissasemble_system};
-use systems::fire_system;
-use systems::map_indexing_system;
-use systems::melee_combat_system;
-use systems::monster_ai_system;
-use systems::particle_system;
-use systems::visibility_system;
-use systems::spawner_ai;
+use systems::{system_cleanup, system_villager_ai, system_dissasemble};
+use systems::system_fire;
+use systems::system_map_indexing;
+use systems::system_melee_combat;
+use systems::system_monster_ai;
+use systems::system_particle;
+use systems::system_visibility;
+use systems::system_spawner_ai;
 
 pub mod effects;
 
@@ -97,20 +97,20 @@ pub struct State {
 
 impl State {
     fn run_systems(&mut self) {
-        fire_system::fire(&mut self.world, &mut self.resources);
-        visibility_system::visibility(&mut self.world, &mut self.resources);
-        spawner_ai::run(&mut self.world, &mut self.resources);
-        monster_ai_system::monster_ai(self);
-        villager_ai_system::villager_ai(self);
-        map_indexing_system::map_indexing(&mut self.world, &mut self.resources);
-        melee_combat_system::melee_combat(&mut self.world, &mut self.resources);
+        system_fire::fire(&mut self.world, &mut self.resources);
+        system_visibility::visibility(&mut self.world, &mut self.resources);
+        system_spawner_ai::run(&mut self.world, &mut self.resources);
+        system_monster_ai::monster_ai(self);
+        system_villager_ai::villager_ai(self);
+        system_map_indexing::map_indexing(&mut self.world, &mut self.resources);
+        system_melee_combat::melee_combat(&mut self.world, &mut self.resources);
         item_system::inventory(&mut self.world, &mut self.resources);
-        dissasemble_system::run_dissasemble_system(self);
+        system_dissasemble::run_dissasemble_system(self);
         system_drop_item(&mut self.world, &mut self.resources);
         unequip_item(&mut self.world, &mut self.resources);
         item_use(&mut self.world, &mut self.resources);
         effects::run_effects_queue(&mut self.world, &mut self.resources);
-        particle_system::spawn_particles(&mut self.world, &mut self.resources);
+        system_particle::spawn_particles(&mut self.world, &mut self.resources);
     }
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<Entity> {
@@ -227,7 +227,7 @@ impl GameState for State {
         ctx.set_active_console(0);
         ctx.cls();
         
-        particle_system::update_particles(&mut self.world, &mut self.resources, ctx);
+        system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 
         let mut new_runstate: RunState = *self.resources.get::<RunState>().unwrap();
 
@@ -418,7 +418,7 @@ impl GameState for State {
 
         self.resources.insert::<RunState>(new_runstate).unwrap();
 
-        cleanup_system::delete_the_dead(&mut self.world, &mut self.resources);
+        system_cleanup::delete_the_dead(&mut self.world, &mut self.resources);
     }
 }
 
@@ -457,7 +457,7 @@ fn main() -> rltk::BError {
     gs.resources.insert(GameMode::NotSelected);
     gs.resources.insert(RunState::MainMenu{menu_selection: gui_menus::MainMenuSelection::Roguelike});
     gs.resources.insert(gamelog::GameLog{messages: vec!["Welcome to the roguelike!".to_string()]});
-    gs.resources.insert(particle_system::ParticleBuilder::new());
+    gs.resources.insert(system_particle::ParticleBuilder::new());
 
     rltk::main_loop(context, gs)
 }

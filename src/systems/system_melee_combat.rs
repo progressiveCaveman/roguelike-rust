@@ -1,6 +1,6 @@
 use hecs::*;
 use resources::*;
-use crate::{components::{CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBonus, Name, Position, WantsToAttack}, systems::particle_system::ParticleBuilder, effects::add_effect, gui::Palette};
+use crate::{components::{CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBonus, Name, Position, WantsToAttack}, systems::system_particle::ParticleBuilder, effects::add_effect, gui::Palette};
 use crate::gamelog::GameLog;
 use crate::effects::{EffectType, Targets};
 

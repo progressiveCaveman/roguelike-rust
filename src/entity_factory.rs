@@ -10,7 +10,7 @@ use crate::rect::Rect;
 use crate::weighted_table::WeightedTable;
 use crate::map::{Map, TileType};
 use crate::MAPWIDTH;
-use crate::systems::fire_system::NEW_FIRE_TURNS;
+use crate::systems::system_fire::NEW_FIRE_TURNS;
 
 const MAX_MONSTERS: i32 = 4;
 

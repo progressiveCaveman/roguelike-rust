@@ -1,11 +1,11 @@
-mod drop_item_system;
-pub use drop_item_system::system_drop_item;
+mod system_drop_item;
+pub use system_drop_item::system_drop_item;
 
-mod item_use_system;
-pub use item_use_system::item_use;
+mod system_item_use;
+pub use system_item_use::item_use;
 
-mod unequip_item_system;
-pub use unequip_item_system::unequip_item;
+mod system_unequip_item;
+pub use system_unequip_item::unequip_item;
 
 use hecs::*;
 use resources::*;
@@ -44,7 +44,7 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
     for (id, intent) in to_deposit.iter() {
         if let Target::ENTITY(item) = intent.target[0] {
             if let Target::ENTITY(target) = intent.target[1] {
-                drop_item_system::drop_item(world, id, &item);
+                system_drop_item::drop_item(world, id, &item);
                 pick_up(world, res, &target, item);
             }   
         }

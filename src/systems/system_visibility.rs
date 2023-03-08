@@ -10,7 +10,7 @@ pub fn visibility(world: &mut World, res: &mut Resources) {
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
     for (_id, (pos, vs, space)) in world.query_mut::<(&Position, &mut Viewshed, Option<&mut SpatialKnowledge>)>() {
-        if vs.dirty {
+        // if vs.dirty {
             let pos = pos.ps.first().unwrap();
 
             vs.dirty = false;
@@ -23,6 +23,6 @@ pub fn visibility(world: &mut World, res: &mut Resources) {
                     space.tiles.insert(idx, (map.tiles[idx], map.tile_content[idx].clone()));
                 }
             }
-        }
+        // }
     }
 }
