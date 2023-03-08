@@ -66,6 +66,3 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
         },
     }
 }
-
-// pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
-// }

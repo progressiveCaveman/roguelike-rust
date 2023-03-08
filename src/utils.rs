@@ -4,7 +4,10 @@ use crate::map::Map;
 
 /// returns the point adjacent to origin that will lead to target
 pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, mut target: usize) -> usize{
+    dbg!("dijkstra_backtrace");
     for _ in 0..1000 {
+        dbg!("How many times does this run?");
+
         let neighbor_indices = map.get_available_exits(target);
 
         for &i in neighbor_indices.iter() {

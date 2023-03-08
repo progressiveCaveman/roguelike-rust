@@ -25,11 +25,8 @@ pub enum Task {
 pub struct Intent {
     pub task: Task,
     pub target: Vec<Target>,
-    // action_score: f32,
     pub turn: i32, // turn this intent originated
 }
-
-////////////////////////////////////////////////////
 
 pub struct AI {
 }

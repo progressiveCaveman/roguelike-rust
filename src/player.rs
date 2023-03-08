@@ -89,7 +89,6 @@ pub fn skip_turn(world: &mut World, res: &mut Resources) -> RunState {
     let mut stats = world.get_mut::<CombatStats>(*player_id).unwrap();
 
     // regen player if not on fire
-    // let fire = world.get_mut::<Fire>(*player_id);
     match world.get_mut::<Fire>(*player_id) {
         Ok(_) => {},
         Err(_) => stats.hp = i32::min(stats.hp + stats.regen_rate, stats.max_hp),

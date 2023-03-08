@@ -124,7 +124,6 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     if gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
     let mut ypos = OFFSET_Y + 2;
-    let mut xpos: usize = 1;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
     ypos += 1;

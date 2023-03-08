@@ -28,13 +28,13 @@ Basic loop: Start with 10 houses + villagers, chief's cabin, lumber mill, fishin
 Implementation
 - [x] Multi-tile entities
 - Z-levels, ground entities, water entities, air entities?, 
-- More levels of intent. Designation entites, goal components for AI, knowledge components for AI and player
+- [x] More levels of intent. Designation entites, goal components for AI, knowledge components for AI and player
 - Group pathfinding and possible optimizations
 - History simulation for testing and generation
 - Challenging UI paradigms - maybe look to cogmind for inspiration
 
 - Starting simulation steps: 
-Generate fully built village in static map.
+[x] Generate fully built village in static map.
 Make AI that fishes, cleans, chops wood, collects shells, and sacrifices excess recourses (holds potlatches) to get points. 
 Add more advanced controls and UI for zoom, look, time control, etc. 
 Diversify resources enough to make trade necessary, add berries to deforested areas, different fish types, diet indicator that tells you if you're not getting enough fat or protein?, general component of health on people used for growth multiplier. (Use culture video at this point to add ecological detail)
