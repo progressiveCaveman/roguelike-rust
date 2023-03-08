@@ -240,7 +240,6 @@ impl Inputs {
     }
 }
 
-
 /*
 Use:
     let t = Target::from(point);
@@ -284,7 +283,6 @@ impl Target {
         }
     }
 }
-
 
 pub fn average(numbers: &[f32]) -> f32 {
     let sum: f32 = numbers.iter().sum();
