@@ -3,8 +3,7 @@ use resources::Resources;
 use crate::map::Map;
 use crate::components::{BlocksTile, Position};
 
-
-pub fn map_indexing(world: &mut World, res: &mut Resources) {
+pub fn run_map_indexing_system(world: &mut World, res: &mut Resources) {
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
     map.set_blocked();

@@ -1,11 +1,11 @@
 mod system_drop_item;
-pub use system_drop_item::system_drop_item;
+pub use system_drop_item::run_drop_item_system;
 
 mod system_item_use;
-pub use system_item_use::item_use;
+pub use system_item_use::run_item_use_system;
 
 mod system_unequip_item;
-pub use system_unequip_item::unequip_item;
+pub use system_unequip_item::run_unequip_item_system;
 
 use hecs::*;
 use resources::*;

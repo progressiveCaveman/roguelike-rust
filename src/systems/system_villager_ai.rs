@@ -6,7 +6,7 @@ use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs
 use crate::{RunState};
 use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType, LumberMill};
 
-pub fn villager_ai(gs: &mut State) {
+pub fn run_villager_ai_system(gs: &mut State) {
 
     {
         let res = &mut gs.resources;

@@ -9,7 +9,7 @@ use crate::Map;
 
 pub const NEW_FIRE_TURNS: i32 = 10;
 
-pub fn fire(world: &mut World, res: &mut Resources) {
+pub fn run_fire_system(world: &mut World, res: &mut Resources) {
     let runstate: &RunState = &res.get::<RunState>().unwrap();
     if *runstate != RunState::PlayerTurn { return; }
 

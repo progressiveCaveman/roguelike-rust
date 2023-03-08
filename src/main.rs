@@ -30,21 +30,14 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::{system_cleanup, system_villager_ai, system_dissasemble};
-use systems::system_fire;
-use systems::system_map_indexing;
-use systems::system_melee_combat;
-use systems::system_monster_ai;
-use systems::system_particle;
-use systems::system_visibility;
-use systems::system_spawner_ai;
+use systems::{system_cleanup, system_villager_ai, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_monster_ai, system_particle, system_visibility, system_spawner_ai};
 
 pub mod effects;
 
 use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, InBackpack, Player, Viewshed, Equipped, WantsToUnequipItem};
 use map::Map;
 use gamelog::GameLog;
-use item_system::{system_drop_item, item_use, unequip_item};
+use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
@@ -97,18 +90,18 @@ pub struct State {
 
 impl State {
     fn run_systems(&mut self) {
-        system_fire::fire(&mut self.world, &mut self.resources);
-        system_visibility::visibility(&mut self.world, &mut self.resources);
-        system_spawner_ai::run(&mut self.world, &mut self.resources);
-        system_monster_ai::monster_ai(self);
-        system_villager_ai::villager_ai(self);
-        system_map_indexing::map_indexing(&mut self.world, &mut self.resources);
-        system_melee_combat::melee_combat(&mut self.world, &mut self.resources);
+        system_fire::run_fire_system(&mut self.world, &mut self.resources);
+        system_visibility::run_visibility_system(&mut self.world, &mut self.resources);
+        system_spawner_ai::run_spawner_system(&mut self.world, &mut self.resources);
+        system_monster_ai::run_monster_ai_system(self);
+        system_villager_ai::run_villager_ai_system(self);
+        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
+        system_melee_combat::run_melee_combat_system(&mut self.world, &mut self.resources);
         item_system::inventory(&mut self.world, &mut self.resources);
         system_dissasemble::run_dissasemble_system(self);
-        system_drop_item(&mut self.world, &mut self.resources);
-        unequip_item(&mut self.world, &mut self.resources);
-        item_use(&mut self.world, &mut self.resources);
+        run_drop_item_system(&mut self.world, &mut self.resources);
+        run_unequip_item_system(&mut self.world, &mut self.resources);
+        run_item_use_system(&mut self.world, &mut self.resources);
         effects::run_effects_queue(&mut self.world, &mut self.resources);
         system_particle::spawn_particles(&mut self.world, &mut self.resources);
     }
@@ -418,7 +411,7 @@ impl GameState for State {
 
         self.resources.insert::<RunState>(new_runstate).unwrap();
 
-        system_cleanup::delete_the_dead(&mut self.world, &mut self.resources);
+        system_cleanup::run_cleanup_system(&mut self.world, &mut self.resources);
     }
 }
 

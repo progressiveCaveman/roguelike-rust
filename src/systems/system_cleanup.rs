@@ -5,7 +5,7 @@ use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
 use crate::gamelog::GameLog;
 
-pub fn delete_the_dead(world: &mut World, res: &mut Resources) {
+pub fn run_cleanup_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let mut dead: Vec<Entity> = vec![];
     let mut to_drop_items: Vec<(Entity, Point)> = vec![];

@@ -3,7 +3,7 @@ use resources::*;
 
 use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem, Inventory}, gamelog::GameLog};
 
-pub fn unequip_item(world: &mut World, res: &mut Resources) {
+pub fn run_unequip_item_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get_mut::<Entity>().unwrap();
     let mut to_unequip: Vec<(Entity, Entity)> = Vec::new();

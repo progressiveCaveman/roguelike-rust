@@ -7,7 +7,7 @@ use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Cons
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};
 
-pub fn item_use(world: &mut World, res: &mut Resources) {
+pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get::<Entity>().unwrap();
     let map = res.get::<Map>().unwrap();

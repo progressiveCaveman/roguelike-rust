@@ -5,7 +5,7 @@ use crate::components::{Equipped, InBackpack, Name, Position, WantsToDropItem, I
 use crate::gamelog::GameLog;
 use crate::utils::InvalidPoint;
 
-pub fn system_drop_item(world: &mut World, res: &mut Resources) {
+pub fn run_drop_item_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get_mut::<Entity>().unwrap();
     let mut to_drop: Vec<(Entity, Entity)> = Vec::new();

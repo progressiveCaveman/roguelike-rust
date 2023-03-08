@@ -4,7 +4,7 @@ use rltk::Point;
 use crate::{entity_factory, RunState};
 use crate::components::{Position, Spawner, Faction};
 
-pub fn run(world: &mut World, res: &mut Resources) {
+pub fn run_spawner_system(world: &mut World, res: &mut Resources) {
     let runstate: &RunState = &res.get::<RunState>().unwrap();
     if *runstate != RunState::AiTurn { return; }
     

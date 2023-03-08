@@ -5,8 +5,7 @@ use rltk::{Point};
 use crate::map::{Map};
 use crate::components::{Position, Viewshed, SpatialKnowledge};
 
-
-pub fn visibility(world: &mut World, res: &mut Resources) {
+pub fn run_visibility_system(world: &mut World, res: &mut Resources) {
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
     for (_id, (pos, vs, space)) in world.query_mut::<(&Position, &mut Viewshed, Option<&mut SpatialKnowledge>)>() {

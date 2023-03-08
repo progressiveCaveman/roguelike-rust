@@ -4,7 +4,7 @@ use crate::{components::{CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBon
 use crate::gamelog::GameLog;
 use crate::effects::{EffectType, Targets};
 
-pub fn melee_combat(world: &mut World, res: &mut Resources) {
+pub fn run_melee_combat_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let mut particle_builder = res.get_mut::<ParticleBuilder>().unwrap();
 

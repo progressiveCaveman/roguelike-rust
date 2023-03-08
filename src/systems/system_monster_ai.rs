@@ -8,7 +8,7 @@ use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, W
 use crate::map::Map;
 use crate::movement::try_move_entity;
 
-pub fn monster_ai(gs: &mut State) {
+pub fn run_monster_ai_system(gs: &mut State) {
 
     let mut needs_wants_to_attack: Vec<Entity> = Vec::new();
     let mut needs_wants_to_pick_up: Vec<(Entity, Entity)> = Vec::new();
