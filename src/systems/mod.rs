@@ -5,6 +5,7 @@ pub mod system_map_indexing;
 pub mod system_melee_combat;
 pub mod system_monster_ai;
 pub mod system_particle;
+pub mod system_pathfinding;
 pub mod system_spawner_ai;
 pub mod system_villager_ai;
 pub mod system_visibility;

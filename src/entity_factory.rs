@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use hecs::*;
 use resources::*;
-use rltk::{RandomNumberGenerator, Point};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree};
+use rltk::{RandomNumberGenerator, Point, DijkstraMap};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -499,7 +499,8 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
         Flammable {},
         LumberMill {},
         BlocksTile {},
-        Inventory { capacity: 50, items: Vec::new() }
+        Inventory { capacity: 50, items: Vec::new() },
+        DijkstraMapToMe { map: DijkstraMap::new_empty(0, 0, 0.) }
     ))
 }
 

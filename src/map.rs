@@ -68,6 +68,10 @@ impl Map {
     pub fn idx_xy(&self, idx: usize) -> (i32, i32) {
         (idx as i32 % self.width, idx as i32 / self.width)
     }
+    
+    pub fn idx_point(&self, idx: usize) -> Point {
+        Point {x: idx as i32 % self.width, y: idx as i32 / self.width}
+    }
 
     pub fn in_bounds(&self, x: i32, y: i32) -> bool {
         x >= 0 && x < self.width && y >= 0 && y < self.height

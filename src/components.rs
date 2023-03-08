@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 use hecs::*;
-use rltk::{self, Point};
+use rltk::{self, Point, DijkstraMap};
 
 use crate::{RenderOrder, map::{TileType, Map}, utils::InvalidPoint};
 
@@ -161,6 +161,10 @@ impl Inventory {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpatialKnowledge {
     pub tiles: HashMap<usize, (TileType, Vec<Entity>)>,
+}
+
+pub struct DijkstraMapToMe {
+    pub map: DijkstraMap
 }
 
 /// Entity intents

@@ -30,7 +30,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::{system_cleanup, system_villager_ai, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_monster_ai, system_particle, system_visibility, system_spawner_ai};
+use systems::{system_cleanup, system_villager_ai, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_monster_ai, system_particle, system_visibility, system_spawner_ai, system_pathfinding};
 
 pub mod effects;
 
@@ -95,6 +95,7 @@ impl State {
         system_fire::run_fire_system(&mut self.world, &mut self.resources);
         system_visibility::run_visibility_system(&mut self.world, &mut self.resources);
         system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
+        system_pathfinding::run_pathfinding_system(&mut self.world, &mut self.resources);
 
         if runstate == RunState::AiTurn { 
             system_spawner_ai::run_spawner_system(&mut self.world, &mut self.resources);

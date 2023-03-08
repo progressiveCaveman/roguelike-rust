@@ -1,11 +1,11 @@
 use hecs::*;
 use rltk;
-use rltk::Point;
+use rltk::{Point, BaseMap};
 use crate::ai::labors::get_wood_gathering_actions;
+use crate::map::Map;
 use crate::{State, movement};
-use crate::ai::decisions::{Action, Consideration, ConsiderationParam, AI, Inputs, Target, Intent, Task, ResponseCurveType};
-use crate::{RunState};
-use crate::components::{Position, Villager, SpatialKnowledge, Inventory, Tree, Item, ItemType, LumberMill};
+use crate::ai::decisions::{Action, AI, Target, Intent, Task};
+use crate::components::{Position, Villager, SpatialKnowledge, Inventory, DijkstraMapToMe};
 
 pub fn run_villager_ai_system(gs: &mut State) {
     
@@ -17,10 +17,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
     {
         let world = &mut gs.world;
         let res = &mut gs.resources;
-
-        let runstate: &RunState = &res.get::<RunState>().unwrap();
-        if *runstate != RunState::AiTurn { return; }
-
+        let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
         for (id, (_, pos, space, inv, intent)) in world.query::<(&Villager, &mut Position, &mut SpatialKnowledge, &mut Inventory, &mut Intent)>().iter() {
             match intent.task {
@@ -33,7 +30,21 @@ pub fn run_villager_ai_system(gs: &mut State) {
                 Task::MoveTo => {
                     if let Target::ENTITY(target) = intent.target[0] {
                         if let Ok(target_pos) = world.get::<Position>(target) {
-                            to_move_from_to.push((id, pos.ps[0], target_pos.ps[0]));
+                            if let Ok(dijkstra) = world.get::<DijkstraMapToMe>(target) {
+                                let my_idx = map.point_idx(pos.ps[0]);
+                                let neighbor_indices = map.get_available_exits(my_idx);
+
+                                let mut tidx:i32 = -1;
+                                for &i in neighbor_indices.iter() {
+                                    if tidx == -1 || dijkstra.map.map[i.0] < dijkstra.map.map[tidx as usize]{
+                                        tidx = i.0 as i32;
+                                    }
+                                }
+
+                                to_move_from_to.push((id, pos.ps[0], map.idx_point(tidx as usize)));
+                            }else{
+                                to_move_from_to.push((id, pos.ps[0], target_pos.ps[0]));
+                            }
                         }
                     } else if let Target::LOCATION(loc) = intent.target[0] {
                         to_move_from_to.push((id, pos.ps[0], loc));
@@ -86,7 +97,6 @@ fn update_decisions(gs: &mut State) {
     let turn = res.get::<i32>().unwrap();
 
     let mut wants_intent: Vec<(Entity, Intent)> = vec![];
-
 
     for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
 

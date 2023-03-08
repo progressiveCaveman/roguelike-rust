@@ -19,7 +19,6 @@ pub fn run_monster_ai_system(gs: &mut State) {
     let world = &mut gs.world;
     let res = &mut gs.resources;
 
-
     {
         let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
         let ppos: &Point = &res.get::<Point>().unwrap();
