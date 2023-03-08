@@ -19,7 +19,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
         let res = &mut gs.resources;
         let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
-        for (id, (_, pos, space, inv, intent)) in world.query::<(&Villager, &mut Position, &mut SpatialKnowledge, &mut Inventory, &mut Intent)>().iter() {
+        for (id, (_, pos, intent)) in world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
             match intent.task {
                 Task::Fish => todo!(),
                 Task::Explore => {
