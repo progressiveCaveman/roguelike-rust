@@ -7,13 +7,15 @@ pub use system_item_use::run_item_use_system;
 mod system_unequip_item;
 pub use system_unequip_item::run_unequip_item_system;
 
+use rltk::Point;
 use hecs::*;
 use resources::*;
 use crate::ai::decisions::{Intent, Task, Target};
-use crate::components::{WantsToPickupItem, Position, InBackpack, Name, Inventory};
+use crate::components::{WantsToPickupItem, Position, InBackpack, Name, Inventory, Equipped};
 use crate::gamelog::{GameLog};
+use crate::utils::InvalidPoint;
 
-pub fn inventory(world: &mut World, res: &mut Resources) {
+pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     let mut need_in_backpack: Vec<(Entity, WantsToPickupItem)> = Vec::new();
     let mut need_pickup: Vec<(Entity, Intent)> = Vec::new();
     let mut to_deposit: Vec<(Entity, Intent)> = Vec::new();
@@ -44,7 +46,7 @@ pub fn inventory(world: &mut World, res: &mut Resources) {
     for (id, intent) in to_deposit.iter() {
         if let Target::ENTITY(item) = intent.target[0] {
             if let Target::ENTITY(target) = intent.target[1] {
-                system_drop_item::drop_item(world, id, &item);
+                drop_item(world, id, &item);
                 pick_up(world, res, &target, item);
             }   
         }
@@ -70,4 +72,22 @@ fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
     }
 
     let _re = world.remove_one::<WantsToPickupItem>(*id);
+}
+
+pub fn drop_item(world: &mut World, id: &Entity, item: &Entity) {
+    let pos = if let Ok(p) = world.get::<Position>(*id) {
+        p.any_point()
+    }else{
+        Point::invalid_point()
+    };
+
+    if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
+        if let Some(pos) = inv.items.iter().position(|x| *x == *item) {
+            inv.items.remove(pos);
+        }
+    }
+    
+    let _in_bp = world.remove_one::<InBackpack>(*id);
+    let _equipped = world.remove_one::<Equipped>(*id);
+    world.insert_one(*id, Position { ps:vec![pos]}).unwrap();
 }

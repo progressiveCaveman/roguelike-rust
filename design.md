@@ -10,8 +10,6 @@ Figure out why a lot of entities slows things down so much
 Make autorun more responsive to commands
 BIG refactor to make an engine module and move all game-mode-specific stuff outside module
 Add debugging game modes, for example arena with controls to spawn monsters, item room, entity communication testing, etc
-Make all system functions start with `run`
-Make run_systems check run state before calling thing
 Add a global range fireball button for sim mode
 
 # PNW thing notes

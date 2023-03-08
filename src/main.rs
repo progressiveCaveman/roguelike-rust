@@ -103,7 +103,7 @@ impl State {
         }
 
         system_melee_combat::run_melee_combat_system(&mut self.world, &mut self.resources);
-        item_system::inventory(&mut self.world, &mut self.resources);
+        item_system::run_inventory_system(&mut self.world, &mut self.resources);
         system_dissasemble::run_dissasemble_system(self);
         run_drop_item_system(&mut self.world, &mut self.resources);
         run_unequip_item_system(&mut self.world, &mut self.resources);
