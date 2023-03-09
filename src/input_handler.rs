@@ -11,6 +11,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
         GameMode::Sim => {
             let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
 
+            // hold shift to move by 10 squares at a time
             let mut movement_mod = 1;
             if ctx.shift {
                 movement_mod = 10;

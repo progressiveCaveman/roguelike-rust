@@ -57,6 +57,13 @@ fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get::<Entity>().unwrap();
 
+    if let Ok(_) = world.get_mut::<Position>(*id) {
+
+    } else {
+        dbg!("Entity doesn't have a position");
+        return;
+    }
+
     if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
         inv.items.push(item);
     } else {

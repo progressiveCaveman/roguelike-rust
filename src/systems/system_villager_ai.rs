@@ -23,7 +23,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
             match intent.task {
                 Task::Fish => todo!(),
                 Task::Explore => {
-                    println!("Exploring....");
+                    // println!("Exploring....");
                     to_explore.push(id);
                 },
                 Task::ExchangeInfo => todo!(),
