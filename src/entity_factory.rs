@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -137,14 +137,33 @@ pub fn villager(world: &mut World, x: i32, y:i32) -> Entity {
             range: 20,
             dirty: true
         },
-        // Monster {},
         Locomotive {},
         Name {name: "Villager".to_string() },
         BlocksTile {},
-        // CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0},
         Inventory { capacity: 5, items: Vec::new() },
         SpatialKnowledge { tiles: HashMap::new() },
-        Villager { },
+        Villager {},
+    ))
+}
+
+pub fn fish(world: &mut World, x: i32, y:i32) -> Entity {
+    world.spawn((
+        Position {ps: vec![Point{ x, y }]},
+        Renderable {
+            glyph: rltk::to_cp437('f'),
+            fg: Palette::COLOR_AMBER,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::NPC,
+            ..Default::default()
+        },
+        Viewshed {
+            visible_tiles: Vec::new(),
+            range: 2,
+            dirty: true
+        },
+        Locomotive {},
+        Name {name: "Fish".to_string() },
+        Fish {},
     ))
 }
 
@@ -366,7 +385,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
 
 // structures
 
-pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32) -> Entity {    
+pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType, rate: i32) -> Entity {    
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -377,7 +396,7 @@ pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32) -> Entity {
             ..Default::default()
         },
         Name {name: "Spawner".to_string()},
-        Spawner {rate: 10}, // TODO magic number
+        Spawner { typ, rate},
         Faction {faction}
     ))
 }

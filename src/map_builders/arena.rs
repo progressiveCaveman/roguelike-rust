@@ -4,7 +4,7 @@ use hecs::World;
 use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
+use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
 
 use super::{MapBuilder, Map, TileType, Position};
 
@@ -29,8 +29,8 @@ impl MapBuilder for AernaBuilder {
     }
 
     fn spawn_entities(&mut self, world: &mut World, res: &mut Resources) {
-        entity_factory::spawner(world, 4, self.map.height / 2, 0);
-        entity_factory::spawner(world, self.map.width - 5, self.map.height / 2, 1);
+        entity_factory::spawner(world, 4, self.map.height / 2, 0, SpawnerType::Orc, 10);
+        entity_factory::spawner(world, self.map.width - 5, self.map.height / 2, 1, SpawnerType::Orc, 10);
     }
 
     fn get_map_history(&self) -> Vec<Map> {

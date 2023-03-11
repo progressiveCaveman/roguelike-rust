@@ -86,6 +86,9 @@ pub struct Monster {}
 pub struct Villager {}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Fish {}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Faction {
     pub faction: i32
 }
@@ -111,7 +114,14 @@ pub struct FishCleaner {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub enum SpawnerType {
+    Orc,
+    Fish
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Spawner {
+    pub typ: SpawnerType,
     pub rate: i32
 }
 

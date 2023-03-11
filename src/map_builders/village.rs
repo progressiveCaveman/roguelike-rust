@@ -4,7 +4,7 @@ use hecs::World;
 use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
+use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
 
 use super::{MapBuilder, Map, TileType, Position};
 
@@ -39,6 +39,9 @@ impl MapBuilder for VillageBuilder {
                 } 
             }
         }
+
+        entity_factory::spawner(world, 1, self.map.height - 6, 0, SpawnerType::Fish, 1);
+
 
         for i in 1..=10 {
             entity_factory::plank_house(world, 10 * i, self.map.height - 14, 4, 4);

@@ -68,3 +68,5 @@ Give an axis a name field
 
 Modular influence maps
 
+
+Implement some FPAC levels with WFC https://github.com/mxgmn/WaveFunctionCollapse

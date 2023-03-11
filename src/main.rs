@@ -30,7 +30,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use systems::{system_cleanup, system_villager_ai, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_monster_ai, system_particle, system_visibility, system_spawner_ai, system_pathfinding};
+use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
 
@@ -98,9 +98,10 @@ impl State {
 
         if runstate == RunState::AiTurn { 
             system_pathfinding::run_pathfinding_system(&mut self.world, &mut self.resources);
-            system_spawner_ai::run_spawner_system(&mut self.world, &mut self.resources);
-            system_villager_ai::run_villager_ai_system(self);
-            system_monster_ai::run_monster_ai_system(self);   
+            system_ai_spawner::run_spawner_system(&mut self.world, &mut self.resources);
+            system_ai_fish::run_fish_ai(&mut self.world, &mut self.resources);
+            system_ai_villager::run_villager_ai_system(self);
+            system_ai_monster::run_monster_ai_system(self);   
         }
 
         system_melee_combat::run_melee_combat_system(&mut self.world, &mut self.resources);
@@ -217,7 +218,7 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.set_active_console(1);
-        ctx.cls();
+        // ctx.cls();
         let (x, y) = ctx.get_char_size();
         for ix in 0..x{
             for iy in 0..y{
@@ -225,7 +226,7 @@ impl GameState for State {
             }
         }
         ctx.set_active_console(0);
-        ctx.cls();
+        // ctx.cls();
         
         system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 
