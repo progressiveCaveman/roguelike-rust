@@ -74,8 +74,8 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
                     let (glyph, mut fg, mut bg) = get_tile_glyph(idx, &*map);
 
                     if gamemode != GameMode::Sim && !get_player_viewshed(gs).is_visible(p) {
-                        fg.scale(0.5);
-                        bg.scale(0.5);
+                        fg = fg.scaled(0.5);
+                        bg = bg.scaled(0.5);
                     }
 
                     ctx.set(x, y, fg, bg, glyph);
@@ -159,6 +159,8 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
         }
         TileType::Water => {
             fg = Palette::COLOR_WATER;
+            bg = Palette::COLOR_WATER;
+            bg = bg.scaled(0.7);
             glyph = rltk::to_cp437('~');
         }
         TileType::WoodWall => {

@@ -38,14 +38,17 @@ pub fn get_neighbors(point: Point) -> Vec<Point> {
 }
 
 pub trait Scale {
-    fn scale(&mut self, amount: f32);
+    fn scaled(&mut self, amount: f32) -> RGBA;
 }
 
 impl Scale for RGBA {
-    fn scale(&mut self, amount: f32) {
-        self.r *= amount;
-        self.g *= amount;
-        self.b *= amount;
+    fn scaled(&mut self, amount: f32) -> RGBA {
+        RGBA {
+            r: self.r * amount,
+            g: self.g * amount,
+            b: self.b * amount,
+            a: self.a * amount,
+        }
     }
 }
 
