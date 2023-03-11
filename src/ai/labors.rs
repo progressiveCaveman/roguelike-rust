@@ -1,13 +1,15 @@
 use hecs::Entity;
+use rltk::Point;
 
-use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill}};
+use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, self, Map}};
 
-use super::decisions::{Action, Consideration, Inputs, ConsiderationParam, Target, ResponseCurveType, Task};
+use super::decisions::{Action, Consideration, Inputs, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
 
 pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
 
     let world = &gs.world;
     let res = &gs.resources;
+    let turn = res.get::<i32>().unwrap();
 
     let pos = pos.ps[0];
 
@@ -52,7 +54,12 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     for tree in trees{
         if has_inventory_space {
             potential_actions.push(Action {
-                name: "go to tree".to_string(),
+                intent: Intent {
+                    name: "go to tree".to_string(),
+                    task: Task::MoveTo,
+                    target: vec!(Target::from(tree)),
+                    turn: *turn,
+                },
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
@@ -78,11 +85,15 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
                     // )
                 ),
                 priority: 1.0,
-                action: (id, Task::MoveTo, vec!(Target::from(tree))),
             });
 
             potential_actions.push(Action {
-                name: "chop tree".to_string(),
+                intent: Intent {
+                    name: "chop tree".to_string(),
+                    task: Task::Destroy,
+                    target: vec!(Target::from(tree)),
+                    turn: *turn,
+                },
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
@@ -108,7 +119,6 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
                     // )
                 ),
                 priority: 2.0,
-                action: (id, Task::Destroy, vec!(Target::from(tree))),
             });
         }
     }
@@ -117,7 +127,12 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     for log in logs.iter() {
         if has_inventory_space {
             potential_actions.push(Action {
-                name: "pick up wood".to_string(),
+                intent: Intent {
+                    name: "pick up wood".to_string(),
+                    task: Task::PickUpItem,
+                    target: vec!(Target::from(*log)),
+                    turn: *turn,
+                },
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
@@ -143,7 +158,6 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
                     // )
                 ),
                 priority: 1.0,
-                action: (id, Task::PickUpItem, vec!(Target::from(*log))),
             });
         }
     }
@@ -153,7 +167,12 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     for lm in lumber_mills {
         if logs_in_inv > 0 {
             potential_actions.push(Action {
-                name: "move to lumber mill".to_string(),
+                intent: Intent {
+                    name: "move to lumber mill".to_string(),
+                    task: Task::MoveTo,
+                    target: vec!(Target::from(lm)),
+                    turn: *turn,
+                },
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
@@ -190,11 +209,15 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
                     )
                 ),
                 priority: 1.0,
-                action: (id, Task::MoveTo, vec!(Target::from(lm))),
             });
 
             potential_actions.push(Action {
-                name: "deposit logs at lumber mill".to_string(),
+                intent: Intent {
+                    name: "deposit logs at lumber mill".to_string(),
+                    task: Task::DepositItemToInventory,
+                    target: vec!(Target::from(inventory_log), Target::from(lm)),
+                    turn: *turn,
+                },
                 cons: vec!(
                     Consideration::new(
                         "Distance to lm".to_string(), 
@@ -231,7 +254,6 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
                     )
                 ),
                 priority: 2.0,
-                action: (id, Task::DepositItemToInventory, vec!(Target::from(inventory_log), Target::from(lm))),
             });
 
         }
@@ -239,7 +261,12 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
 
     // wander action
     potential_actions.push(Action {
-        name: "wander".to_string(),
+        intent: Intent {
+            name: "wander".to_string(),
+            task: Task::Explore,
+            target: vec!(),
+            turn: *turn,
+        },
         cons: vec!(
             Consideration::new(
                 "baseline".to_string(), 
@@ -248,8 +275,136 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
             ),
         ),
         priority: 1.0,
-        action: (id, Task::Explore, vec![]),
     });
+
+    potential_actions
+}
+
+pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+    let world = &gs.world;
+    let res = &gs.resources;
+    let turn = res.get::<i32>().unwrap();
+
+    let pos = pos.ps[0];
+
+    let has_inventory_space = inv.capacity > inv.items.len() as i32;
+
+    let mut fish_in_inv = 0;
+    let mut inventory_fish: Entity = id; // initialization is messy here but correct as long as logs_in_inv > 0
+    for e in inv.items.iter() {
+        if let Ok(item) = world.get::<Fish>(*e) {
+            fish_in_inv += 1;
+            inventory_fish = *e;
+        }
+    }
+
+    // populate all our info
+    let mut water: Vec<Point> = vec![]; // actually points adjacent to water
+    let mut fisheries: Vec<Entity> = vec![];
+
+    for (idx, (tile, entities)) in space.tiles.iter() {
+        let map = res.get::<Map>().unwrap();
+        if *tile == TileType::Water {
+            // todo actually path to water to test if it should be considered?
+            let mut apoint = map.idx_point(*idx);
+            apoint.y -= 1;
+            let aboveidx = map.point_idx(apoint);
+            if map.tiles[aboveidx] != TileType::Water {
+                water.push(apoint);
+            }
+        }
+
+        for e in entities.iter() {
+            // if let Ok(_) = world.get::<Tree>(*e) {
+            //     trees.push(*e);
+            // }
+            // if let Ok(item) = world.get::<Item>(*e) {
+            //     if item.typ == ItemType::Log {
+            //         logs.push(*e);
+            //     }
+            // }
+            if let Ok(_) = world.get::<FishCleaner>(*e) {
+                if !fisheries.contains(e) { //multitile
+                    fisheries.push(*e);
+                }
+            }
+        }
+    }
+
+    let mut potential_actions:Vec<Action> = vec!();
+
+    // for each water tile found
+    for wp in water{ 
+        if has_inventory_space {
+            potential_actions.push(Action {
+                intent: Intent {
+                    name: "go to water".to_string(),
+                    task: Task::MoveTo,
+                    target: vec!(Target::from(wp)),
+                    turn: *turn,
+                },
+                cons: vec!(
+                    Consideration::new(
+                        "Distance".to_string(), 
+                        Inputs::distance(world, res, Target::from(pos), Target::from(wp)),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: -1.0 / 100.0, 
+                            k: 1.0, 
+                            c: 1.0, 
+                            b: 1.0 
+                        }
+                    ),
+                    // Consideration::new(
+                    //     "wood in stockpile".to_string(), 
+                    //     Inputs::item_stockpile_count(world, stock, item_type),
+                    //     ConsiderationParam { 
+                    //         t: todo!(), 
+                    //         m: 0.0, 
+                    //         k: 0.0, 
+                    //         c: 0.0, 
+                    //         b: 0.0 
+                    //     }
+                    // )
+                ),
+                priority: 1.0,
+            });
+
+            potential_actions.push(Action {
+                intent: Intent {
+                    name: "fish at water".to_string(),
+                    task: Task::Fish,
+                    target: vec!(Target::from(wp)),
+                    turn: *turn,
+                },
+                cons: vec!(
+                    Consideration::new(
+                        "Distance".to_string(), 
+                        Inputs::distance(world, res, Target::from(pos), Target::from(wp)),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::LessThan, 
+                            m: 2., 
+                            k: 1.0, 
+                            c: 1.0, 
+                            b: 1.0 
+                        }
+                    ),
+                    // Consideration::new(
+                    //     "wood in stockpile".to_string(), 
+                    //     Inputs::item_stockpile_count(world, stock, item_type),
+                    //     ConsiderationParam { 
+                    //         t: todo!(), 
+                    //         m: 0.0, 
+                    //         k: 0.0, 
+                    //         c: 0.0, 
+                    //         b: 0.0 
+                    //     }
+                    // )
+                ),
+                priority: 2.0,
+            });
+        }
+    }
 
     potential_actions
 }

@@ -164,6 +164,7 @@ pub fn fish(world: &mut World, x: i32, y:i32) -> Entity {
         Locomotive {},
         Name {name: "Fish".to_string() },
         Fish {},
+        Item { typ: ItemType::Fish }
     ))
 }
 
@@ -436,7 +437,7 @@ pub fn plank_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
             order: RenderOrder::Items,
             ..Default::default()
         },
-        Name {name: "plank_house".to_string()},
+        Name {name: "Plank House".to_string()},
         Flammable {},
         PlankHouse { housing_cap: 5, villagers: vec![] },
         BlocksTile {}
@@ -488,10 +489,12 @@ pub fn fish_cleaner(world: &mut World, x: i32, y: i32, width: i32, height: i32) 
             order: RenderOrder::Items,
             ..Default::default()
         },
-        Name {name: "fish_cleaner".to_string()},
+        Name {name: "Fish Cleaner".to_string()},
         Flammable {},
         FishCleaner {},
-        BlocksTile {}
+        BlocksTile {},
+        Inventory { capacity: 50, items: Vec::new() },
+        DijkstraMapToMe { map: DijkstraMap::new_empty(0, 0, 0.) }
     ))
 }
 
@@ -514,7 +517,7 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
             order: RenderOrder::Items,
             ..Default::default()
         },
-        Name {name: "lumber_mill".to_string()},
+        Name {name: "Lumber Mill".to_string()},
         Flammable {},
         LumberMill {},
         BlocksTile {},

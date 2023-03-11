@@ -53,7 +53,7 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     }
 }
 
-fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
+pub fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let player_id = res.get::<Entity>().unwrap();
 

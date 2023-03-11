@@ -24,6 +24,19 @@ pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, m
     target
 }
 
+pub fn get_neighbors(point: Point) -> Vec<Point> {
+    vec![
+        Point { x: point.x - 1, y: point.y - 1 },
+        Point { x: point.x - 1, y: point.y },
+        Point { x: point.x - 1, y: point.y + 1 },
+        Point { x: point.x, y: point.y - 1 },
+        Point { x: point.x, y: point.y + 1 },
+        Point { x: point.x + 1, y: point.y - 1 },
+        Point { x: point.x + 1, y: point.y },
+        Point { x: point.x + 1, y: point.y + 1},
+    ]
+}
+
 pub trait Scale {
     fn scale(&mut self, amount: f32);
 }

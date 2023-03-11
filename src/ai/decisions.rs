@@ -23,6 +23,7 @@ pub enum Task {
 
 #[derive(Clone, Debug)]
 pub struct Intent {
+    pub name: String,
     pub task: Task,
     pub target: Vec<Target>,
     pub turn: i32, // turn this intent originated
@@ -32,7 +33,7 @@ pub struct AI {
 }
 
 impl AI {
-    pub fn choose_action(actions: Vec<Action>) -> (Entity, Task, Vec<Target>) {
+    pub fn choose_action(actions: Vec<Action>) -> Intent {
         let mut scores: Vec<f32> = vec!();
         let mut best_i = 0;
         let mut best_score = 0.;
@@ -49,17 +50,22 @@ impl AI {
                 best_i = i;
             }
         }
-
-        actions[best_i].action.clone()
+        
+        actions[best_i].intent.clone()
     }
 }
 
 #[derive(Clone, Debug)]
+pub struct ActionDetermination {
+    name: String
+}
+
+#[derive(Clone, Debug)]
 pub struct Action {
-    pub name: String,
     pub cons: Vec<Consideration>,
     pub priority: f32,
-    pub action: (Entity, Task, Vec<Target>) // the intent to attach 
+    pub intent: Intent,
+    // pub action: (Entity, Task, Vec<Target>) // the intent to attach 
 }
 
 impl Action {

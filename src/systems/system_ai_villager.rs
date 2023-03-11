@@ -1,11 +1,13 @@
 use hecs::*;
 use rltk;
 use rltk::{Point, BaseMap};
-use crate::ai::labors::get_wood_gathering_actions;
-use crate::map::Map;
-use crate::{State, movement};
+use crate::ai::labors::{get_wood_gathering_actions, get_fishing_actions};
+use crate::item_system::pick_up;
+use crate::map::{Map, TileType};
+use crate::utils::get_neighbors;
+use crate::{State, movement, item_system};
 use crate::ai::decisions::{Action, AI, Target, Intent, Task};
-use crate::components::{Position, Villager, SpatialKnowledge, Inventory, DijkstraMapToMe};
+use crate::components::{Position, Villager, SpatialKnowledge, Inventory, DijkstraMapToMe, Fish};
 
 pub fn run_villager_ai_system(gs: &mut State) {
     
@@ -13,6 +15,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
     let mut to_explore: Vec<Entity> = vec![];
     let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
+    let mut to_fish: Vec<(Entity, Point)> = vec![];
 
     {
         let world = &mut gs.world;
@@ -21,7 +24,9 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
         for (id, (_, pos, intent)) in world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
             match intent.task {
-                Task::Fish => todo!(),
+                Task::Fish => {
+                    to_fish.push((id, pos.ps[0]));
+                },
                 Task::Explore => {
                     // println!("Exploring....");
                     to_explore.push(id);
@@ -88,6 +93,40 @@ pub fn run_villager_ai_system(gs: &mut State) {
         let world = &mut gs.world;
         let _res = world.remove_one::<Intent>(e);
     }
+
+    for (e, p) in to_fish {
+        let world = &mut gs.world;
+        let res = &mut gs.resources;
+
+        let mut to_pick_up: Vec<(Entity, Entity)> = vec![];
+
+        {
+            let map = &res.get::<Map>().unwrap();
+
+            let n = get_neighbors(p);
+            let adj_water: Vec<&Point> = n.iter().filter(|p| {
+                let idx = map.point_idx(**p);
+                map.tiles[idx] == TileType::Water
+            }).collect();
+            
+
+            for p in adj_water.iter() {
+                let idx = map.point_idx(**p);
+                for te in &map.tile_content[idx] {
+                    if let Ok(_) = world.get::<Fish>(*te) {
+                        //found a target
+                        to_pick_up.push((e, *te));
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (e, te) in to_pick_up.iter() {
+            pick_up(world, res, &e, *te);
+            let _res = world.remove_one::<Intent>(*e);
+        }
+    }
 }
 
 fn update_decisions(gs: &mut State) {
@@ -110,10 +149,11 @@ fn update_decisions(gs: &mut State) {
         let mut potential_actions:Vec<Action> = vec!();
 
         potential_actions.append(&mut get_wood_gathering_actions(gs, id, pos, space, inv));
+        potential_actions.append(&mut get_fishing_actions(gs, id, pos, space, inv));
 
         let best = AI::choose_action(potential_actions);
         // dbg!(best.clone());
-        wants_intent.push((best.0, Intent { task: best.1, target: best.2, turn: *turn }));
+        wants_intent.push((id, best));
     }
 
     for (id, intent) in wants_intent {

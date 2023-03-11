@@ -231,7 +231,8 @@ pub enum ItemType {
     Shield,
     Weapon,
     Potion,
-    Scroll
+    Scroll, 
+    Fish
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
