@@ -4,6 +4,57 @@ use rltk::{Point, BaseMap};
 
 use crate::{map::Map, components::{Position, ItemType, Inventory, Item}};
 
+pub struct AI {
+}
+
+impl AI {
+    pub fn choose_action(actions: Vec<Action>) -> Intent {
+        let mut best_action: &Action = &actions[0];
+        let mut best_score = 0.;
+
+        for i in 0..actions.len() {
+            let action = &actions[i];
+            let score = action.get_action_score();
+
+            // println!("Action: {}, score: {}", action.name, score);
+
+            if score > best_score {
+                best_score = score;
+                best_action = action;
+            }
+        }
+
+        best_action.intent.clone()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Action {
+    pub cons: Vec<Consideration>,
+    pub priority: f32,
+    pub intent: Intent,
+}
+
+impl Action {
+    pub fn get_action_score(&self) -> f32 {
+        // get average of all consideration scores
+        let mut scores: Vec<f32> = vec!();
+        for c in self.cons.iter() {
+            let s = c.get_score();
+            if s == 0. {
+                return 0.
+            }
+
+            scores.push(s);
+        }
+
+        let ave = average(&scores);
+
+        // multiply by priorities
+        ave * self.priority
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Task {
     Fish,
@@ -27,60 +78,6 @@ pub struct Intent {
     pub task: Task,
     pub target: Vec<Target>,
     pub turn: i32, // turn this intent originated
-}
-
-pub struct AI {
-}
-
-impl AI {
-    pub fn choose_action(actions: Vec<Action>) -> Intent {
-        let mut scores: Vec<f32> = vec!();
-        let mut best_i = 0;
-        let mut best_score = 0.;
-        for i in 0..actions.len() {
-            let action = &actions[i];
-            let score = action.get_action_score();
-
-            // println!("Action: {}, score: {}", action.name, score);
-
-            scores.push(action.get_action_score());
-
-            if score > best_score {
-                best_score = score;
-                best_i = i;
-            }
-        }
-
-        actions[best_i].intent.clone()
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Action {
-    pub cons: Vec<Consideration>,
-    pub priority: f32,
-    pub intent: Intent,
-    // pub action: (Entity, Task, Vec<Target>) // the intent to attach 
-}
-
-impl Action {
-    pub fn get_action_score(&self) -> f32 {
-        // get average of all consideration scores
-        let mut scores: Vec<f32> = vec!();
-        for c in self.cons.iter() {
-            let s = c.get_score();
-            if s == 0. {
-                return 0.
-            }
-
-            scores.push(s);
-        }
-
-        let ave = average(&scores);
-
-        // multiply by priorities
-        ave * self.priority
-    }
 }
 
 #[derive(Clone, Debug)]

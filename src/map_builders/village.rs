@@ -40,7 +40,7 @@ impl MapBuilder for VillageBuilder {
             }
         }
 
-        entity_factory::spawner(world, 1, self.map.height - 6, 0, SpawnerType::Fish, 1);
+        entity_factory::spawner(world, 1, self.map.height - 7, 0, SpawnerType::Fish, 1);
 
 
         for i in 1..=10 {
