@@ -112,6 +112,7 @@ impl State {
         run_item_use_system(&mut self.world, &mut self.resources);
         effects::run_effects_queue(&mut self.world, &mut self.resources);
         system_particle::spawn_particles(&mut self.world, &mut self.resources);
+        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
     }
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<Entity> {

@@ -119,12 +119,16 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
     map_mouse_pos.0 += min_x;
     map_mouse_pos.1 += min_y;
-    if map_mouse_pos.0 >= map.width-1 || map_mouse_pos.1 >= map.height-1 || map_mouse_pos.0 < 1 || map_mouse_pos.1 < 1 { return; }
+    if map_mouse_pos.0 >= map.width || map_mouse_pos.1 >= map.height || map_mouse_pos.0 < 0 || map_mouse_pos.1 < 0 { return; }
     
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
     if gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
-    let mut ypos = OFFSET_Y + 2;
+    let mut ypos = OFFSET_Y + 1;
+
+    ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
+
+    ypos += 2;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
     ypos += 1;
@@ -161,6 +165,11 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
         if let Ok(intent) = world.get::<Intent>(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
+        }
+
+        if let Ok(pos) = world.get::<Position>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Position: {:?}", pos.ps[0]));
         }
 
         ypos += 1;
