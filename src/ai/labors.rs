@@ -1,7 +1,7 @@
 use hecs::Entity;
 use rltk::Point;
 
-use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, self, Map}};
+use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}};
 
 use super::decisions::{Action, Consideration, Inputs, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
 

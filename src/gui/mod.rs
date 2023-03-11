@@ -1,6 +1,7 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
 use hecs::*;
 use resources::*;
+use crate::ai::decisions::Intent;
 use crate::player::get_player_map_knowledge;
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
@@ -155,6 +156,11 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
                     }
                 }
             }
+        }
+
+        if let Ok(intent) = world.get::<Intent>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
         }
 
         ypos += 1;

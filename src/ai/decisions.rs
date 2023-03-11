@@ -50,14 +50,9 @@ impl AI {
                 best_i = i;
             }
         }
-        
+
         actions[best_i].intent.clone()
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct ActionDetermination {
-    name: String
 }
 
 #[derive(Clone, Debug)]

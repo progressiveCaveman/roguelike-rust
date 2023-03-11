@@ -16,10 +16,9 @@ pub fn run_dissasemble_system(gs: &mut State) {
         }
     }
 
-    let mut wants_remove_intent: Vec<Entity> = vec![];
     let mut wants_despawn: Vec<Entity> = vec![];
 
-    for (id, pos, intent) in wants_to_destroy.iter() {
+    for (_, pos, intent) in wants_to_destroy.iter() {
         let target = intent.target[0].get_point(world);
         
         // check distance
@@ -47,16 +46,11 @@ pub fn run_dissasemble_system(gs: &mut State) {
                     entity_factory::log(world, tpoint.x, tpoint.y);
                 }
 
-                wants_remove_intent.push(*id);
                 wants_despawn.push(e);
             }
 
             break;
         }
-    }
-
-    for e in wants_remove_intent {
-        let _res = world.remove_one::<Intent>(e);
     }
 
     for e in wants_despawn {

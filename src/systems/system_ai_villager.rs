@@ -79,7 +79,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
     for e in to_explore {
         movement::autoexplore(gs, e);
         let world = &mut gs.world;
-        let _res = world.remove_one::<Intent>(e);
     }
 
     for (e, from, to) in to_move_from_to {
@@ -91,7 +90,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
         movement::try_move_entity(e, dx, dy, gs);
         let world = &mut gs.world;
-        let _res = world.remove_one::<Intent>(e);
     }
 
     for (e, p) in to_fish {
@@ -124,7 +122,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
         for (e, te) in to_pick_up.iter() {
             pick_up(world, res, &e, *te);
-            let _res = world.remove_one::<Intent>(*e);
         }
     }
 }
