@@ -262,7 +262,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     // wander action
     potential_actions.push(Action {
         intent: Intent {
-            name: "wander".to_string(),
+            name: "explore".to_string(),
             task: Task::Explore,
             target: vec!(),
             turn: *turn,

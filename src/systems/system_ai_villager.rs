@@ -4,8 +4,8 @@ use rltk::{Point, BaseMap};
 use crate::ai::labors::{get_wood_gathering_actions, get_fishing_actions};
 use crate::item_system::pick_up;
 use crate::map::{Map, TileType};
-use crate::utils::get_neighbors;
-use crate::{State, movement, item_system};
+use crate::utils::{get_neighbors, point_diff};
+use crate::{State, movement};
 use crate::ai::decisions::{Action, AI, Target, Intent, Task};
 use crate::components::{Position, Villager, SpatialKnowledge, Inventory, DijkstraMapToMe, Fish};
 
@@ -78,18 +78,18 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
     for e in to_explore {
         movement::autoexplore(gs, e);
-        let world = &mut gs.world;
     }
 
     for (e, from, to) in to_move_from_to {
-        let mut dx = to.x - from.x;
-        let mut dy = to.y - from.y;
+        // let res = &mut gs.resources;
+        // let map = &mut res.get_mut::<Map>().unwrap();
 
-        if dx != 0 { dx = dx / dx.abs(); }
-        if dy != 0 { dy = dy / dy.abs(); }
+        let path = movement::get_path(&gs.get_map(), from, to);
 
-        movement::try_move_entity(e, dx, dy, gs);
-        let world = &mut gs.world;
+        if path.success && path.steps.len() > 1 {
+            let p = gs.get_map().idx_point(path.steps[1]);
+            movement::try_move_entity(e, point_diff(from, p), gs);
+        }
     }
 
     for (e, p) in to_fish {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
-use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType};
+use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType, LocomotionType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
 use crate::rect::Rect;
@@ -26,7 +26,7 @@ pub fn player(world: &mut World, pos: (i32, i32)) -> Entity {
             ..Default::default()
         },
         Player {},
-        Locomotive {},
+        Locomotive { mtype: LocomotionType::Ground, speed: 1 },
         Viewshed {
             visible_tiles: Vec::new(),
             range: 20,
@@ -137,7 +137,7 @@ pub fn villager(world: &mut World, x: i32, y:i32) -> Entity {
             range: 20,
             dirty: true
         },
-        Locomotive {},
+        Locomotive { mtype: LocomotionType::Ground, speed: 1 },
         Name {name: "Villager".to_string() },
         BlocksTile {},
         Inventory { capacity: 5, items: Vec::new() },
@@ -161,7 +161,7 @@ pub fn fish(world: &mut World, x: i32, y:i32) -> Entity {
             range: 2,
             dirty: true
         },
-        Locomotive {},
+        Locomotive { mtype: LocomotionType::Water, speed: 1 },
         Name {name: "Fish".to_string() },
         Fish {},
         Item { typ: ItemType::Fish }
@@ -192,7 +192,7 @@ pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, nam
             dirty: true
         },
         Monster {},
-        Locomotive {},
+        Locomotive { mtype: LocomotionType::Ground, speed: 1 },
         Name {name},
         BlocksTile {},
         CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0},
@@ -217,7 +217,7 @@ pub fn big_monster(world: &mut World, x: i32, y: i32) -> Entity {
             dirty: true
         },
         Monster {},
-        Locomotive {},
+        Locomotive { mtype: LocomotionType::Ground, speed: 1 },
         Name {name: "Monster".to_string()},
         BlocksTile {},
         CombatStats {max_hp: 8, hp: 8, defense: 1, power: 4, regen_rate: 0}

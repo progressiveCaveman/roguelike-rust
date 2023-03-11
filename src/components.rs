@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use hecs::*;
 use rltk::{self, Point, DijkstraMap};
 
-use crate::{RenderOrder, map::{TileType, Map}, utils::InvalidPoint};
+use crate::{RenderOrder, map::{TileType, Map}};
 
 /// Basic UI components
 
@@ -18,7 +18,7 @@ impl Position {
         if self.ps.len() > 0 {
             *self.ps.first().unwrap()
         } else {
-            Point::invalid_point()
+            unreachable!()
         }
     }
 
@@ -133,7 +133,16 @@ pub struct Tree {}
 /// Entity properties
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Locomotive {}
+pub enum LocomotionType {
+    Ground,
+    Water
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Locomotive {
+    pub mtype: LocomotionType,
+    pub speed: usize
+}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct BlocksTile {}

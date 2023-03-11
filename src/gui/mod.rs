@@ -143,9 +143,19 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Name: {}", name.name));
         }
 
+        if let Ok(pos) = world.get::<Position>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Position: {:?}", pos.ps[0]));
+        }
+
         if let Ok(stats) = world.get::<CombatStats>(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("HP: {}/{}", stats.hp, stats.max_hp));
+        }
+
+        if let Ok(intent) = world.get::<Intent>(*e) {
+            ypos += 1;
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
         }
 
         if let Ok(inv) = world.get::<Inventory>(*e) {
@@ -160,16 +170,6 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
                     }
                 }
             }
-        }
-
-        if let Ok(intent) = world.get::<Intent>(*e) {
-            ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
-        }
-
-        if let Ok(pos) = world.get::<Position>(*e) {
-            ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Position: {:?}", pos.ps[0]));
         }
 
         ypos += 1;

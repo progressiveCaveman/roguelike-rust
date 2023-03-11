@@ -41,7 +41,8 @@ impl Action {
         let mut scores: Vec<f32> = vec!();
         for c in self.cons.iter() {
             let s = c.get_score();
-            if s == 0. {
+
+            if s == 0. { 
                 return 0.
             }
 
@@ -76,7 +77,7 @@ pub enum Task {
 pub struct Intent {
     pub name: String,
     pub task: Task,
-    pub target: Vec<Target>,
+    pub target: Vec<Target>, // most tasks have one target, more targets are specified in name, ie `DepositItemToInventory` expects [item, inventory]
     pub turn: i32, // turn this intent originated
 }
 
@@ -155,14 +156,15 @@ impl ConsiderationParam {
     }
 }
 
+/// for types Const, GreaterThan, and LessThan only m is considered
 #[derive(Clone, Debug, PartialEq)]
 pub enum ResponseCurveType {
     Const,
+    GreaterThan,
+    LessThan,
     Linear,
     Quadratic,
     Logistic,
-    GreaterThan,
-    LessThan
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -274,8 +276,8 @@ impl Target {
                 if let Ok(pos) = world.get::<Position>(*entity) {
                     pos.ps[0]
                 } else {
-                    println!("ERROR: Target::ENTITY position not found");
-                    Point { x: 0, y: 0 }
+                    // dbg!("ERROR: Target::ENTITY position not found");
+                    Point { x: -1, y: -1 }
                 }
             },
         }

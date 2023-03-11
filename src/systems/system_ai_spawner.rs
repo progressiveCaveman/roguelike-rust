@@ -24,7 +24,7 @@ pub fn run_spawner_system(world: &mut World, res: &mut Resources) {
                 world.insert_one(e, Faction {faction: *f}).unwrap();        
             },
             SpawnerType::Fish => {
-                let e = entity_factory::fish(world, p.x, p.y);        
+                entity_factory::fish(world, p.x, p.y);        
             },
         }
     }

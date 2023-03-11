@@ -4,9 +4,9 @@ use crate::map::Map;
 
 /// returns the point adjacent to origin that will lead to target
 pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, mut target: usize) -> usize{
-    dbg!("dijkstra_backtrace");
+    // dbg!("dijkstra_backtrace");
     for _ in 0..1000 {
-        dbg!("How many times does this run?");
+        // dbg!("How many times does this run?");
 
         let neighbor_indices = map.get_available_exits(target);
 
@@ -37,6 +37,44 @@ pub fn get_neighbors(point: Point) -> Vec<Point> {
     ]
 }
 
+// translates dir according to roguelike numpad convention - 1 is SW, 9 is NE
+// pub fn get_movement(point: Point, dir: usize, movemod: i32) -> Point {
+//     match dir {
+//         1 => Point { x: point.x - movemod, y: point.y + movemod },
+//         2 => Point { x: point.x, y: point.y + movemod },
+//         3 => Point { x: point.x + movemod, y: point.y + movemod },
+//         4 => Point { x: point.x - movemod, y: point.y },
+//         6 => Point { x: point.x + movemod, y: point.y },
+//         7 => Point { x: point.x - movemod, y: point.y - movemod },
+//         8 => Point { x: point.x, y: point.y - movemod },
+//         9 => Point { x: point.x + movemod, y: point.y - movemod },
+//         _ => point
+//     }
+// }
+
+// translates dir according to roguelike numpad convention - 1 is SW, 9 is NE
+pub fn dir_to_point(dir: usize, dismod: i32) -> Point {
+    match dir {
+        1 => Point { x: -dismod, y: dismod },
+        2 => Point { x: 0, y: dismod },
+        3 => Point { x: dismod, y: dismod },
+        4 => Point { x: -dismod, y: 0 },
+        6 => Point { x: dismod, y: 0 },
+        7 => Point { x: -dismod, y: -dismod },
+        8 => Point { x: 0, y: -dismod },
+        9 => Point { x: dismod, y: -dismod },
+        _ => Point { x: 0, y: 0 }
+    }
+}
+
+pub fn point_plus(p1: Point, p2: Point) -> Point {
+    Point { x: p2.x + p1.x, y: p2.y + p1.y }
+}
+
+pub fn point_diff(p1: Point, p2: Point) -> Point {
+    Point { x: p2.x - p1.x, y: p2.y - p1.y }
+}
+
 pub trait Scale {
     fn scaled(&mut self, amount: f32) -> RGBA;
 }
@@ -58,6 +96,6 @@ pub trait InvalidPoint {
 
 impl InvalidPoint for Point {
     fn invalid_point() -> Point {
-        Point { x: 0, y: 0 }
+        Point { x: -1, y: -1 }
     }
 }

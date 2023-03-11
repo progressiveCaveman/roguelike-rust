@@ -1,7 +1,8 @@
 use hecs::*;
 use rltk;
 use rltk::Point;
-use crate::State;
+use crate::utils::point_diff;
+use crate::{State, movement};
 use crate::gui::Palette;
 use crate::{systems::system_particle::ParticleBuilder};
 use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, WantsToPickupItem};
@@ -96,16 +97,12 @@ pub fn run_monster_ai_system(gs: &mut State) {
             } else if vs.visible_tiles.contains(&target){
 
                 // in order to stop multi-tile monsters from blocking themselves, make them not block before running A*
+                // this is still just a hack since multi-tile monsters still path through 1 wide areas
                 for pos in pos.ps.iter() {
                     let idx = map.xy_idx(pos.x, pos.y);
                     map.blocked[idx] = false;
                 }
-
-                let path = rltk::a_star_search(
-                    map.xy_idx(pos.ps[0].x, pos.ps[0].y) as i32,
-                    map.xy_idx(target.x, target.y) as i32,
-                    &mut *map
-                );
+                let path = movement::get_path(map, pos.ps[0], target);
 
                 // make monster block again
                 for pos in pos.ps.iter() {
@@ -114,11 +111,8 @@ pub fn run_monster_ai_system(gs: &mut State) {
                 }
 
                 if path.success && path.steps.len() > 1 {
-                    let (new_x, new_y) = map.idx_xy(path.steps[1]);
-                    let dx = new_x - pos.ps[0].x;
-                    let dy = new_y - pos.ps[0].y;
-
-                    to_try_move.push((id, Point{x: dx, y: dy}));
+                    let p = map.idx_point(path.steps[1]);
+                    to_try_move.push((id, point_diff(pos.ps[0], p)));
                 }
             }
         }
@@ -144,6 +138,6 @@ pub fn run_monster_ai_system(gs: &mut State) {
     }
 
     for (id, delta) in to_try_move.iter() {
-        try_move_entity(*id, delta.x, delta.y, gs);
+        try_move_entity(*id, *delta, gs);
     }
 }

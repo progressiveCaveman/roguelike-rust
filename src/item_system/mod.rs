@@ -7,13 +7,11 @@ pub use system_item_use::run_item_use_system;
 mod system_unequip_item;
 pub use system_unequip_item::run_unequip_item_system;
 
-use rltk::Point;
 use hecs::*;
 use resources::*;
 use crate::ai::decisions::{Intent, Task, Target};
 use crate::components::{WantsToPickupItem, Position, InBackpack, Name, Inventory, Equipped};
 use crate::gamelog::{GameLog};
-use crate::utils::InvalidPoint;
 
 pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     let mut need_in_backpack: Vec<(Entity, WantsToPickupItem)> = Vec::new();
@@ -85,7 +83,7 @@ pub fn drop_item(world: &mut World, id: &Entity, item: &Entity) {
     let pos = if let Ok(p) = world.get::<Position>(*id) {
         p.any_point()
     }else{
-        Point::invalid_point()
+        unreachable!()
     };
 
     if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {

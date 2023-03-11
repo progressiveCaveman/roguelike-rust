@@ -20,12 +20,16 @@ pub fn run_dissasemble_system(gs: &mut State) {
 
     for (_, pos, intent) in wants_to_destroy.iter() {
         let target = intent.target[0].get_point(world);
+
+        if target == Point::invalid_point() {
+            continue;
+        }
         
         // check distance
         for p in pos {
             let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, *p);
             if distance > 1.5 {
-                dbg!("entity not next to target {", distance);
+                // dbg!("entity not next to target", distance);
                 continue;
             }
 

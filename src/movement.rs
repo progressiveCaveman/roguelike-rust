@@ -1,19 +1,23 @@
-use std::cmp::{max, min};
 use hecs::*;
-use rltk::{Point, DijkstraMap};
+use rltk::{Point, DijkstraMap, NavigationPath};
 
-use crate::utils::{dijkstra_backtrace};
-use crate::{State, MAPWIDTH, MAPHEIGHT, GameMode};
+use crate::utils::{dijkstra_backtrace, InvalidPoint, point_plus};
+use crate::{State, GameMode};
 use crate::map::{Map, TileType};
-use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, Locomotive, BlocksTile, SpatialKnowledge};
+use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, BlocksTile, SpatialKnowledge, Locomotive, LocomotionType};
 
-pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
+/// dp is delta
+pub fn try_move_entity(entity: Entity, dp: Point, gs: &mut State) {
     let mut map = gs.resources.get_mut::<Map>().unwrap();
     let mode = gs.resources.get::<GameMode>().unwrap();
     let mut needs_wants_to_attack: Option<(Entity, WantsToAttack)> = None;
 
+    // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
+
     if let Ok(mut pos) = gs.world.get_mut::<Position>(entity) {
-        if let Ok(_loc) = &gs.world.get::<Locomotive>(entity) {
+        // if let Ok(_loc) = &gs.world.get::<Locomotive>(entity) {
+
+            let canmove = can_move(&gs.world, &map, entity, &pos, dp);
 
             // In Sim mode, player is basically just a camera object
             let mut is_camera = false;
@@ -21,75 +25,29 @@ pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
                 if *mode == GameMode::Sim { is_camera = true; }
             }
 
-            // check for blockers
-            let mut is_blocked = false;
-
             if !is_camera {
-                // If there's anything attackable in path, attack it
-                for pos in pos.ps.iter() {
-                    let dest_idx = map.xy_idx(pos.x + dx, pos.y + dy);
-                    for potential_target in map.tile_content[dest_idx].iter() {
-                        if *potential_target == entity {
-                            continue;
-                        }
+                if let Some(target) = get_target(&gs.world, &map, entity, &pos, dp) {
+                    needs_wants_to_attack = Some((entity, WantsToAttack {target}));
 
-                        match &gs.world.get::<CombatStats>(*potential_target) {
-                            Ok(_cs) => {
-                                needs_wants_to_attack = Some((entity, WantsToAttack {target: *potential_target}));
-                                break;
-                            }
-                            Err(_e) => {}
-                        }
-                    }
-                }
-
-                // This is ugly but it basically says if we have an intention to attack, don't try to move
-                if let Some(_) = needs_wants_to_attack {
-                    is_blocked = true
-                }
-
-                for pos in pos.ps.iter() {
-                    if is_blocked { break; }
-
-                    // check for tiles that block
-                    let dest_idx = map.xy_idx(pos.x + dx, pos.y + dy);
-                    if map.blocks_movement(dest_idx) { 
-                        is_blocked = true;
-                        break;
-                    }
-
-                    // Check for entities that block
-                    for potential_blocker in map.tile_content[dest_idx].iter() {
-                        if *potential_blocker == entity {
-                            continue;
-                        }
-
-                        match &gs.world.get::<BlocksTile>(*potential_blocker) {
-                            Ok(_cs) => {
-                                dbg!("Trying to move somewhere that blocks");
-                                is_blocked = true;
-                                break;
-                            }
-                            Err(_e) => {}
-                        }
-                    }
+                    // gs.world.insert_one(entity, WantsToAttack {target});
+                    // return;
                 }
             }
 
             // do movement
-            if is_camera || is_blocked == false {                
+            if is_camera || canmove {                
                 if let Ok(mut vs) = gs.world.get_mut::<Viewshed>(entity) {
                     vs.dirty = true;
                 }
 
                 // for pos in pos.ps.iter_mut() {
                 for i in 0..pos.ps.len() {
-                    let newx = min(MAPWIDTH as i32 - 1, max(0, pos.ps[i].x + dx)); 
-                    let newy = min(MAPHEIGHT as i32 - 1, max(0, pos.ps[i].y + dy));
-                    pos.ps[i].x = newx;
-                    pos.ps[i].y = newy; 
+                    let oldidx = map.point_idx(pos.ps[i]);
 
-                    let idx = map.xy_idx(newx, newy);
+                    pos.ps[i] = point_plus(pos.ps[i], dp);
+
+                    let idx = map.point_idx(pos.ps[i]);
+                    map.blocked[oldidx] = false;
                     map.blocked[idx] = true;
                 }
     
@@ -102,13 +60,88 @@ pub fn try_move_entity(entity: Entity, dx: i32, dy: i32, gs: &mut State) {
                         ppos.y = pos.ps[0].y;
                     }
                 }
+
+                return;
+            }
+        // }
+    }
+
+    if let Some((e, c)) = needs_wants_to_attack {
+        let _res = gs.world.insert_one(e, c);
+    }
+}
+
+// checks for entities with combat stats on block
+pub fn get_target(world: &World, map: &Map, entity: Entity, pos: &Position, dp: Point) -> Option<Entity> {
+
+    // check for combat stats on entity
+    if let Err(_) = world.get::<CombatStats>(entity){
+        return None;
+    }
+
+    for pos in pos.ps.iter() {
+        let dest_idx = map.xy_idx(pos.x + dp.x, pos.y + dp.y);
+        // let dest_idx = map.point_idx(tp);
+        for potential_target in map.tile_content[dest_idx].iter() {
+            if *potential_target == entity {
+                continue;
+            }
+
+            match &world.get::<CombatStats>(*potential_target) {
+                Ok(_cs) => {
+                    return Some(*potential_target)
+                }
+                Err(_e) => {}
             }
         }
     }
 
-    if let Some(v) = needs_wants_to_attack {
-        let _res = gs.world.insert_one(v.0, v.1);
+    None
+}
+
+pub fn can_move(world: &World, map: &Map, entity: Entity, pos: &Position, dp: Point) -> bool {
+    if let Ok(loco) = world.get::<Locomotive>(entity){
+        for pos in pos.ps.iter() {
+            // check for tiles that block
+            let dest_idx = map.xy_idx(pos.x + dp.x, pos.y + dp.y);
+            // let dest_idx = map.point_idx(tp);
+            if loco.mtype == LocomotionType::Ground && map.blocks_movement(dest_idx) { 
+                return false;
+            }
+
+            if loco.mtype == LocomotionType::Water && map.tiles[dest_idx] != TileType::Water { 
+                return false;
+            }
+
+            // check for entities that block
+            for potential_target in map.tile_content[dest_idx].iter() {
+                if *potential_target == entity {
+                    continue;
+                }
+    
+                match &world.get::<BlocksTile>(*potential_target) {
+                    Ok(_cs) => {
+                        return false
+                    }
+                    Err(_e) => {}
+                }
+            }
+        }
+
+        return true
     }
+
+    return false
+}
+
+pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
+    let path = rltk::a_star_search(
+        map.point_idx(from) as i32,
+        map.point_idx(tp) as i32,
+        map
+    );
+
+    return path;
 }
 
 pub fn autoexplore(gs: &mut State, entity: Entity){
@@ -116,7 +149,7 @@ pub fn autoexplore(gs: &mut State, entity: Entity){
     let entity_point: Point;
     
     // Use djikstras to find nearest unexplored tile
-    let mut target = (0, std::f32::MAX); // tile_idx, distance
+    let mut target = (Point::invalid_point(), std::f32::MAX); // tile_idx, distance
     let dijkstra_map: DijkstraMap;
     {
         let res = &gs.resources;
@@ -147,7 +180,7 @@ pub fn autoexplore(gs: &mut State, entity: Entity){
                 let distance_to_start = dijkstra_map.map[i];
 
                 if distance_to_start < target.1 {
-                    target = (i, distance_to_start)
+                    target = (map.idx_point(i), distance_to_start)
                 }
             }
         }
@@ -162,8 +195,8 @@ pub fn autoexplore(gs: &mut State, entity: Entity){
         map.dijkstra_map = dijkstra_map.map.clone();
 
         // We have a target tile. Now follow the path up the chain
-        let t = dijkstra_backtrace(dijkstra_map, map, e_idx, target.0);
-        target = (t, 1.0);
+        let t = dijkstra_backtrace(dijkstra_map, map, e_idx, map.point_idx(target.0));
+        target = (map.idx_point(t), 1.0);
     }
     
     // Send a move command
@@ -172,13 +205,14 @@ pub fn autoexplore(gs: &mut State, entity: Entity){
     {
         let res = &gs.resources;
         let map = res.get::<Map>().unwrap();
-        let targetx = map.idx_xy(target.0).0;
-        let targety = map.idx_xy(target.0).1;
-        dx = targetx - entity_point.x;
+        // let targetx = map.idx_xy(target.0).0;
+        // let targety = map.idx_xy(target.0).1;
+        dx = target.0.x - entity_point.x;
         // if dx != 0 { dx = dx/dx.abs(); }
-        dy = targety - entity_point.y;
+        dy = target.0.y - entity_point.y;
         // if dy != 0 { dy = dy / dy.abs(); }
     }
     
-    try_move_entity(entity, dx, dy, gs);
+    // let t = map.
+    try_move_entity(entity, Point { x: dx, y: dy }, gs);
 }

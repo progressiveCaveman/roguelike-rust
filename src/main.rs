@@ -89,20 +89,24 @@ pub struct State {
 }
 
 impl State {
+    fn get_map(&mut self) -> resources::Ref<Map> {
+        self.resources.get::<Map>().unwrap()
+    }
+
     fn run_systems(&mut self) {
         let runstate: RunState = *self.resources.get::<RunState>().unwrap();
 
         system_fire::run_fire_system(&mut self.world, &mut self.resources);
         system_visibility::run_visibility_system(&mut self.world, &mut self.resources);
-        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
 
         if runstate == RunState::AiTurn { 
             system_pathfinding::run_pathfinding_system(&mut self.world, &mut self.resources);
             system_ai_spawner::run_spawner_system(&mut self.world, &mut self.resources);
-            system_ai_fish::run_fish_ai(&mut self.world, &mut self.resources);
+            system_ai_fish::run_fish_ai(self);
             system_ai_villager::run_villager_ai_system(self);
             system_ai_monster::run_monster_ai_system(self);   
         }
+        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
 
         system_melee_combat::run_melee_combat_system(&mut self.world, &mut self.resources);
         item_system::run_inventory_system(&mut self.world, &mut self.resources);
