@@ -12,6 +12,9 @@ pub use confusion::inflict_confusion;
 mod fire;
 pub use fire::inflict_fire;
 
+mod inventory;
+pub use inventory::pick_up;
+
 use crate::Map;
 
 lazy_static! {
@@ -21,7 +24,8 @@ lazy_static! {
 pub enum EffectType { 
     Damage { amount : i32 },
     Confusion { turns: i32 },
-    Fire { turns: i32 }
+    Fire { turns: i32 },
+    PickUp { },
 }
 
 #[derive(Clone)]
@@ -74,6 +78,7 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::Damage{..} => true,
         EffectType::Confusion{..} => true,
         EffectType::Fire{..} => true,
+        EffectType::PickUp {  } => false,
     }
 }
 
@@ -99,6 +104,7 @@ fn affect_tile(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, til
         EffectType::Damage{..} => {},
         EffectType::Confusion{..} => {},
         EffectType::Fire{..} => fire::inflict_fire_tile(ecs, res, effect, tile_idx),
+        EffectType::PickUp {  } => {},
     }
 }
 
@@ -107,5 +113,6 @@ fn affect_entity(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, t
         EffectType::Damage{..} => damage::inflict_damage(ecs, res, effect, target),
         EffectType::Confusion{..} => confusion::inflict_confusion(ecs, res, effect, target),
         EffectType::Fire{..} => fire::inflict_fire(ecs, res, effect, target),
+        EffectType::PickUp {  } => inventory::pick_up(ecs, res, effect, target),
     }
 }

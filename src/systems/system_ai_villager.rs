@@ -2,7 +2,7 @@ use hecs::*;
 use rltk;
 use rltk::{Point, BaseMap};
 use crate::ai::labors::{get_wood_gathering_actions, get_fishing_actions};
-use crate::item_system::pick_up;
+use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
 use crate::utils::{get_neighbors, point_diff};
 use crate::{State, movement};
@@ -121,7 +121,12 @@ pub fn run_villager_ai_system(gs: &mut State) {
         }
 
         for (e, te) in to_pick_up.iter() {
-            pick_up(world, res, &e, *te);
+            // pick_up(world, res, &e, *te);
+            add_effect(
+                Some(*e), 
+                EffectType::PickUp {}, 
+                Targets::Single { target: *te }
+            );
         }
     }
 }

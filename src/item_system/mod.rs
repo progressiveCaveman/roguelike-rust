@@ -11,6 +11,7 @@ use hecs::*;
 use resources::*;
 use crate::ai::decisions::{Intent, Task, Target};
 use crate::components::{WantsToPickupItem, Position, InBackpack, Name, Inventory, Equipped};
+use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::{GameLog};
 
 pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
@@ -32,12 +33,22 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     }
 
     for (id, wants_pickup) in need_in_backpack.iter() {
-        pick_up(world, res, id, wants_pickup.item);
+        // pick_up(world, res, id, wants_pickup.item);
+        add_effect(
+            Some(*id), 
+            EffectType::PickUp {}, 
+            Targets::Single { target: wants_pickup.item }
+        );
     }
 
     for (id, intent) in need_pickup.iter() {
         if let Target::ENTITY(e) = intent.target[0] {
-            pick_up(world, res, id, e);
+            // pick_up(world, res, id, e);
+            add_effect(
+                Some(*id), 
+                EffectType::PickUp {}, 
+                Targets::Single { target: e }
+            );
         }
     }
 
@@ -45,39 +56,17 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
         if let Target::ENTITY(item) = intent.target[0] {
             if let Target::ENTITY(target) = intent.target[1] {
                 drop_item(world, id, &item);
-                pick_up(world, res, &target, item);
+                // pick_up(world, res, &target, item);
+                add_effect(
+                    Some(target), 
+                    EffectType::PickUp {}, 
+                    Targets::Single { target: item }
+                );
             }   
         }
     }
 }
 
-pub fn pick_up(world: &mut World, res: &mut Resources, id: &Entity, item: Entity) {
-    let mut log = res.get_mut::<GameLog>().unwrap();
-    let player_id = res.get::<Entity>().unwrap();
-
-    if let Ok(_) = world.get_mut::<Position>(*id) {
-
-    } else {
-        dbg!("Entity doesn't have a position");
-        return;
-    }
-
-    if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
-        inv.items.push(item);
-    } else {
-        dbg!("Entity has no inventory");
-    }
-
-    let _res = world.remove_one::<Position>(item);
-    let _r = world.insert_one(item, InBackpack {owner: *id});
-
-    if *id == *player_id {
-        let name = world.get::<Name>(item).unwrap();
-        log.messages.push(format!("You pick up the {}", name.name));
-    }
-
-    let _re = world.remove_one::<WantsToPickupItem>(*id);
-}
 
 pub fn drop_item(world: &mut World, id: &Entity, item: &Entity) {
     let pos = if let Ok(p) = world.get::<Position>(*id) {
