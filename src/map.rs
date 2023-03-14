@@ -6,7 +6,7 @@ use rltk::{Algorithm2D, BaseMap, Point};
 
 use crate::components::{Position, Faction};
 use crate::gui::{OFFSET_X, OFFSET_Y};
-use crate::{State, SCALE};
+use crate::{SCALE};
 
 use crate::{MAPWIDTH, MAPHEIGHT};
 
@@ -34,7 +34,7 @@ pub struct Map {
     pub dijkstra_map: Vec<f32>,
 
     // TODO Maybe this doesn't belong here, a system would be better practice (but uglier)
-    pub influence_maps: Vec<Vec<f32>>
+    // pub influence_maps: Vec<Vec<f32>>,
 }
 
 impl Map {
@@ -48,7 +48,7 @@ impl Map {
             tile_content: vec![Vec::new(); MAPCOUNT],
             depth: new_depth,
             dijkstra_map: vec![-1.0; MAPCOUNT],
-            influence_maps:vec![vec![0.0; MAPCOUNT]; 2] // todo magic numbers
+            // influence_maps:vec![vec![0.0; MAPCOUNT]; 2],// todo magic numbers
         }
     }
 
@@ -117,77 +117,88 @@ impl Map {
         !self.blocked[idx]
     }
 
-    pub fn refresh_influence_maps(&mut self, gs: &State, turn: i32){
-        if turn % 10 == 0 {
-            let unit_str = 100;
+    // pub fn refresh_water_map(&mut self) {
+    //     let mut waters: Vec<usize> = vec![];
+    //     for i in 0..self.tiles.len() {
+    //         if self.tiles[i] == TileType::Water {
+    //             waters.push(i);
+    //         }
+    //     }
 
-            let mut f1: Vec<(Point, f32)> = Vec::new();
-            let mut f2: Vec<(Point, f32)> = Vec::new();
+    //     self.water_map = rltk::DijkstraMap::new(self.width, self.height, &waters, self, 800.0).map;
+    // }
 
-            for (_, (pos, faction)) in gs.world.query::<(&Position, &Faction)>().iter() {
-                for p in pos.ps.iter() {
-                    match faction.faction {
-                        1 => f1.push((*p, unit_str as f32)),
-                        2 => f2.push((*p, unit_str as f32)),
-                        _ => {}
-                    }
-                }
-            }
+    // pub fn refresh_influence_maps(&mut self, gs: &State, turn: i32){
+    //     if turn % 10 == 0 {
+    //         let unit_str = 100;
+
+    //         let mut f1: Vec<(Point, f32)> = Vec::new();
+    //         let mut f2: Vec<(Point, f32)> = Vec::new();
+
+    //         for (_, (pos, faction)) in gs.world.query::<(&Position, &Faction)>().iter() {
+    //             for p in pos.ps.iter() {
+    //                 match faction.faction {
+    //                     1 => f1.push((*p, unit_str as f32)),
+    //                     2 => f2.push((*p, unit_str as f32)),
+    //                     _ => {}
+    //                 }
+    //             }
+    //         }
             
-            self.repopulate_influence_map(f1, 0.9, 0);
-            self.repopulate_influence_map(f2, 0.9, 1);
-        }
-    }
+    //         self.repopulate_influence_map(f1, 0.9, 0);
+    //         self.repopulate_influence_map(f2, 0.9, 1);
+    //     }
+    // }
 
-    pub fn repopulate_influence_map(&mut self, pois: Vec<(Point, f32)>, spread: f32, imap_index: usize) {        
-        for i in 0..self.influence_maps[imap_index].len() {
-            self.influence_maps[imap_index][i] = 0.0;
-        }
+    // pub fn repopulate_influence_map(&mut self, pois: Vec<(Point, f32)>, spread: f32, imap_index: usize) {        
+    //     for i in 0..self.influence_maps[imap_index].len() {
+    //         self.influence_maps[imap_index][i] = 0.0;
+    //     }
 
-        // let vals = &mut self.influence_maps[Inf_map_index];
+    //     // let vals = &mut self.influence_maps[Inf_map_index];
 
-        // add poi vals to map
-        for poi in pois.iter() {
-            let idx = self.xy_idx(poi.0.x, poi.0.y);
-            self.influence_maps[imap_index][idx] = poi.1;
-        }
+    //     // add poi vals to map
+    //     for poi in pois.iter() {
+    //         let idx = self.xy_idx(poi.0.x, poi.0.y);
+    //         self.influence_maps[imap_index][idx] = poi.1;
+    //     }
 
-        // return;
+    //     // return;
 
-        // iterate on the map and blur all influence
-        let num_iterations = 10;
-        for _ in 0..num_iterations {
-            // buffer to hold the changes for this step
-            let mut buf = vec![0.0; self.influence_maps[imap_index].len()];
+    //     // iterate on the map and blur all influence
+    //     let num_iterations = 10;
+    //     for _ in 0..num_iterations {
+    //         // buffer to hold the changes for this step
+    //         let mut buf = vec![0.0; self.influence_maps[imap_index].len()];
 
-            let mut max_inf: f32 = 0.0;
+    //         let mut max_inf: f32 = 0.0;
 
-            // reduce each tile 
-            for (i, el) in self.influence_maps[imap_index].iter().enumerate() {
-                max_inf = f32::max(max_inf, *el);
-                let neighbors = self.get_available_exits(i);
+    //         // reduce each tile 
+    //         for (i, el) in self.influence_maps[imap_index].iter().enumerate() {
+    //             max_inf = f32::max(max_inf, *el);
+    //             let neighbors = self.get_available_exits(i);
 
-                // get amount to decay by
-                let decay_amount:f32 = self.influence_maps[imap_index][i] * spread;
-                buf[i] = buf[i] - decay_amount;
+    //             // get amount to decay by
+    //             let decay_amount:f32 = self.influence_maps[imap_index][i] * spread;
+    //             buf[i] = buf[i] - decay_amount;
 
-                // distribute decay amongst the neighborhood
-                for n in neighbors.iter() {
-                    if n.0 >= buf.len() {
-                        continue;
-                    }
+    //             // distribute decay amongst the neighborhood
+    //             for n in neighbors.iter() {
+    //                 if n.0 >= buf.len() {
+    //                     continue;
+    //                 }
 
-                    //  float inf = m_Influences[c.neighbor] * expf(-c.dist * m_fDecay);
-                    buf[n.0] = buf[n.0] + decay_amount / neighbors.len() as f32;
-                }
-            }
+    //                 //  float inf = m_Influences[c.neighbor] * expf(-c.dist * m_fDecay);
+    //                 buf[n.0] = buf[n.0] + decay_amount / neighbors.len() as f32;
+    //             }
+    //         }
 
-            // apply change buffer to values
-            for i in 0..buf.len() {
-                self.influence_maps[imap_index][i] += buf[i];
-            }
-        }
-    }
+    //         // apply change buffer to values
+    //         for i in 0..buf.len() {
+    //             self.influence_maps[imap_index][i] += buf[i];
+    //         }
+    //     }
+    // }
 }
 
 impl Algorithm2D for Map {

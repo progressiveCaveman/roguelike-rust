@@ -121,13 +121,7 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
     match map.tiles[idx] {
         TileType::Floor => {
             fg = Palette::COLOR_GREEN_DARK;
-            if RENDER_DJIKSTRA && map.dijkstra_map[idx] >= 0.0 {
-                let val = (map.dijkstra_map[idx] % 10.0) as u8;
-                let cha = (val + b'0') as char;
-                glyph = rltk::to_cp437(cha);
-            }else{
-                glyph = rltk::to_cp437('·');
-            }
+            glyph = rltk::to_cp437('·');
         }
         TileType::Wall => {
             fg = Palette::MAIN_FG;
@@ -142,7 +136,7 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
             glyph = rltk::to_cp437('<');
         }
         TileType::Grass => {
-            // fg = Palette::COLOR_GREEN;
+            fg = Palette::COLOR_GREEN;
             bg = Palette::COLOR_GREEN_DARK;
             // glyph = rltk::to_cp437('"');
         }
@@ -180,6 +174,17 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
     if map.fire_turns[idx] > 0 { // TODO check if player knows about fire
         bg = Palette::COLOR_FIRE;
         glyph = rltk::to_cp437('^');
+    }
+
+    match map.tiles[idx] {
+        TileType::Floor | TileType::Grass => {
+            if RENDER_DJIKSTRA && map.dijkstra_map[idx] >= 0.0 {
+                let val = (map.dijkstra_map[idx] % 10.0) as u8;
+                let cha = (val + b'0') as char;
+                glyph = rltk::to_cp437(cha);
+            }
+        },
+        _ => {}
     }
 
     // let f1val = map.influence_maps[0][idx];

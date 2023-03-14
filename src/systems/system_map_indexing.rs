@@ -1,9 +1,11 @@
-use hecs::*;
-use resources::Resources;
+use crate::State;
 use crate::map::Map;
 use crate::components::{BlocksTile, Position};
 
-pub fn run_map_indexing_system(world: &mut World, res: &mut Resources) {
+pub fn run_map_indexing_system(gs: &mut State) {
+    let world = &mut gs.world;
+    let res = &gs.resources;
+    
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
 
     map.set_blocked();

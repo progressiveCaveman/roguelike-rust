@@ -106,7 +106,7 @@ impl State {
             system_ai_villager::run_villager_ai_system(self);
             system_ai_monster::run_monster_ai_system(self);   
         }
-        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
+        system_map_indexing::run_map_indexing_system(self);
 
         system_melee_combat::run_melee_combat_system(&mut self.world, &mut self.resources);
         item_system::run_inventory_system(&mut self.world, &mut self.resources);
@@ -116,7 +116,7 @@ impl State {
         run_item_use_system(&mut self.world, &mut self.resources);
         effects::run_effects_queue(&mut self.world, &mut self.resources);
         system_particle::spawn_particles(&mut self.world, &mut self.resources);
-        system_map_indexing::run_map_indexing_system(&mut self.world, &mut self.resources);
+        system_map_indexing::run_map_indexing_system(self);
     }
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<Entity> {
