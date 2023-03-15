@@ -46,11 +46,8 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: Entity) {
             unreachable!()
         };
 
-        dbg!(1);
         if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
-            dbg!(2);
             if let Some(pos) = inv.items.iter().position(|x| *x == target) {
-        dbg!(3);
                 inv.items.remove(pos);
             }
         }
