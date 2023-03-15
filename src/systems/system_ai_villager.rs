@@ -77,13 +77,10 @@ pub fn run_villager_ai_system(gs: &mut State) {
     }
 
     for e in to_explore {
-        movement::autoexplore(gs, e);
+        add_effect(Some(e), EffectType::Explore {  }, Targets::Single { target: e })
     }
 
     for (e, from, to) in to_move_from_to {
-        // let res = &mut gs.resources;
-        // let map = &mut res.get_mut::<Map>().unwrap();
-
         let path = movement::get_path(&gs.get_map(), from, to);
 
         if path.success && path.steps.len() > 1 {
@@ -121,7 +118,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
         }
 
         for (e, te) in to_pick_up.iter() {
-            // pick_up(world, res, &e, *te);
             add_effect(
                 Some(*e), 
                 EffectType::PickUp {}, 

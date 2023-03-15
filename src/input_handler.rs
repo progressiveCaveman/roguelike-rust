@@ -1,4 +1,4 @@
-use crate::{State, RunState, GameMode, movement, entity_factory, player, utils::{dir_to_point}};
+use crate::{State, RunState, GameMode, movement, entity_factory, player, utils::{dir_to_point}, effects::{add_effect, EffectType, Targets}};
 use hecs::Entity;
 use rltk::{Rltk, VirtualKeyCode};
 
@@ -51,7 +51,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::N => movement::try_move_entity(player_id, dir_to_point( 3, movemod), gs),
                     VirtualKeyCode::B => movement::try_move_entity(player_id, dir_to_point( 1, movemod), gs),
                     VirtualKeyCode::G => player::get_item(&mut gs.world, &mut gs.resources),
-                    VirtualKeyCode::X => movement::autoexplore(gs, player_id),
+                    VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}, Targets::Single { target: player_id }),
                     VirtualKeyCode::R => player::reveal_map(gs),
                     VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: entity_factory::tmp_fireball(&mut gs.world) },
                     VirtualKeyCode::I => return RunState::ShowInventory,

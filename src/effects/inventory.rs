@@ -1,20 +1,12 @@
 use hecs::*;
 use super::*;
-use crate::{components::{Fire, Position, Inventory, InBackpack, WantsToPickupItem, Name}, gamelog::GameLog};
+use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog};
 
-// pub fn pick_up(_world: &mut World, res: &mut Resources, effect: &EffectSpawner, target_idx: usize) {
-//     let mut map = res.get_mut::<Map>().unwrap();
-
-//     if let EffectType::Fire { turns } = effect.effect_type {
-//         if map.is_flammable(target_idx) {
-//                 map.fire_turns[target_idx] += turns;
-//         }
-//     }
-// }
-
-
-pub fn pick_up(world: &mut World, res: &mut Resources, effect: &EffectSpawner, target: Entity) {
+pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
     if let Some(id) = effect.creator {
+        let world = &mut gs.world;
+        let res = &gs.resources;
+
         let mut log = res.get_mut::<GameLog>().unwrap();
         let player_id = res.get::<Entity>().unwrap();
     
@@ -40,5 +32,31 @@ pub fn pick_up(world: &mut World, res: &mut Resources, effect: &EffectSpawner, t
         }
     
         let _re = world.remove_one::<WantsToPickupItem>(id);    
+    }
+}
+
+pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+    if let Some(id) = effect.creator {
+        let world = &mut gs.world;
+        let res = &gs.resources;
+
+        let pos = if let Ok(p) = world.get::<Position>(id) {
+            p.any_point()
+        }else{
+            unreachable!()
+        };
+
+        dbg!(1);
+        if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+            dbg!(2);
+            if let Some(pos) = inv.items.iter().position(|x| *x == target) {
+        dbg!(3);
+                inv.items.remove(pos);
+            }
+        }
+        
+        let _in_bp = world.remove_one::<InBackpack>(id);
+        let _equipped = world.remove_one::<Equipped>(id);
+        world.insert_one(target, Position { ps:vec![pos]}).unwrap();
     }
 }

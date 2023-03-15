@@ -72,6 +72,7 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
 pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     let player_id = res.get::<Entity>().unwrap();
 
+    dbg!("Inventory display code is outdated");
     // Items in backpack
     let mut query = world.query::<(&InBackpack, &Name)>();
     let inventory = query.iter().filter(|item| item.1.0.owner == *player_id);

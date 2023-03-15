@@ -9,13 +9,15 @@ pub use damage::inflict_damage;
 mod confusion;
 pub use confusion::inflict_confusion;
 
+mod explore;
+
 mod fire;
 pub use fire::inflict_fire;
 
 mod inventory;
 pub use inventory::pick_up;
 
-use crate::Map;
+use crate::{Map, State};
 
 lazy_static! {
     pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
@@ -26,6 +28,8 @@ pub enum EffectType {
     Confusion { turns: i32 },
     Fire { turns: i32 },
     PickUp { },
+    Drop { },
+    Explore { },
 }
 
 #[derive(Clone)]
@@ -33,7 +37,7 @@ pub enum Targets {
     Tile { tile_idx: usize},
     Tiles { tiles: Vec<usize> },
     Single { target: Entity },
-    Area { target: Vec<Entity> }
+    Area { target: Vec<Entity> },
 }
 
 pub struct EffectSpawner {
@@ -53,23 +57,25 @@ pub fn add_effect(creator : Option<Entity>, effect_type: EffectType, targets : T
         });
 }
 
-pub fn run_effects_queue(ecs : &mut World, res: &mut Resources) {
+pub fn run_effects_queue(gs: &mut State) {
+
+
     loop {
         let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
         if let Some(effect) = effect {
-            target_applicator(ecs, res, &effect);
+            target_applicator(gs, &effect);
         } else {
             break;
         }
     }
 }
 
-fn target_applicator(ecs : &mut World, res: &mut Resources, effect : &EffectSpawner) {
+fn target_applicator(gs: &mut State, effect : &EffectSpawner) {
     match &effect.targets {
-        Targets::Tile{tile_idx} => affect_tile(ecs, res, effect, *tile_idx),
-        Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, res, effect, *tile_idx)),
-        Targets::Single{target} => affect_entity(ecs, res, effect, *target),
-        Targets::Area{target} => target.iter().for_each(|entity| affect_entity(ecs, res, effect, *entity)),
+        Targets::Tile{tile_idx} => affect_tile(gs, effect, *tile_idx),
+        Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(gs, effect, *tile_idx)),
+        Targets::Single{target} => affect_entity(gs, effect, *target),
+        Targets::Area{target} => target.iter().for_each(|entity| affect_entity(gs, effect, *entity)),
     }
 }
 
@@ -79,14 +85,17 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::Confusion{..} => true,
         EffectType::Fire{..} => true,
         EffectType::PickUp {  } => false,
+        EffectType::Explore {  } => false,
+        EffectType::Drop {  } => false,
     }
 }
 
-fn affect_tile(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, tile_idx : usize) {
+fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
     if tile_effect_hits_entities(&effect.effect_type) {
         let mut entities: Vec<Entity> = vec![];
 
         {
+            let res = &gs.resources;
             let map = res.get::<Map>().unwrap();
 
             for entity in map.tile_content[tile_idx].iter() {
@@ -95,7 +104,7 @@ fn affect_tile(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, til
         }
 
         for entity in entities{
-            affect_entity(ecs, res, effect, entity);
+            affect_entity(gs, effect, entity);
         }
     }
 
@@ -103,16 +112,20 @@ fn affect_tile(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, til
     match &effect.effect_type {
         EffectType::Damage{..} => {},
         EffectType::Confusion{..} => {},
-        EffectType::Fire{..} => fire::inflict_fire_tile(ecs, res, effect, tile_idx),
+        EffectType::Fire{..} => fire::inflict_fire_tile(gs, effect, tile_idx),
         EffectType::PickUp {  } => {},
+        EffectType::Explore {  } => {},
+        EffectType::Drop {  } => {},
     }
 }
 
-fn affect_entity(ecs: &mut World, res: &mut Resources, effect: &EffectSpawner, target: Entity) {
+fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: Entity) {
     match &effect.effect_type {
-        EffectType::Damage{..} => damage::inflict_damage(ecs, res, effect, target),
-        EffectType::Confusion{..} => confusion::inflict_confusion(ecs, res, effect, target),
-        EffectType::Fire{..} => fire::inflict_fire(ecs, res, effect, target),
-        EffectType::PickUp {  } => inventory::pick_up(ecs, res, effect, target),
+        EffectType::Damage{..} => damage::inflict_damage(gs, effect, target),
+        EffectType::Confusion{..} => confusion::inflict_confusion(gs, effect, target),
+        EffectType::Fire{..} => fire::inflict_fire(gs, effect, target),
+        EffectType::PickUp {  } => inventory::pick_up(gs, effect, target),
+        EffectType::Explore {  } => explore::autoexplore(gs, effect, target),
+        EffectType::Drop {  } => inventory::drop_item(gs, effect, target),
     }
 }

@@ -1,9 +1,8 @@
 use hecs::*;
 use resources::*;
 use crate::components::{Name, WantsToDropItem};
+use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::GameLog;
-
-use super::drop_item;
 
 pub fn run_drop_item_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
@@ -21,6 +20,10 @@ pub fn run_drop_item_system(world: &mut World, res: &mut Resources) {
 
     for (id, item) in to_drop.iter() {
         world.remove_one::<WantsToDropItem>(*id).unwrap();
-        drop_item(world, id, item);
+        add_effect(
+            Some(*id), 
+            EffectType::Drop {}, 
+            Targets::Single { target: *item }
+        );
     }
 }

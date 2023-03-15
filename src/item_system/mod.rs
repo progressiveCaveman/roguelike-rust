@@ -33,7 +33,6 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     }
 
     for (id, wants_pickup) in need_in_backpack.iter() {
-        // pick_up(world, res, id, wants_pickup.item);
         add_effect(
             Some(*id), 
             EffectType::PickUp {}, 
@@ -43,7 +42,6 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
 
     for (id, intent) in need_pickup.iter() {
         if let Target::ENTITY(e) = intent.target[0] {
-            // pick_up(world, res, id, e);
             add_effect(
                 Some(*id), 
                 EffectType::PickUp {}, 
@@ -55,8 +53,11 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
     for (id, intent) in to_deposit.iter() {
         if let Target::ENTITY(item) = intent.target[0] {
             if let Target::ENTITY(target) = intent.target[1] {
-                drop_item(world, id, &item);
-                // pick_up(world, res, &target, item);
+                add_effect(
+                    Some(*id), 
+                    EffectType::Drop {}, 
+                    Targets::Single { target: item }
+                );
                 add_effect(
                     Some(target), 
                     EffectType::PickUp {}, 
@@ -65,23 +66,4 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
             }   
         }
     }
-}
-
-
-pub fn drop_item(world: &mut World, id: &Entity, item: &Entity) {
-    let pos = if let Ok(p) = world.get::<Position>(*id) {
-        p.any_point()
-    }else{
-        unreachable!()
-    };
-
-    if let Ok(mut inv) = world.get_mut::<Inventory>(*id) {
-        if let Some(pos) = inv.items.iter().position(|x| *x == *item) {
-            inv.items.remove(pos);
-        }
-    }
-    
-    let _in_bp = world.remove_one::<InBackpack>(*id);
-    let _equipped = world.remove_one::<Equipped>(*id);
-    world.insert_one(*id, Position { ps:vec![pos]}).unwrap();
 }

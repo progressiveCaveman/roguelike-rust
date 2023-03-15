@@ -114,7 +114,7 @@ impl State {
         run_drop_item_system(&mut self.world, &mut self.resources);
         run_unequip_item_system(&mut self.world, &mut self.resources);
         run_item_use_system(&mut self.world, &mut self.resources);
-        effects::run_effects_queue(&mut self.world, &mut self.resources);
+        effects::run_effects_queue(self);
         system_particle::spawn_particles(&mut self.world, &mut self.resources);
         system_map_indexing::run_map_indexing_system(self);
     }
@@ -231,7 +231,7 @@ impl GameState for State {
             }
         }
         ctx.set_active_console(0);
-        // ctx.cls();
+        ctx.cls();
         
         system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 

@@ -3,7 +3,9 @@ use super::*;
 use crate::components::{CombatStats};
 use crate::gamelog::GameLog;
 
-pub fn inflict_damage(world: &mut World, res: &mut Resources, damage: &EffectSpawner, target: Entity) {
+pub fn inflict_damage(gs: &mut State, damage: &EffectSpawner, target: Entity) {
+    let world = &gs.world;
+    let res = &gs.resources;
     let mut log = res.get_mut::<GameLog>().unwrap();
 
     if let EffectType::Damage{amount} = damage.effect_type {
