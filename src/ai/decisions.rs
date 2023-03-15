@@ -59,12 +59,12 @@ impl Action {
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Task {
     Fish,
-    Explore,
+    Explore, //
     ExchangeInfo,
-    MoveTo,
+    MoveTo, 
     Destroy,
-    PickUpItem,
-    DropItem,
+    PickUpItem, //
+    DropItem, //
     UseItem,
     EquipItem,
     UnequipItem,

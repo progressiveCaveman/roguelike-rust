@@ -1,7 +1,6 @@
 use std::sync::Mutex;
 use std::collections::VecDeque;
 use hecs::*;
-use resources::*;
 
 mod damage;
 pub use damage::inflict_damage;
@@ -58,8 +57,6 @@ pub fn add_effect(creator : Option<Entity>, effect_type: EffectType, targets : T
 }
 
 pub fn run_effects_queue(gs: &mut State) {
-
-
     loop {
         let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
         if let Some(effect) = effect {
