@@ -3,7 +3,6 @@ use super::*;
 use crate::{components::Fire};
 
 pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, target_idx: usize) {
-    let world = &mut gs.world;
     let res = &gs.resources;
     let mut map = res.get_mut::<Map>().unwrap();
 
@@ -16,7 +15,6 @@ pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, target_idx: usi
 
 pub fn inflict_fire(gs: &mut State, effect: &EffectSpawner, target: Entity) {
     let world = &mut gs.world;
-    let res = &gs.resources;
 
     if let EffectType::Fire { turns } = effect.effect_type {
         let _ = world.insert_one(target, Fire{turns});

@@ -1,5 +1,4 @@
-use hecs::{Entity, World};
-use resources::Resources;
+use hecs::{Entity};
 use rltk::{Point, DijkstraMap};
 
 use crate::{State, utils::{InvalidPoint, dijkstra_backtrace}, map::{Map, TileType}, components::{Position, SpatialKnowledge}, movement::try_move_entity};
@@ -8,7 +7,6 @@ use super::EffectSpawner;
 
 
 pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, target: Entity){
-    let world = &gs.world;
     let res = &gs.resources;
     
     if let Some(entity) = effect.creator {
@@ -69,17 +67,10 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, target: Entity){
         let dx: i32;
         let dy: i32;
         {
-            let res = &gs.resources;
-            let map = res.get::<Map>().unwrap();
-            // let targetx = map.idx_xy(target.0).0;
-            // let targety = map.idx_xy(target.0).1;
             dx = target.0.x - entity_point.x;
-            // if dx != 0 { dx = dx/dx.abs(); }
             dy = target.0.y - entity_point.y;
-            // if dy != 0 { dy = dy / dy.abs(); }
         }
         
-        // let t = map.
         try_move_entity(entity, Point { x: dx, y: dy }, gs);
     }
 }

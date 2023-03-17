@@ -13,6 +13,8 @@ mod explore;
 mod fire;
 pub use fire::inflict_fire;
 
+mod heal;
+
 mod inventory;
 pub use inventory::pick_up;
 
@@ -29,6 +31,7 @@ pub enum EffectType {
     PickUp { },
     Drop { },
     Explore { },
+    Heal { amount: i32 } 
 }
 
 #[derive(Clone)]
@@ -84,6 +87,7 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::PickUp {  } => false,
         EffectType::Explore {  } => false,
         EffectType::Drop {  } => false,
+        EffectType::Heal {..} => true,
     }
 }
 
@@ -110,9 +114,10 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
         EffectType::Damage{..} => {},
         EffectType::Confusion{..} => {},
         EffectType::Fire{..} => fire::inflict_fire_tile(gs, effect, tile_idx),
-        EffectType::PickUp {  } => {},
-        EffectType::Explore {  } => {},
-        EffectType::Drop {  } => {},
+        EffectType::PickUp { } => {},
+        EffectType::Explore { } => {},
+        EffectType::Drop { } => {},
+        EffectType::Heal {..} => {}, // todo make this cause a burst of life or something
     }
 }
 
@@ -124,5 +129,6 @@ fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: Entity) {
         EffectType::PickUp {  } => inventory::pick_up(gs, effect, target),
         EffectType::Explore {  } => explore::autoexplore(gs, effect, target),
         EffectType::Drop {  } => inventory::drop_item(gs, effect, target),
+        EffectType::Heal {..} => heal::heal(gs, effect, target),
     }
 }

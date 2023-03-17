@@ -14,7 +14,6 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
     let mut p_builder = res.get_mut::<ParticleBuilder>().unwrap();
     let mut to_remove: Vec<(Entity, Entity)> = Vec::new();
     let mut to_remove_wants_use: Vec<Entity> = Vec::new();
-    let mut to_heal: Vec<(Entity, ProvidesHealing)> = Vec::new();
     let mut to_unequip: Vec<(Entity, Name, Entity)> = Vec::new();
     let mut to_equip: Vec<(Entity, Equippable, Name, Entity)> = Vec::new();
 
@@ -85,8 +84,12 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
                     match stats {
                         Err(_e) => {},
                         Ok(_stats) => {
-                            to_heal.push((*target, *healer));
-                            if id == *player_id {
+                            add_effect(
+                                Some(id), 
+                                EffectType::Heal { amount: healer.heal }, 
+                                Targets::Single { target: *target }
+                            );
+                            if id == *player_id { // todo should this code be in /effects?
                                 let name = world.get::<Name>(use_item.item).unwrap();
                                 log.messages.push(format!("You use the {}, healing {} hp", name.name, healer.heal));
                             }
@@ -204,11 +207,6 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
 
     for id in to_remove_wants_use {
         world.remove_one::<WantsToUseItem>(id).unwrap();
-    }
-
-    for (id, heals) in to_heal {
-        let mut stats = world.get_mut::<CombatStats>(id).unwrap();
-        stats.hp = i32::min(stats.hp + heals.heal, stats.max_hp);
     }
 
     for (id, name, target) in to_unequip {

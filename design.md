@@ -11,6 +11,7 @@ Make autorun more responsive to commands
 BIG refactor to make an engine module and move all game-mode-specific stuff outside module
 Add debugging game modes, for example arena with controls to spawn monsters, item room, entity communication testing, etc
 Add a global range fireball button for sim mode
+Add brogue style nearby item/monster display in rl mode
 
 # PNW thing notes
 

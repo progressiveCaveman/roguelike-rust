@@ -38,7 +38,6 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
 pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: Entity) {
     if let Some(id) = effect.creator {
         let world = &mut gs.world;
-        let res = &gs.resources;
 
         let pos = if let Ok(p) = world.get::<Position>(id) {
             p.any_point()
