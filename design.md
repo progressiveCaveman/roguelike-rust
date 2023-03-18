@@ -1,5 +1,7 @@
 # TODO:
 
+Implement a proper time system. Entities acting at slightly different times could resolve potential issues with the effects system. Do systems need to be reworked to act on one entity at a time? 
+
 Add scent system
 Refactor all (world, res) to take state instead
 Remove referneces to res and instead ask state for objects

@@ -58,7 +58,7 @@ impl Action {
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Task {
-    Fish,
+    Fish, // not an effect yet but maybe could be?
     Explore, //
     ExchangeInfo,
     MoveTo, 
@@ -156,7 +156,27 @@ impl ConsiderationParam {
     }
 }
 
-/// for types Const, GreaterThan, and LessThan only m is considered
+/*
+for types Const, GreaterThan, and LessThan, only m is considered
+Linear
+Quadratic
+logisitic
+Logit
+
+Paramters - m,k,c,b
+
+Linear/quad: y=m*(x-c)^k + b
+m = slope
+k = exponent
+b = vert shift
+c = horiz shift
+
+Logistic: y = (k * (1/(1+1000em^(-1x+c)))) + b
+m=slope of inflection
+k=vertical size of curve
+b=vert shift
+c=horiz shift 
+*/
 #[derive(Clone, Debug, PartialEq)]
 pub enum ResponseCurveType {
     Const,

@@ -351,7 +351,7 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
                             t: ResponseCurveType::Linear, 
                             m: -1.0 / 100.0, 
                             k: 1.0, 
-                            c: 1.0, 
+                            c: 2.0, 
                             b: 1.0 
                         }
                     ),
@@ -383,7 +383,7 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
                         Inputs::distance(world, res, Target::from(pos), Target::from(wp)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
-                            m: 2., 
+                            m: 1., 
                             k: 1.0, 
                             c: 1.0, 
                             b: 1.0 

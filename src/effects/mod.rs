@@ -31,7 +31,7 @@ pub enum EffectType {
     PickUp { },
     Drop { },
     Explore { },
-    Heal { amount: i32 } 
+    Heal { amount: i32 },
 }
 
 #[derive(Clone)]

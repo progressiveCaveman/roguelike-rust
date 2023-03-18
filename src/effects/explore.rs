@@ -5,8 +5,7 @@ use crate::{State, utils::{InvalidPoint, dijkstra_backtrace}, map::{Map, TileTyp
 
 use super::EffectSpawner;
 
-
-pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, target: Entity){
+pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: Entity){
     let res = &gs.resources;
     
     if let Some(entity) = effect.creator {
