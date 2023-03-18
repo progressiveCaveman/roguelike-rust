@@ -92,37 +92,29 @@ pub fn run_villager_ai_system(gs: &mut State) {
     for (e, p) in to_fish {
         let world = &mut gs.world;
         let res = &mut gs.resources;
+        
+        let map = &res.get::<Map>().unwrap();
 
-        let mut to_pick_up: Vec<(Entity, Entity)> = vec![];
+        let n = get_neighbors(p);
+        let adj_water: Vec<&Point> = n.iter().filter(|p| {
+            let idx = map.point_idx(**p);
+            map.tiles[idx] == TileType::Water
+        }).collect();
+        
 
-        {
-            let map = &res.get::<Map>().unwrap();
-
-            let n = get_neighbors(p);
-            let adj_water: Vec<&Point> = n.iter().filter(|p| {
-                let idx = map.point_idx(**p);
-                map.tiles[idx] == TileType::Water
-            }).collect();
-            
-
-            for p in adj_water.iter() {
-                let idx = map.point_idx(**p);
-                for te in &map.tile_content[idx] {
-                    if let Ok(_) = world.get::<Fish>(*te) {
-                        //found a target
-                        to_pick_up.push((e, *te));
-                        break;
-                    }
+        for p in adj_water.iter() {
+            let idx = map.point_idx(**p);
+            for te in &map.tile_content[idx] {
+                if let Ok(_) = world.get::<Fish>(*te) {
+                    //found a target
+                    add_effect(
+                        Some(e), 
+                        EffectType::PickUp {}, 
+                        Targets::Single { target: *te }
+                    );
+                    break;
                 }
             }
-        }
-
-        for (e, te) in to_pick_up.iter() {
-            add_effect(
-                Some(*e), 
-                EffectType::PickUp {}, 
-                Targets::Single { target: *te }
-            );
         }
     }
 }
