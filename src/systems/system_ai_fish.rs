@@ -2,7 +2,7 @@ use rand::prelude::SliceRandom;
 use hecs::*;
 use rand::thread_rng;
 use rltk::Point;
-use crate::map::{TileType};
+use crate::map::{TileType, Map};
 use crate::components::{Position, Fish};
 use crate::utils::point_diff;
 use crate::{movement, State};
@@ -10,15 +10,25 @@ use crate::{movement, State};
 // currently fish only move east
 pub fn run_fish_ai(gs: &mut State) {    
     let mut to_try_move: Vec<(Entity, Point)> = vec![];
-    
-    for (id, (pos, _)) in gs.world.query::<(&Position, &Fish)>().iter() {        
-        if pos.ps.len() == 1{
-            // if at edge of map, remove fish
+    let mut to_remove: Vec<Entity> = vec![];
 
-            let pos = pos.ps[0];
-            to_try_move.push((id, pos));
-        } else {
-            dbg!("ERROR: multi-tile fish not supported");
+    {
+        let map: &Map = &mut gs.resources.get::<Map>().unwrap();
+        
+        for (id, (pos, _)) in gs.world.query::<(&Position, &Fish)>().iter() {        
+            if pos.ps.len() == 1{
+                // if at edge of map, remove fish
+
+                let pos = pos.ps[0];
+
+                if pos.x >= map.width - 2 {
+                    to_remove.push(id);
+                } else {
+                    to_try_move.push((id, pos));
+                }
+            } else {
+                dbg!("ERROR: multi-tile fish not supported");
+            }
         }
     }
 
@@ -42,5 +52,9 @@ pub fn run_fish_ai(gs: &mut State) {
                 break;
             }
         }
+    }
+
+    for e in to_remove.iter() {
+        gs.world.despawn(*e).unwrap();
     }
 }

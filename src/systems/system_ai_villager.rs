@@ -13,7 +13,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
     
     update_decisions(gs);
 
-    let mut to_explore: Vec<Entity> = vec![];
     let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
     let mut to_fish: Vec<(Entity, Point)> = vec![];
 
@@ -28,8 +27,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
                     to_fish.push((id, pos.ps[0]));
                 },
                 Task::Explore => {
-                    // println!("Exploring....");
-                    to_explore.push(id);
+                    add_effect(Some(id), EffectType::Explore {  }, Targets::Single { target: id })
                 },
                 Task::ExchangeInfo => todo!(),
                 Task::MoveTo => {
@@ -74,10 +72,6 @@ pub fn run_villager_ai_system(gs: &mut State) {
                 Task::Attack => todo!(),
             }
         }
-    }
-
-    for e in to_explore {
-        add_effect(Some(e), EffectType::Explore {  }, Targets::Single { target: e })
     }
 
     for (e, from, to) in to_move_from_to {

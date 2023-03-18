@@ -406,5 +406,102 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
         }
     }
 
+    // if fish in inventory
+    // for each fish cleaner
+    for f in fisheries {
+        if fish_in_inv > 0 {
+            potential_actions.push(Action {
+                intent: Intent {
+                    name: "move to fishery".to_string(),
+                    task: Task::MoveTo,
+                    target: vec!(Target::from(f)),
+                    turn: *turn,
+                },
+                cons: vec!(
+                    Consideration::new(
+                        "Distance".to_string(), 
+                        Inputs::distance(world, res, Target::from(pos), Target::from(f)),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: 1. - 1./20., 
+                            k: 1.0, 
+                            c: 1.0, 
+                            b: 0.0 
+                        }
+                    ),
+                    Consideration::new(
+                        "fish in stockpile".to_string(), 
+                        Inputs::inventory_count(world, f, ItemType::Fish),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: -1. / 50.0, 
+                            k: 1.0, 
+                            c: 0.0, 
+                            b: 1.0 
+                        }
+                    ),
+                    Consideration::new(
+                        "fish in iventory".to_string(), 
+                        inv.count_type(world, ItemType::Fish) as f32,
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: 1. / 5.0, 
+                            k: 1.0, 
+                            c: 0.0, 
+                            b: 0.0 
+                        }
+                    )
+                ),
+                priority: 1.0,
+            });
+
+            potential_actions.push(Action {
+                intent: Intent {
+                    name: "deposit fish at fishery".to_string(),
+                    task: Task::DepositItemToInventory,
+                    target: vec!(Target::from(inventory_fish), Target::from(f)),
+                    turn: *turn,
+                },
+                cons: vec!(
+                    Consideration::new(
+                        "Distance to fishery".to_string(), 
+                        Inputs::distance(world, res, Target::from(pos), Target::from(f)),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::LessThan, 
+                            m: 2., 
+                            k: 2.0, 
+                            c: 1.0, 
+                            b: 0.0 
+                        }
+                    ),
+                    Consideration::new(
+                        "fish in stockpile".to_string(), 
+                        Inputs::inventory_count(world, f, ItemType::Fish),
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: -1. / 50.0, 
+                            k: 1.0, 
+                            c: 0.0, 
+                            b: 1.0 
+                        }
+                    ),
+                    Consideration::new(
+                        "fish in iventory".to_string(), 
+                        inv.count_type(world, ItemType::Fish) as f32,
+                        ConsiderationParam { 
+                            t: ResponseCurveType::Linear, 
+                            m: 1. / 5.0, 
+                            k: 1.0, 
+                            c: 0.0, 
+                            b: 0.0 
+                        }
+                    )
+                ),
+                priority: 2.0,
+            });
+
+        }
+    }
+
     potential_actions
 }
