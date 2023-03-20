@@ -10,17 +10,32 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
         let mut log = res.get_mut::<GameLog>().unwrap();
         let player_id = res.get::<Entity>().unwrap();
     
-        if let Ok(_) = world.get_mut::<Position>(id) {
-    
-        } else {
+        if let Err(_) = world.get_mut::<Position>(id) {
             dbg!("Entity doesn't have a position");
             return;
         }
     
-        if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
-            inv.items.push(target);
-        } else {
-            dbg!("Entity has no inventory");
+        if let Ok(name) = world.get_mut::<Name>(id) {
+            if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+                inv.items.push(target);
+
+                let mut entities: Vec<Entity> = vec![];
+                for e1 in inv.items.iter() {
+                    let mut dup = false;
+                    for e2 in entities.iter() {
+                        if e2 == e1 {
+                            dup = true;
+                            println!("ERROR: Duplicate item in {} inventory", name.name);
+                            return;
+                        }
+                    }
+                    if !dup {
+                        entities.push(*e1);
+                    }
+                }
+            } else {
+                dbg!("Entity has no inventory");
+            }
         }
     
         let _res = world.remove_one::<Position>(target);
