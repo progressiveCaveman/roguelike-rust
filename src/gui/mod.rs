@@ -124,11 +124,11 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
     if gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
-    let mut ypos = OFFSET_Y + 1;
+    let mut ypos = OFFSET_Y;
 
-    ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
+    // ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
 
-    ypos += 2;
+    // ypos += 2;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
     ypos += 1;
@@ -140,12 +140,12 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     for e in map.tile_content[idx].iter() {
         if let Ok(name) = world.get::<Name>(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Name: {}", name.name));
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?} {}", e, name.name));
         }
 
         if let Ok(pos) = world.get::<Position>(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Position: {:?}", pos.ps[0]));
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", pos.ps[0]));
         }
 
         if let Ok(stats) = world.get::<CombatStats>(*e) {
@@ -166,7 +166,7 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
                 for item in inv.items.iter() {
                     if let Ok(name) = world.get::<Name>(*item) {
                         ypos += 1;
-                        ctx.print_color(3, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{}", name.name));    
+                        ctx.print_color(3, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}, {}", item, name.name));    
                     }
                 }
             }
