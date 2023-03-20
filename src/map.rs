@@ -4,7 +4,6 @@ use hecs::*;
 use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
 
-use crate::components::{Position, Faction};
 use crate::gui::{OFFSET_X, OFFSET_Y};
 use crate::{SCALE};
 

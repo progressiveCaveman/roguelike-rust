@@ -1,10 +1,10 @@
 use hecs::*;
-use rltk::{Point, DijkstraMap, NavigationPath};
+use rltk::{Point, NavigationPath};
 
-use crate::utils::{dijkstra_backtrace, InvalidPoint, point_plus};
+use crate::utils::{point_plus};
 use crate::{State, GameMode};
 use crate::map::{Map, TileType};
-use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, BlocksTile, SpatialKnowledge, Locomotive, LocomotionType};
+use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, BlocksTile, Locomotive, LocomotionType};
 
 /// dp is delta
 pub fn try_move_entity(entity: Entity, dp: Point, gs: &mut State) {

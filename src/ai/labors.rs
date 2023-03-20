@@ -292,7 +292,7 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
     let mut fish_in_inv = 0;
     let mut inventory_fish: Entity = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
-        if let Ok(item) = world.get::<Fish>(*e) {
+        if let Ok(_) = world.get::<Fish>(*e) {
             fish_in_inv += 1;
             inventory_fish = *e;
         }
