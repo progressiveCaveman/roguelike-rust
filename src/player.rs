@@ -48,7 +48,7 @@ pub fn get_item(world: &mut World, res: &mut Resources){
     match target_item {
         None => {log.messages.push(format!("There is nothing to pick up here"))}
         Some(item) => {
-            let _res = world.insert_one(*player_id, WantsToPickupItem {
+            let _res = world.add_component(*player_id, WantsToPickupItem {
                 collected_by: *player_id,
                 item
             });

@@ -1,5 +1,5 @@
 use resources::*;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::effects::add_effect;
 use crate::gui::Palette;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
@@ -211,14 +211,14 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
 
     for (id, name, target) in to_unequip {
         world.remove_one::<Equipped>(id).unwrap();
-        world.insert_one(id, InBackpack{owner: target}).unwrap();
+        world.add_component(id, InBackpack{owner: target}).unwrap();
         if target == *player_id {
             log.messages.push(format!("You unequip your {}", name.name));
         }
     }
 
     for (id, equippable, name, target) in to_equip {
-        world.insert_one(id, Equipped{owner: target, slot: equippable.slot}).unwrap();
+        world.add_component(id, Equipped{owner: target, slot: equippable.slot}).unwrap();
         world.remove_one::<InBackpack>(id).unwrap();
         if target == *player_id {
             log.messages.push(format!("You equip your {}", name.name));

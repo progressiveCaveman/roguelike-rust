@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use resources::*;
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType, LocomotionType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
@@ -15,7 +15,7 @@ use crate::systems::system_fire::NEW_FIRE_TURNS;
 const MAX_MONSTERS: i32 = 4;
 
 pub fn player(world: &mut World, pos: (i32, i32)) -> EntityId {
-    world.spawn((
+    world.add_entity((
         SerializeMe {},
         Position { ps: vec![Point{ x: pos.0, y: pos.1 }]},
         Renderable {
@@ -123,7 +123,7 @@ fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
 /// Monsters
 
 pub fn villager(world: &mut World, x: i32, y:i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('v'),
@@ -147,7 +147,7 @@ pub fn villager(world: &mut World, x: i32, y:i32) -> EntityId {
 }
 
 pub fn fish(world: &mut World, x: i32, y:i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('f'),
@@ -177,7 +177,7 @@ pub fn goblin(world: &mut World, x: i32, y:i32) -> EntityId {
 }
 
 pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: String) -> EntityId{
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph,
@@ -202,7 +202,7 @@ pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, nam
 
 #[allow(dead_code)]
 pub fn big_monster(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }, Point{ x: x+1, y }, Point{ x, y: y+1 }, Point{ x: x+1, y: y+1 }]},
         Renderable {
             glyph: rltk::to_cp437('o'),
@@ -227,7 +227,7 @@ pub fn big_monster(world: &mut World, x: i32, y: i32) -> EntityId {
 /// consumables
 
 pub fn health_potion(world: &mut World, x: i32, y:i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('p'),
@@ -244,7 +244,7 @@ pub fn health_potion(world: &mut World, x: i32, y:i32) -> EntityId {
 }
 
 pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('('),
@@ -262,7 +262,7 @@ pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> EntityId {
 }
 
 pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('*'),
@@ -281,7 +281,7 @@ pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
 }
 
 pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('&'),
@@ -301,7 +301,7 @@ pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
 /// equippables
 
 pub fn dagger(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('│'),
@@ -318,7 +318,7 @@ pub fn dagger(world: &mut World, x: i32, y: i32) -> EntityId {
 }
 
 pub fn longsword(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('│'),
@@ -335,7 +335,7 @@ pub fn longsword(world: &mut World, x: i32, y: i32) -> EntityId {
 }
 
 pub fn shield(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('°'),
@@ -352,7 +352,7 @@ pub fn shield(world: &mut World, x: i32, y: i32) -> EntityId {
 }
 
 pub fn tower_shield(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('°'),
@@ -369,7 +369,7 @@ pub fn tower_shield(world: &mut World, x: i32, y: i32) -> EntityId {
 }
 
 pub fn log(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('='),
@@ -387,7 +387,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> EntityId {
 // structures
 
 pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType, rate: i32) -> EntityId {    
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('&'),
@@ -403,7 +403,7 @@ pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType
 }
 
 pub fn tree(world: &mut World, x: i32, y: i32) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
             glyph: rltk::to_cp437('|'),
@@ -428,7 +428,7 @@ pub fn plank_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 
     // TODO pick colors for buildings, maybe glyph?
 
-    world.spawn((
+    world.add_entity((
         Position {ps},
         Renderable {
             glyph: rltk::to_cp437('#'),
@@ -454,7 +454,7 @@ pub fn chief_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 
     // TODO pick colors for buildings, maybe glyph?
 
-    world.spawn((
+    world.add_entity((
         Position {ps},
         Renderable {
             glyph: rltk::to_cp437('#'),
@@ -480,7 +480,7 @@ pub fn fish_cleaner(world: &mut World, x: i32, y: i32, width: i32, height: i32) 
 
     // TODO pick colors for buildings, maybe glyph?
 
-    world.spawn((
+    world.add_entity((
         Position {ps},
         Renderable {
             glyph: rltk::to_cp437('#'),
@@ -508,7 +508,7 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 
     // TODO pick colors for buildings, maybe glyph?
 
-    world.spawn((
+    world.add_entity((
         Position {ps},
         Renderable {
             glyph: rltk::to_cp437('#'),
@@ -529,7 +529,7 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 /// misc
 
 pub fn tmp_fireball(world: &mut World) -> EntityId {
-    world.spawn((
+    world.add_entity((
         Name {name: "Fireball".to_string()},
         Item {typ: ItemType::Scroll},
         Consumable {},

@@ -1,6 +1,6 @@
 use resources::Resources;
 use rltk::RandomNumberGenerator;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::map::TileType;
 use crate::RunState;
 use crate::components::{CombatStats, Fire, Position};

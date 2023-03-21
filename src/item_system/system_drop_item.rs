@@ -1,5 +1,5 @@
 use resources::*;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::components::{Name, WantsToDropItem};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::GameLog;

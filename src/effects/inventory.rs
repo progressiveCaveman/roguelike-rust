@@ -1,3 +1,5 @@
+use shipyard::{ViewMut, Get};
+
 use super::*;
 use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog};
 
@@ -9,6 +11,12 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         let mut log = res.get_mut::<GameLog>().unwrap();
         let player_id = res.get::<EntityId>().unwrap();
     
+        gs.world.run(|mut positions: ViewMut<Position>| {
+            if let Err(_) = (&mut positions).get(target) {
+                dbg!("Entity doesn't have a position");
+                return;
+            }
+        });
         if let Err(_) = world.get_mut::<Position>(id) {
             dbg!("Entity doesn't have a position");
             return;
@@ -38,7 +46,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         }
     
         let _res = world.remove_one::<Position>(target);
-        let _r = world.insert_one(target, InBackpack {owner: id});
+        let _r = world.add_component(target, InBackpack {owner: id});
     
         if id == *player_id {
             let name = world.get::<Name>(target).unwrap();
@@ -58,7 +66,6 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         }else{
             unreachable!()
         };
-
         if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
             if let Some(pos) = inv.items.iter().position(|x| *x == target) {
                 inv.items.remove(pos);
@@ -67,6 +74,6 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         
         let _in_bp = world.remove_one::<InBackpack>(id);
         let _equipped = world.remove_one::<Equipped>(id);
-        world.insert_one(target, Position { ps:vec![pos]}).unwrap();
+        world.add_component(target, Position { ps:vec![pos]});
     }
 }

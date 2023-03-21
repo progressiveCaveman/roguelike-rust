@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 use rltk::{self, Point, DijkstraMap};
-use shipyard::EntityId;
+use shipyard::{EntityId, Component, World, View, IntoIter};
 
 use crate::{RenderOrder, map::{TileType, Map}};
 
 /// Basic UI components
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Component, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub ps: Vec<Point>
 }
@@ -27,7 +27,7 @@ impl Position {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Renderable {
     pub glyph: rltk::FontCharType,
     pub fg: rltk::RGBA,
@@ -50,7 +50,7 @@ impl Default for Renderable {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
@@ -69,85 +69,85 @@ impl Viewshed {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct Name {
     pub name: String
 }
 
 /// Entity properties
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Player {}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Monster {}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Villager {}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Fish {}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Faction {
     pub faction: i32
 }
 
 /// Structures
 
-// #[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct PlankHouse {
     pub housing_cap: i32,
     pub villagers: Vec<EntityId>
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct ChiefHouse {
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct LumberMill {
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct FishCleaner {
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum SpawnerType {
     Orc,
     Fish
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Spawner {
     pub typ: SpawnerType,
     pub rate: i32
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Tree {}
 
 /// Labors?
 
 /// Entity properties
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum LocomotionType {
     Ground,
     Water
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Locomotive {
     pub mtype: LocomotionType,
     pub speed: usize
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct BlocksTile {}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct CombatStats {
     pub max_hp: i32,
     pub hp: i32,
@@ -156,7 +156,7 @@ pub struct CombatStats {
     pub regen_rate: i32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct Inventory {
     pub capacity: i32,
     pub items: Vec<EntityId>
@@ -165,49 +165,60 @@ pub struct Inventory {
 impl Inventory {
     pub fn count_type(&self, world: &World, item_type: ItemType) -> i32 {
         let mut count = 0;
-        for e in self.items.iter() {
-            if let Ok(item) = world.get::<Item>(*e) {
+        world.run(|mut items: View<Item>| {
+            for item in items.iter() {
                 if item.typ == item_type {
                     count += 1;
                 }
             }
-        }
+        });
+
+        // for e in self.items.iter() {
+        //     if let Ok(item) = world.get::<Item>(*e) {
+        //         if item.typ == item_type {
+        //             count += 1;
+        //         }
+        //     }
+        // }
 
         return count;
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct SpatialKnowledge {
     pub tiles: HashMap<usize, (TileType, Vec<EntityId>)>,
 }
 
+#[derive(Component)]
 pub struct DijkstraMapToMe {
     pub map: DijkstraMap
 }
 
 /// Entity intents
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct WantsToAttack {
     pub target: EntityId
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct WantsToPickupItem {
     pub collected_by: EntityId,
     pub item: EntityId
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct WantsToDropItem {
     pub item: EntityId
 }
 
+#[derive(Component)]
 pub struct WantsToUnequipItem {
     pub item: EntityId
 }
 
+#[derive(Component)]
 pub struct WantsToUseItem {
     pub item: EntityId,
     pub target: Option<rltk::Point>
@@ -215,26 +226,28 @@ pub struct WantsToUseItem {
 
 /// Inventory components
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Component, PartialEq, Copy, Clone)]
 pub enum EquipmentSlot { RightHand, LeftHand }
 
-#[derive(Copy, Clone)]
+#[derive(Component, Copy, Clone)]
 pub struct Equippable {
     pub slot: EquipmentSlot
 }
 
+#[derive(Component)]
 pub struct Equipped {
     pub owner: EntityId,
     pub slot: EquipmentSlot
 }
 
+#[derive(Component)]
 pub struct InBackpack {
     pub owner: EntityId
 }
 
 /// Item properties
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum ItemType {
     Log,
     Shield,
@@ -244,69 +257,78 @@ pub enum ItemType {
     Fish
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Item {
     pub typ: ItemType
 }
 
+#[derive(Component)]
 pub struct Consumable {}
 
+#[derive(Component)]
 pub struct MeleePowerBonus {
     pub power: i32
 }
 
+#[derive(Component)]
 pub struct MeleeDefenseBonus {
     pub defense: i32
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct ProvidesHealing {
     pub heal: i32
 }
 
+#[derive(Component)]
 pub struct Ranged {
     pub range: i32
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct DealsDamage {
     pub damage: i32
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct Confusion {
     pub turns: i32
 }
 
+#[derive(Component)]
 pub struct AreaOfEffect {
     pub radius: i32
 }
 
 /// Fire components
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct Fire {
     pub turns: i32
 }
 
-#[derive(Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 pub struct Flammable {}
 
 /// Save components
 
+#[derive(Component)]
 pub struct SerializeMe {}
 
+#[derive(Component)]
 pub struct Lifetime {
     pub ms: f32
 }
 
 /// Particle components
 
+#[derive(Component)]
 pub struct Velocity {
     pub x: f32,
     pub y: f32
 }
 
+#[derive(Component)]
 pub struct Particle {
     pub float_x: f32,
     pub float_y: f32

@@ -57,9 +57,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
                 },
                 Task::PickUpItem => {
-                    // if let Some(Target::ENTITY(t)) = intent.target {
-                    //     world.insert_one(id, WantsToPickupItem{ collected_by: id, item: t }).unwrap();
-                    // }
+                    
                 },
                 Task::DropItem => todo!(),
                 Task::UseItem => todo!(),
@@ -142,6 +140,6 @@ fn update_decisions(gs: &mut State) {
 
     for (id, intent) in wants_intent {
         let world = &mut gs.world;
-        let _r = world.insert_one(id, intent);
+        let _r = world.add_component(id, intent);
     }
 }

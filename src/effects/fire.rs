@@ -16,6 +16,6 @@ pub fn inflict_fire(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     let world = &mut gs.world;
 
     if let EffectType::Fire { turns } = effect.effect_type {
-        let _ = world.insert_one(target, Fire{turns});
+        let _ = world.add_component(target, Fire{turns});
     }
 }

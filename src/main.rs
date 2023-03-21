@@ -29,7 +29,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::EntityId;
+use shipyard::{EntityId, World, EntitiesView, ViewMut, Get};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -121,24 +121,33 @@ impl State {
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
         let mut ids_to_delete: Vec<EntityId> = Vec::new();
-        let all_entities: Vec<EntityId> = self.world.iter().map(|(id, _)| id).collect();
 
         let player_id = self.resources.get::<EntityId>().unwrap();
 
-        for id in all_entities {
-            let mut to_delete = true;
-            if let Ok(_p) =  self.world.get::<Player>(id) { to_delete = false; }
+        self.world.run(|v_pos: View<Pos>, v_vel: View<Vel>| {
+            for (i, _) in (&v_pos, !&v_vel).iter() {
+                dbg!(i);
+            }
+        });
+
+
+
+
+        // self.world.run(|entities: EntitiesView, | {
+
+        //     let mut to_delete = true;
+        //     if let Ok(_p) = self.world.get::<Player>(id) { to_delete = false; }
             
-            if let Ok(backpack) = self.world.get::<InBackpack>(id) {
-                if backpack.owner == *player_id { to_delete = false; }
-            }
+        //     if let Ok(backpack) = self.world.get::<InBackpack>(id) {
+        //         if backpack.owner == *player_id { to_delete = false; }
+        //     }
 
-            if let Ok(equipped) = self.world.get::<Equipped>(id) {
-                if equipped.owner == *player_id { to_delete = false; }
-            }
+        //     if let Ok(equipped) = self.world.get::<Equipped>(id) {
+        //         if equipped.owner == *player_id { to_delete = false; }
+        //     }
 
-            if to_delete { ids_to_delete.push(id); }
-        }
+        //     if to_delete { ids_to_delete.push(id); }
+        // });
 
         ids_to_delete
     }
@@ -188,8 +197,12 @@ impl State {
         player_pos_comp.ps[0].y = start_pos.y;
 
         // Mark viewshed as dirty
-        let player_vs = self.world.get_mut::<Viewshed>(*player_id);
-        if let Ok(mut vs) = player_vs { vs.dirty = true; }
+        // let player_vs = self.world.get_mut::<Viewshed>(*player_id);
+        self.world.run(|mut vs: ViewMut<Viewshed>| {
+            if let Ok(mut vs) = vs.get(*player_id) {
+                vs.dirty = true; 
+            }
+        });
     }
 
     fn next_level(&mut self) {
@@ -311,17 +324,17 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            self.world.insert_one(*id, WantsToUseItem {item, target: None}).unwrap();
+                            self.world.add_component(*id, WantsToUseItem {item, target: None}).unwrap();
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
                         let player_id = self.resources.get::<EntityId>().unwrap();
-                        self.world.insert_one(*player_id, WantsToDropItem {item}).unwrap();
+                        self.world.add_component(*player_id, WantsToDropItem {item}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
                         let player_id = self.resources.get::<EntityId>().unwrap();
-                        self.world.insert_one(*player_id, WantsToUnequipItem{item}).unwrap();
+                        self.world.add_component(*player_id, WantsToUnequipItem{item}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Cancel => { new_runstate = RunState::ShowInventory}
@@ -334,7 +347,7 @@ impl GameState for State {
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
                         let player_id = self.resources.get::<EntityId>().unwrap();
-                        self.world.insert_one(*player_id, WantsToUseItem{item, target: res.1}).unwrap();
+                        self.world.add_component(*player_id, WantsToUseItem{item, target: res.1}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }
                 }

@@ -1,6 +1,6 @@
 use resources::*;
 use rltk::Point;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
 use crate::gamelog::GameLog;
@@ -37,7 +37,7 @@ pub fn run_cleanup_system(world: &mut World, res: &mut Resources) {
     for (e, point) in to_drop_items.iter() {
         let _in_bp = world.remove_one::<InBackpack>(*e);
         let _equipped = world.remove_one::<Equipped>(*e);
-        world.insert_one(*e, Position { ps:vec![*point]}).unwrap();    
+        world.add_component(*e, Position { ps:vec![*point]});    
     }
 
     for id in dead.iter() {

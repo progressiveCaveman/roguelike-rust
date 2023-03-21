@@ -1,5 +1,5 @@
 use resources::*;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 
 use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem, Inventory}, gamelog::GameLog};
 
@@ -21,7 +21,7 @@ pub fn run_unequip_item_system(world: &mut World, res: &mut Resources) {
 
     for (id, item_id) in to_unequip { //todo will .iter() break this
         world.remove_one::<Equipped>(item_id).unwrap();
-        world.insert_one(item_id, InBackpack{owner: id}).unwrap();
+        world.add_component(item_id, InBackpack{owner: id}).unwrap();
     }
 
     for id in to_remove_wants_unequip {

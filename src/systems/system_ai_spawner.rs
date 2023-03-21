@@ -20,7 +20,7 @@ pub fn run_spawner_system(world: &mut World, res: &mut Resources) {
         match t {
             SpawnerType::Orc => {
                 let e = entity_factory::orc(world, p.x, p.y);
-                world.insert_one(e, Faction {faction: *f}).unwrap();        
+                world.add_component(e, Faction {faction: *f}).unwrap();        
             },
             SpawnerType::Fish => {
                 entity_factory::fish(world, p.x, p.y);        

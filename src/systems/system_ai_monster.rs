@@ -120,11 +120,11 @@ pub fn run_monster_ai_system(gs: &mut State) {
 
     for id in needs_wants_to_attack.iter() {
         let player_id: &EntityId = &res.get::<EntityId>().unwrap();
-        world.insert_one(*id, WantsToAttack {target: *player_id}).unwrap();
+        world.add_component(*id, WantsToAttack {target: *player_id}).unwrap();
     }
 
     for (id, item) in needs_wants_to_pick_up.iter() {
-        world.insert_one(*id, WantsToPickupItem{ collected_by: *id, item: *item }).unwrap();
+        world.add_component(*id, WantsToPickupItem{ collected_by: *id, item: *item }).unwrap();
     }
 
     for (id, _confusion) in to_update_confusion.iter() {

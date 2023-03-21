@@ -1,3 +1,5 @@
+use shipyard::{ViewMut, Get};
+
 use super::*;
 use crate::components::{CombatStats};
 use crate::gamelog::GameLog;
@@ -8,15 +10,25 @@ pub fn inflict_damage(gs: &mut State, damage: &EffectSpawner, target: EntityId) 
     let mut log = res.get_mut::<GameLog>().unwrap();
 
     if let EffectType::Damage{amount} = damage.effect_type {
-
-        let stats = world.get_mut::<CombatStats>(target);
-        match stats {
-            Ok(mut stats) => {
-                stats.hp -= amount;
-            },
-            Err(_e) => {
-                log.messages.push(format!("Damage failed!!"));
+        world.run(|mut stats: ViewMut<CombatStats>| {
+            match (&mut stats).get(target) {
+                Ok(mut stats) => {
+                    stats.hp -= amount;
+                },
+                Err(_e) => {
+                    log.messages.push(format!("Damage failed!!"));
+                }            
             }
-        }
+        });
+
+        // let stats = world.get_mut::<CombatStats>(target);
+        // match stats {
+        //     Ok(mut stats) => {
+        //         stats.hp -= amount;
+        //     },
+        //     Err(_e) => {
+        //         log.messages.push(format!("Damage failed!!"));
+        //     }
+        // }
     }
 }

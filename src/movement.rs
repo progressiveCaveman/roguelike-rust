@@ -67,7 +67,7 @@ pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
     }
 
     if let Some((e, c)) = needs_wants_to_attack {
-        let _res = gs.world.insert_one(e, c);
+        let _res = gs.world.add_component(e, c);
     }
 }
 
