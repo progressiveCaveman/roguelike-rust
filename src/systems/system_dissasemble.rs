@@ -1,5 +1,5 @@
-use hecs::*;
 use rltk::Point;
+use shipyard::EntityId;
 use crate::ai::decisions::{Intent, Task, Target};
 use crate::utils::InvalidPoint;
 use crate::{entity_factory, State};
@@ -8,7 +8,7 @@ use crate::components::{Position, Tree};
 pub fn run_dissasemble_system(gs: &mut State) {
     let world = &mut gs.world;
 
-    let mut wants_to_destroy: Vec<(Entity, Vec<Point>, Intent)> = vec![];
+    let mut wants_to_destroy: Vec<(EntityId, Vec<Point>, Intent)> = vec![];
 
     for (id, (pos, intent)) in &mut world.query::<(&Position, &Intent)>() {
         if intent.task == Task::Destroy {
@@ -16,7 +16,7 @@ pub fn run_dissasemble_system(gs: &mut State) {
         }
     }
 
-    let mut wants_despawn: Vec<Entity> = vec![];
+    let mut wants_despawn: Vec<EntityId> = vec![];
 
     for (_, pos, intent) in wants_to_destroy.iter() {
         let target = intent.target[0].get_point(world);

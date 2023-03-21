@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use hecs::*;
 use resources::*;
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
+use shipyard::EntityId;
 use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType, LocomotionType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
@@ -14,7 +14,7 @@ use crate::systems::system_fire::NEW_FIRE_TURNS;
 
 const MAX_MONSTERS: i32 = 4;
 
-pub fn player(world: &mut World, pos: (i32, i32)) -> Entity {
+pub fn player(world: &mut World, pos: (i32, i32)) -> EntityId {
     world.spawn((
         SerializeMe {},
         Position { ps: vec![Point{ x: pos.0, y: pos.1 }]},
@@ -122,7 +122,7 @@ fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
 
 /// Monsters
 
-pub fn villager(world: &mut World, x: i32, y:i32) -> Entity {
+pub fn villager(world: &mut World, x: i32, y:i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -146,7 +146,7 @@ pub fn villager(world: &mut World, x: i32, y:i32) -> Entity {
     ))
 }
 
-pub fn fish(world: &mut World, x: i32, y:i32) -> Entity {
+pub fn fish(world: &mut World, x: i32, y:i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -168,15 +168,15 @@ pub fn fish(world: &mut World, x: i32, y:i32) -> Entity {
     ))
 }
 
-pub fn orc(world: &mut World, x: i32, y:i32) -> Entity{
+pub fn orc(world: &mut World, x: i32, y:i32) -> EntityId{
     monster(world, x, y, rltk::to_cp437('o'), "Orc".to_string())
 }
 
-pub fn goblin(world: &mut World, x: i32, y:i32) -> Entity {
+pub fn goblin(world: &mut World, x: i32, y:i32) -> EntityId {
     monster(world, x, y, rltk::to_cp437('g'), "Goblin".to_string())
 }
 
-pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: String) -> Entity{
+pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: String) -> EntityId{
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -201,7 +201,7 @@ pub fn monster(world: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, nam
 }
 
 #[allow(dead_code)]
-pub fn big_monster(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn big_monster(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }, Point{ x: x+1, y }, Point{ x, y: y+1 }, Point{ x: x+1, y: y+1 }]},
         Renderable {
@@ -226,7 +226,7 @@ pub fn big_monster(world: &mut World, x: i32, y: i32) -> Entity {
 
 /// consumables
 
-pub fn health_potion(world: &mut World, x: i32, y:i32) -> Entity {
+pub fn health_potion(world: &mut World, x: i32, y:i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -243,7 +243,7 @@ pub fn health_potion(world: &mut World, x: i32, y:i32) -> Entity {
     ))
 }
 
-pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> Entity {
+pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -261,7 +261,7 @@ pub fn magic_missile_scroll(world: &mut World, x: i32, y:i32) -> Entity {
     ))
 }
 
-pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -280,7 +280,7 @@ pub fn fireball_scroll(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -300,7 +300,7 @@ pub fn confusion_scroll(world: &mut World, x: i32, y: i32) -> Entity {
 
 /// equippables
 
-pub fn dagger(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn dagger(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -317,7 +317,7 @@ pub fn dagger(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn longsword(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn longsword(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -334,7 +334,7 @@ pub fn longsword(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn shield(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn shield(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -351,7 +351,7 @@ pub fn shield(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn tower_shield(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn tower_shield(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -368,7 +368,7 @@ pub fn tower_shield(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn log(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -386,7 +386,7 @@ pub fn log(world: &mut World, x: i32, y: i32) -> Entity {
 
 // structures
 
-pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType, rate: i32) -> Entity {    
+pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType, rate: i32) -> EntityId {    
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -402,7 +402,7 @@ pub fn spawner(world: &mut World, x: i32, y: i32, faction: i32, typ: SpawnerType
     ))
 }
 
-pub fn tree(world: &mut World, x: i32, y: i32) -> Entity {
+pub fn tree(world: &mut World, x: i32, y: i32) -> EntityId {
     world.spawn((
         Position {ps: vec![Point{ x, y }]},
         Renderable {
@@ -418,7 +418,7 @@ pub fn tree(world: &mut World, x: i32, y: i32) -> Entity {
     ))
 }
 
-pub fn plank_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> Entity {
+pub fn plank_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
@@ -444,7 +444,7 @@ pub fn plank_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
     ))
 }
 
-pub fn chief_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> Entity {
+pub fn chief_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
@@ -470,7 +470,7 @@ pub fn chief_house(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
     ))
 }
 
-pub fn fish_cleaner(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> Entity {
+pub fn fish_cleaner(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
@@ -498,7 +498,7 @@ pub fn fish_cleaner(world: &mut World, x: i32, y: i32, width: i32, height: i32) 
     ))
 }
 
-pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> Entity {
+pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
@@ -528,7 +528,7 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 
 /// misc
 
-pub fn tmp_fireball(world: &mut World) -> Entity {
+pub fn tmp_fireball(world: &mut World) -> EntityId {
     world.spawn((
         Name {name: "Fireball".to_string()},
         Item {typ: ItemType::Scroll},

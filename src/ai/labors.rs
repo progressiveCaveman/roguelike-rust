@@ -1,11 +1,11 @@
-use hecs::Entity;
 use rltk::Point;
+use shipyard::EntityId;
 
 use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}};
 
 use super::decisions::{Action, Consideration, Inputs, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
 
-pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
 
     let world = &gs.world;
     let res = &gs.resources;
@@ -16,7 +16,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     let has_inventory_space = inv.capacity > inv.items.len() as i32;
 
     let mut logs_in_inv = 0;
-    let mut inventory_log: Entity = id; // initialization is messy here but correct as long as logs_in_inv > 0
+    let mut inventory_log: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
         if let Ok(item) = world.get::<Item>(*e) {
             if item.typ == ItemType::Log {
@@ -27,9 +27,9 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     }
 
     // populate all our info
-    let mut trees: Vec<Entity> = vec![];
-    let mut logs: Vec<Entity> = vec![];
-    let mut lumber_mills: Vec<Entity> = vec![];
+    let mut trees: Vec<EntityId> = vec![];
+    let mut logs: Vec<EntityId> = vec![];
+    let mut lumber_mills: Vec<EntityId> = vec![];
     for (_, entities) in space.tiles.values() {
         for e in entities.iter() {
             if let Ok(_) = world.get::<Tree>(*e) {
@@ -280,7 +280,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: Entity, pos: &Position, space:
     potential_actions
 }
 
-pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
     let world = &gs.world;
     let res = &gs.resources;
     let turn = res.get::<i32>().unwrap();
@@ -290,7 +290,7 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
     let has_inventory_space = inv.capacity > inv.items.len() as i32;
 
     let mut fish_in_inv = 0;
-    let mut inventory_fish: Entity = id; // initialization is messy here but correct as long as logs_in_inv > 0
+    let mut inventory_fish: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
         if let Ok(_) = world.get::<Fish>(*e) {
             fish_in_inv += 1;
@@ -300,7 +300,7 @@ pub fn get_fishing_actions(gs: &State, id: Entity, pos: &Position, space: &Spati
 
     // populate all our info
     let mut water: Vec<Point> = vec![]; // actually points adjacent to water
-    let mut fisheries: Vec<Entity> = vec![];
+    let mut fisheries: Vec<EntityId> = vec![];
 
     for (idx, (tile, entities)) in space.tiles.iter() {
         let map = res.get::<Map>().unwrap();

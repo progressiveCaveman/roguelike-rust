@@ -1,7 +1,7 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use shipyard::EntityId;
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
-use hecs::*;
 use resources::*;
 use crate::gui::{ItemMenuResult, Palette};
 use crate::components::{Name, InBackpack, Equipped, Equippable};
@@ -69,8 +69,8 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
     }
 }
 
-pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
-    let player_id = res.get::<Entity>().unwrap();
+pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
+    let player_id = res.get::<EntityId>().unwrap();
 
     dbg!("Inventory display code is outdated");
     // Items in backpack
@@ -83,7 +83,7 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     let title = "Inventory";
     ctx.print_color(13, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut useable: Vec<Entity> = Vec::new();
+    let mut useable: Vec<EntityId> = Vec::new();
     for (j, (id, (_pack, name))) in world.query::<(&InBackpack, &Name)>().iter().filter(|item| item.1.0.owner == *player_id).enumerate() {
         ctx.set(12, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
         ctx.set(13, y, Palette::COLOR_PURPLE, Palette::MAIN_BG, 97 + j as rltk::FontCharType);
@@ -105,7 +105,7 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut equipped: Vec<Entity> = Vec::new();
+    let mut equipped: Vec<EntityId> = Vec::new();
     for (j, (id, (_pack, name))) in world.query::<(&Equipped, &Name)>().iter().filter(|item| item.1.0.owner == *player_id).enumerate() {
         let offset = j + backpack_count;
         ctx.set(47, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
@@ -136,7 +136,7 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     }
 }
 
-pub fn show_item_actions(world: &mut World, _res: &mut Resources, item: Entity, ctx: &mut Rltk) -> ItemActionSelection {
+pub fn show_item_actions(world: &mut World, _res: &mut Resources, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
     let item_name = world.get::<Name>(item).unwrap();
     ctx.draw_box(15, 23, 31, 5, Palette::MAIN_FG, Palette::MAIN_BG);
     ctx.print_color(18, 23, Palette::MAIN_FG, Palette::MAIN_BG, item_name.name.to_string());

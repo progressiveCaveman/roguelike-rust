@@ -1,6 +1,6 @@
-use hecs::*;
 use rltk;
 use rltk::Point;
+use shipyard::EntityId;
 use crate::utils::point_diff;
 use crate::{State, movement};
 use crate::gui::Palette;
@@ -11,11 +11,11 @@ use crate::movement::try_move_entity;
 
 pub fn run_monster_ai_system(gs: &mut State) {
 
-    let mut needs_wants_to_attack: Vec<Entity> = Vec::new();
-    let mut needs_wants_to_pick_up: Vec<(Entity, Entity)> = Vec::new();
-    let mut to_update_confusion: Vec<(Entity, Confusion)> = Vec::new();
+    let mut needs_wants_to_attack: Vec<EntityId> = Vec::new();
+    let mut needs_wants_to_pick_up: Vec<(EntityId, EntityId)> = Vec::new();
+    let mut to_update_confusion: Vec<(EntityId, Confusion)> = Vec::new();
 
-    let mut to_try_move: Vec<(Entity, Point)> = Vec::new();
+    let mut to_try_move: Vec<(EntityId, Point)> = Vec::new();
 
     let world = &mut gs.world;
     let res = &mut gs.resources;
@@ -119,7 +119,7 @@ pub fn run_monster_ai_system(gs: &mut State) {
     }
 
     for id in needs_wants_to_attack.iter() {
-        let player_id: &Entity = &res.get::<Entity>().unwrap();
+        let player_id: &EntityId = &res.get::<EntityId>().unwrap();
         world.insert_one(*id, WantsToAttack {target: *player_id}).unwrap();
     }
 

@@ -1,6 +1,5 @@
 use std::sync::Mutex;
 use std::collections::VecDeque;
-use hecs::*;
 
 mod damage;
 pub use damage::inflict_damage;
@@ -17,6 +16,7 @@ mod heal;
 
 mod inventory;
 pub use inventory::pick_up;
+use shipyard::EntityId;
 
 use crate::{Map, State};
 
@@ -38,17 +38,17 @@ pub enum EffectType {
 pub enum Targets {
     Tile { tile_idx: usize},
     Tiles { tiles: Vec<usize> },
-    Single { target: Entity },
-    Area { target: Vec<Entity> },
+    Single { target: EntityId },
+    Area { target: Vec<EntityId> },
 }
 
 pub struct EffectSpawner {
-    pub creator : Option<Entity>,
+    pub creator : Option<EntityId>,
     pub effect_type : EffectType,
     pub targets : Targets
 }
 
-pub fn add_effect(creator : Option<Entity>, effect_type: EffectType, targets : Targets) {
+pub fn add_effect(creator : Option<EntityId>, effect_type: EffectType, targets : Targets) {
     EFFECT_QUEUE
         .lock()
         .unwrap()
@@ -93,7 +93,7 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
 
 fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
     if tile_effect_hits_entities(&effect.effect_type) {
-        let mut entities: Vec<Entity> = vec![];
+        let mut entities: Vec<EntityId> = vec![];
 
         {
             let res = &gs.resources;
@@ -121,7 +121,7 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
     }
 }
 
-fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     match &effect.effect_type {
         EffectType::Damage{..} => damage::inflict_damage(gs, effect, target),
         EffectType::Confusion{..} => confusion::inflict_confusion(gs, effect, target),

@@ -7,7 +7,6 @@ pub use system_item_use::run_item_use_system;
 mod system_unequip_item;
 pub use system_unequip_item::run_unequip_item_system;
 
-use hecs::*;
 use resources::*;
 use crate::ai::decisions::{Intent, Task, Target};
 use crate::components::{WantsToPickupItem, Inventory};

@@ -24,7 +24,6 @@ use self::village::VillageBuilder;
 
 mod common;
 use common::*;
-use hecs::World;
 use resources::Resources;
 
 use crate::rect::Rect;

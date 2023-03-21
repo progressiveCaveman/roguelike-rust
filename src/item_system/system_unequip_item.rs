@@ -1,13 +1,13 @@
-use hecs::*;
 use resources::*;
+use shipyard::EntityId;
 
 use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem, Inventory}, gamelog::GameLog};
 
 pub fn run_unequip_item_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
-    let player_id = res.get_mut::<Entity>().unwrap();
-    let mut to_unequip: Vec<(Entity, Entity)> = Vec::new();
-    let mut to_remove_wants_unequip: Vec<Entity> = Vec::new();
+    let player_id = res.get_mut::<EntityId>().unwrap();
+    let mut to_unequip: Vec<(EntityId, EntityId)> = Vec::new();
+    let mut to_remove_wants_unequip: Vec<EntityId> = Vec::new();
 
     for (id, (_, wants_unequip)) in world.query::<(&Inventory, &WantsToUnequipItem)>().iter() {
         to_remove_wants_unequip.push(id);

@@ -1,6 +1,6 @@
-use hecs::*;
 use rltk;
 use rltk::{Point, BaseMap};
+use shipyard::EntityId;
 use crate::ai::labors::{get_wood_gathering_actions, get_fishing_actions};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
@@ -13,8 +13,8 @@ pub fn run_villager_ai_system(gs: &mut State) {
     
     update_decisions(gs);
 
-    let mut to_move_from_to: Vec<(Entity, Point, Point)> = vec![];
-    let mut to_fish: Vec<(Entity, Point)> = vec![];
+    let mut to_move_from_to: Vec<(EntityId, Point, Point)> = vec![];
+    let mut to_fish: Vec<(EntityId, Point)> = vec![];
 
     {
         let world = &mut gs.world;
@@ -119,7 +119,7 @@ fn update_decisions(gs: &mut State) {
     let res = &gs.resources;
     let turn = res.get::<i32>().unwrap();
 
-    let mut wants_intent: Vec<(Entity, Intent)> = vec![];
+    let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
 
     for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
 

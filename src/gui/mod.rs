@@ -1,6 +1,6 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
-use hecs::*;
 use resources::*;
+use shipyard::EntityId;
 use crate::ai::decisions::Intent;
 use crate::player::get_player_map_knowledge;
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
@@ -56,7 +56,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
     let res = &gs.resources;
 
-    let player_id: &Entity = &res.get::<Entity>().unwrap();
+    let player_id: &EntityId = &res.get::<EntityId>().unwrap();
     let player_stats = world.get::<CombatStats>(*player_id).unwrap();
     let hp_gui = format!("{} / {} HP", player_stats.hp, player_stats.max_hp);
     let map = res.get::<Map>().unwrap();
@@ -222,7 +222,7 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
 
 pub fn ranged_target(world: &mut World, res: &mut Resources, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
     let map = res.get::<Map>().unwrap();
-    let player_id = *res.get::<Entity>().unwrap();
+    let player_id = *res.get::<EntityId>().unwrap();
     let player_pos = *res.get::<Point>().unwrap();
     ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
 

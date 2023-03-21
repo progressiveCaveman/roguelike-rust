@@ -1,5 +1,5 @@
-use hecs::*;
 use resources::*;
+use shipyard::EntityId;
 use crate::effects::add_effect;
 use crate::gui::Palette;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
@@ -9,19 +9,19 @@ use crate::effects::{EffectType, Targets};
 
 pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
     let map = res.get::<Map>().unwrap();
     let mut p_builder = res.get_mut::<ParticleBuilder>().unwrap();
-    let mut to_remove: Vec<(Entity, Entity)> = Vec::new();
-    let mut to_remove_wants_use: Vec<Entity> = Vec::new();
-    let mut to_unequip: Vec<(Entity, Name, Entity)> = Vec::new();
-    let mut to_equip: Vec<(Entity, Equippable, Name, Entity)> = Vec::new();
+    let mut to_remove: Vec<(EntityId, EntityId)> = Vec::new();
+    let mut to_remove_wants_use: Vec<EntityId> = Vec::new();
+    let mut to_unequip: Vec<(EntityId, Name, EntityId)> = Vec::new();
+    let mut to_equip: Vec<(EntityId, Equippable, Name, EntityId)> = Vec::new();
 
     for (id, use_item) in &mut world.query::<&WantsToUseItem>().iter() {
         let mut used_item = true;
 
         // Find all targets
-        let mut targets: Vec<Entity> = Vec::new();
+        let mut targets: Vec<EntityId> = Vec::new();
         let mut target_tiles: Vec<usize> = Vec::new();
         match use_item.target {
             None => targets.push(*player_id),

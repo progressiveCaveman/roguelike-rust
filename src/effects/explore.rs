@@ -1,11 +1,11 @@
-use hecs::{Entity};
 use rltk::{Point, DijkstraMap};
+use shipyard::EntityId;
 
 use crate::{State, utils::{InvalidPoint, dijkstra_backtrace}, map::{Map, TileType}, components::{Position, SpatialKnowledge}, movement::try_move_entity};
 
 use super::EffectSpawner;
 
-pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: Entity){
+pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
     let res = &gs.resources;
     
     if let Some(entity) = effect.creator {

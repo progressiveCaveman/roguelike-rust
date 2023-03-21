@@ -4,7 +4,6 @@ extern crate lazy_static;
 use map::TileType;
 use rltk::{RGBA};
 use rltk::{Rltk, GameState, RltkBuilder, Point};
-use hecs::*;
 use resources::Resources;
 
 mod item_system;
@@ -30,6 +29,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
+use shipyard::EntityId;
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -63,8 +63,8 @@ pub enum RunState {
     PlayerTurn,
     AiTurn,
     ShowInventory,
-    ShowItemActions {item: Entity},
-    ShowTargeting {range: i32, item: Entity},
+    ShowItemActions {item: EntityId},
+    ShowTargeting {range: i32, item: EntityId},
     MainMenu {menu_selection: gui_menus::MainMenuSelection},
     SaveGame,
     NextLevel,
@@ -119,11 +119,11 @@ impl State {
         system_map_indexing::run_map_indexing_system(self);
     }
 
-    fn entities_to_delete_on_level_change(&mut self) -> Vec<Entity> {
-        let mut ids_to_delete: Vec<Entity> = Vec::new();
-        let all_entities: Vec<Entity> = self.world.iter().map(|(id, _)| id).collect();
+    fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
+        let mut ids_to_delete: Vec<EntityId> = Vec::new();
+        let all_entities: Vec<EntityId> = self.world.iter().map(|(id, _)| id).collect();
 
-        let player_id = self.resources.get::<Entity>().unwrap();
+        let player_id = self.resources.get::<EntityId>().unwrap();
 
         for id in all_entities {
             let mut to_delete = true;
@@ -182,7 +182,7 @@ impl State {
         // Update player position
         let mut player_position = self.resources.get_mut::<Point>().unwrap();
         *player_position = Point::new(start_pos.x, start_pos.y);
-        let player_id = self.resources.get::<Entity>().unwrap();
+        let player_id = self.resources.get::<EntityId>().unwrap();
         let mut player_pos_comp = self.world.get_mut::<Position>(*player_id).unwrap();
         player_pos_comp.ps[0].x = start_pos.x;
         player_pos_comp.ps[0].y = start_pos.y;
@@ -295,9 +295,9 @@ impl GameState for State {
                 match result {
                     gui_menus::ItemActionSelection::NoSelection => {}
                     gui_menus::ItemActionSelection::Used => {
-                        let mut to_add_wants_use_item: Vec<Entity> = Vec::new();
+                        let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
-                            let player_id = self.resources.get::<Entity>().unwrap();
+                            let player_id = self.resources.get::<EntityId>().unwrap();
                             let is_item_ranged = self.world.get::<Ranged>(item);
                             match is_item_ranged {
                                 Ok(is_item_ranged) => {
@@ -315,12 +315,12 @@ impl GameState for State {
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
-                        let player_id = self.resources.get::<Entity>().unwrap();
+                        let player_id = self.resources.get::<EntityId>().unwrap();
                         self.world.insert_one(*player_id, WantsToDropItem {item}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
-                        let player_id = self.resources.get::<Entity>().unwrap();
+                        let player_id = self.resources.get::<EntityId>().unwrap();
                         self.world.insert_one(*player_id, WantsToUnequipItem{item}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }
@@ -333,7 +333,7 @@ impl GameState for State {
                     gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
-                        let player_id = self.resources.get::<Entity>().unwrap();
+                        let player_id = self.resources.get::<EntityId>().unwrap();
                         self.world.insert_one(*player_id, WantsToUseItem{item, target: res.1}).unwrap();
                         new_runstate = RunState::PlayerTurn;
                     }

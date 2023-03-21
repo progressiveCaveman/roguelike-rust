@@ -1,4 +1,3 @@
-use hecs::*;
 use super::*;
 use crate::{components::Fire};
 
@@ -13,7 +12,7 @@ pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, target_idx: usi
     }
 }
 
-pub fn inflict_fire(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+pub fn inflict_fire(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     let world = &mut gs.world;
 
     if let EffectType::Fire { turns } = effect.effect_type {

@@ -1,4 +1,3 @@
-use hecs::{Entity, World};
 use resources::Resources;
 use rltk::{FontCharType, Rltk, Point, RGBA};
 
@@ -70,7 +69,7 @@ pub fn update_particles(world: &mut World, _res: &mut Resources, ctx: &Rltk) {
 }
 
 pub fn remove_dead_particles(world: &mut World) {
-    let mut particles_to_remove: Vec<Entity> = Vec::new();
+    let mut particles_to_remove: Vec<EntityId> = Vec::new();
     for (id, lifetime) in world.query::<&mut Lifetime>().iter() {
         if lifetime.ms <= 0.0 {
             particles_to_remove.push(id);

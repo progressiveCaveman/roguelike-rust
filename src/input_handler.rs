@@ -1,12 +1,12 @@
 use crate::{State, RunState, GameMode, movement, entity_factory, player, utils::{dir_to_point}, effects::{add_effect, EffectType, Targets}};
-use hecs::Entity;
 use rltk::{Rltk, VirtualKeyCode};
+use shipyard::EntityId;
 
 
 pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     let game_mode: GameMode = *gs.resources.get::<GameMode>().unwrap();
 
-    let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
+    let player_id: EntityId = *gs.resources.get::<EntityId>().unwrap();
 
     // hold shift to move by 10 squares at a time
     let mut movemod = 1;
@@ -37,7 +37,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             RunState::AwaitingInput   
         },
         GameMode::RL => {
-            let player_id: Entity = *gs.resources.get::<Entity>().unwrap();
+            let player_id: EntityId = *gs.resources.get::<EntityId>().unwrap();
 
             match ctx.key {
                 None => { return RunState::AwaitingInput }

@@ -1,8 +1,7 @@
-use hecs::*;
 use super::*;
 use crate::components::{CombatStats};
 
-pub fn heal(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+pub fn heal(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     let world = &gs.world;
 
     if let Ok(mut stats) = world.get_mut::<CombatStats>(target) {

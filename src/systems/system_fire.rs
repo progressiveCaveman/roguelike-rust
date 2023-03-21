@@ -1,6 +1,6 @@
-use hecs::*;
 use resources::Resources;
 use rltk::RandomNumberGenerator;
+use shipyard::EntityId;
 use crate::map::TileType;
 use crate::RunState;
 use crate::components::{CombatStats, Fire, Position};
@@ -33,7 +33,7 @@ pub fn run_fire_system(world: &mut World, res: &mut Resources) {
     }
 
     // reduce fire turns and remove expired fire components
-    let mut to_remove_fire: Vec<Entity> = Vec::new();
+    let mut to_remove_fire: Vec<EntityId> = Vec::new();
 
     for (id, fire) in world.query::<&mut Fire>().iter() {
         fire.turns -= 1;

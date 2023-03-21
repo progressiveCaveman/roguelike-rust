@@ -1,4 +1,3 @@
-use hecs::World;
 use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use rand::thread_rng;

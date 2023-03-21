@@ -1,8 +1,8 @@
 use serde;
 use serde::{Serialize, Deserialize};
-use hecs::*;
 use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
+use shipyard::EntityId;
 
 use crate::gui::{OFFSET_X, OFFSET_Y};
 use crate::{SCALE};
@@ -27,7 +27,7 @@ pub struct Map {
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
-    pub tile_content : Vec<Vec<Entity>>,
+    pub tile_content : Vec<Vec<EntityId>>,
 
     // vec of numbers for debug. If it's not set, shouldn't affect anything
     pub dijkstra_map: Vec<f32>,

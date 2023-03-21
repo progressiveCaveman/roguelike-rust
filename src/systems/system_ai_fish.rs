@@ -1,7 +1,7 @@
 use rand::prelude::SliceRandom;
-use hecs::*;
 use rand::thread_rng;
 use rltk::Point;
+use shipyard::EntityId;
 use crate::map::{TileType, Map};
 use crate::components::{Position, Fish};
 use crate::utils::point_diff;
@@ -9,8 +9,8 @@ use crate::{movement, State};
 
 // currently fish only move east
 pub fn run_fish_ai(gs: &mut State) {    
-    let mut to_try_move: Vec<(Entity, Point)> = vec![];
-    let mut to_remove: Vec<Entity> = vec![];
+    let mut to_try_move: Vec<(EntityId, Point)> = vec![];
+    let mut to_remove: Vec<EntityId> = vec![];
 
     {
         let map: &Map = &mut gs.resources.get::<Map>().unwrap();

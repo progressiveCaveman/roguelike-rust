@@ -1,5 +1,5 @@
-use hecs::*;
 use resources::*;
+use shipyard::EntityId;
 use crate::{components::{CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBonus, Name, Position, WantsToAttack}, systems::system_particle::ParticleBuilder, effects::add_effect, gui::Palette};
 use crate::gamelog::GameLog;
 use crate::effects::{EffectType, Targets};
@@ -8,7 +8,7 @@ pub fn run_melee_combat_system(world: &mut World, res: &mut Resources) {
     let mut log = res.get_mut::<GameLog>().unwrap();
     let mut particle_builder = res.get_mut::<ParticleBuilder>().unwrap();
 
-    let mut to_remove_wants_melee: Vec<Entity> = vec![];
+    let mut to_remove_wants_melee: Vec<EntityId> = vec![];
 
     for (id, (wants_attack, name, stats)) in &mut world.query::<(&WantsToAttack, &Name, &CombatStats)>() {
         if stats.hp > 0 {

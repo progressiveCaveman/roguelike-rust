@@ -1,4 +1,3 @@
-use hecs::*;
 use resources::Resources;
 use crate::map::Map;
 use crate::components::{Position, DijkstraMapToMe};

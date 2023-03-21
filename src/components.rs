@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
-use hecs::*;
 use rltk::{self, Point, DijkstraMap};
+use shipyard::EntityId;
 
 use crate::{RenderOrder, map::{TileType, Map}};
 
@@ -98,7 +98,7 @@ pub struct Faction {
 // #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct PlankHouse {
     pub housing_cap: i32,
-    pub villagers: Vec<Entity>
+    pub villagers: Vec<EntityId>
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -159,7 +159,7 @@ pub struct CombatStats {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Inventory {
     pub capacity: i32,
-    pub items: Vec<Entity>
+    pub items: Vec<EntityId>
 }
 
 impl Inventory {
@@ -179,7 +179,7 @@ impl Inventory {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpatialKnowledge {
-    pub tiles: HashMap<usize, (TileType, Vec<Entity>)>,
+    pub tiles: HashMap<usize, (TileType, Vec<EntityId>)>,
 }
 
 pub struct DijkstraMapToMe {
@@ -190,26 +190,26 @@ pub struct DijkstraMapToMe {
 
 #[derive(Clone, Copy)]
 pub struct WantsToAttack {
-    pub target: Entity
+    pub target: EntityId
 }
 
 #[derive(Clone, Copy)]
 pub struct WantsToPickupItem {
-    pub collected_by: Entity,
-    pub item: Entity
+    pub collected_by: EntityId,
+    pub item: EntityId
 }
 
 #[derive(Clone, Copy)]
 pub struct WantsToDropItem {
-    pub item: Entity
+    pub item: EntityId
 }
 
 pub struct WantsToUnequipItem {
-    pub item: Entity
+    pub item: EntityId
 }
 
 pub struct WantsToUseItem {
-    pub item: Entity,
+    pub item: EntityId,
     pub target: Option<rltk::Point>
 }
 
@@ -224,12 +224,12 @@ pub struct Equippable {
 }
 
 pub struct Equipped {
-    pub owner: Entity,
+    pub owner: EntityId,
     pub slot: EquipmentSlot
 }
 
 pub struct InBackpack {
-    pub owner: Entity
+    pub owner: EntityId
 }
 
 /// Item properties

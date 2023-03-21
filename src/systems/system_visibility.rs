@@ -1,4 +1,3 @@
-use hecs::*;
 use resources::Resources;
 use rltk;
 use rltk::{Point};

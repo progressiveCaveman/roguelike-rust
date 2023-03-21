@@ -1,5 +1,5 @@
-use hecs::*;
 use rltk::{Point, NavigationPath};
+use shipyard::EntityId;
 
 use crate::utils::{point_plus};
 use crate::{State, GameMode};
@@ -7,10 +7,10 @@ use crate::map::{Map, TileType};
 use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, BlocksTile, Locomotive, LocomotionType};
 
 /// dp is delta
-pub fn try_move_entity(entity: Entity, dp: Point, gs: &mut State) {
+pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
     let mut map = gs.resources.get_mut::<Map>().unwrap();
     let mode = gs.resources.get::<GameMode>().unwrap();
-    let mut needs_wants_to_attack: Option<(Entity, WantsToAttack)> = None;
+    let mut needs_wants_to_attack: Option<(EntityId, WantsToAttack)> = None;
 
     // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
 
@@ -72,7 +72,7 @@ pub fn try_move_entity(entity: Entity, dp: Point, gs: &mut State) {
 }
 
 // checks for entities with combat stats on block
-pub fn get_target(world: &World, map: &Map, entity: Entity, pos: &Position, dp: Point) -> Option<Entity> {
+pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> Option<EntityId> {
 
     // check for combat stats on entity
     if let Err(_) = world.get::<CombatStats>(entity){
@@ -99,7 +99,7 @@ pub fn get_target(world: &World, map: &Map, entity: Entity, pos: &Position, dp: 
     None
 }
 
-pub fn can_move(world: &World, map: &Map, entity: Entity, pos: &Position, dp: Point) -> bool {
+pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> bool {
     if let Ok(loco) = world.get::<Locomotive>(entity){
         for pos in pos.ps.iter() {
             // check for tiles that block

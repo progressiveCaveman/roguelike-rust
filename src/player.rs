@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
 use rltk::{Point};
-use hecs::*;
 use resources::*;
+use shipyard::EntityId;
 
 use crate::{State, RunState};
 use crate::map::{Map, TileType};
 use crate::components::{Position, CombatStats, Item, WantsToPickupItem, Fire, SpatialKnowledge, Viewshed};
 use crate::gamelog::GameLog;
 
-pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Entity>)>{
+pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<EntityId>)>{
     let world = &gs.world;
     let res = &gs.resources;
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
 
     if let Ok(space) =  world.get_mut::<SpatialKnowledge>(*player_id) {
         space.tiles.clone()
@@ -24,7 +24,7 @@ pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Ent
 pub fn get_player_viewshed(gs: &State) -> Viewshed {
     let world = &gs.world;
     let res = &gs.resources;
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
 
     let vs = world.get_mut::<Viewshed>(*player_id).unwrap();
 
@@ -32,11 +32,11 @@ pub fn get_player_viewshed(gs: &State) -> Viewshed {
 }
 
 pub fn get_item(world: &mut World, res: &mut Resources){
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
     let player_pos = res.get::<Point>().unwrap();
     let mut log = res.get_mut::<GameLog>().unwrap();
 
-    let mut target_item: Option<Entity> = None;
+    let mut target_item: Option<EntityId> = None;
 
     for (id, (_item, pos)) in &mut world.query::<(&Item, &Position)>() {
         let pos = pos.ps.first().unwrap();
@@ -60,7 +60,7 @@ pub fn reveal_map(gs: &mut State){
     let world = &gs.world;
     let res = &gs.resources;
     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
 
 
     if let Ok(mut space) =  world.get_mut::<SpatialKnowledge>(*player_id) {
@@ -85,7 +85,7 @@ pub fn try_next_level(_world: &mut World, res: &mut Resources) -> bool {
 }
 
 pub fn skip_turn(world: &mut World, res: &mut Resources) -> RunState {
-    let player_id = res.get::<Entity>().unwrap();
+    let player_id = res.get::<EntityId>().unwrap();
     let mut stats = world.get_mut::<CombatStats>(*player_id).unwrap();
 
     // regen player if not on fire

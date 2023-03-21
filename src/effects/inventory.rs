@@ -1,14 +1,13 @@
-use hecs::*;
 use super::*;
 use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog};
 
-pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
         let world = &mut gs.world;
         let res = &gs.resources;
 
         let mut log = res.get_mut::<GameLog>().unwrap();
-        let player_id = res.get::<Entity>().unwrap();
+        let player_id = res.get::<EntityId>().unwrap();
     
         if let Err(_) = world.get_mut::<Position>(id) {
             dbg!("Entity doesn't have a position");
@@ -19,13 +18,13 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
             if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
                 inv.items.push(target);
 
-                let mut entities: Vec<Entity> = vec![];
+                let mut entities: Vec<EntityId> = vec![];
                 for e1 in inv.items.iter() {
                     let mut dup = false;
                     for e2 in entities.iter() {
                         if e2 == e1 {
                             dup = true;
-                            println!("ERROR: Duplicate item in {} inventory", name.name);
+                            // println!("ERROR: Duplicate item in {} inventory", name.name);
                             return;
                         }
                     }
@@ -50,7 +49,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: Entity) {
     }
 }
 
-pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: Entity) {
+pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
         let world = &mut gs.world;
 

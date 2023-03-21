@@ -1,6 +1,6 @@
-use hecs::{Entity, World};
 use resources::Resources;
 use rltk::{Point, BaseMap};
+use shipyard::EntityId;
 
 use crate::{map::Map, components::{Position, ItemType, Inventory, Item}};
 
@@ -241,8 +241,8 @@ impl Inputs {
         min
     }
 
-    pub fn inventory_count(world: &World, holder: Entity, item_type: ItemType) -> f32 {
-        let mut to_count_type: Vec<Entity> = vec![];
+    pub fn inventory_count(world: &World, holder: EntityId, item_type: ItemType) -> f32 {
+        let mut to_count_type: Vec<EntityId> = vec![];
         if let Ok(mut inv) = world.get_mut::<Inventory>(holder) {
             to_count_type.append(&mut inv.items);
         }
@@ -273,7 +273,7 @@ Use:
  #[derive(Clone, Debug, Copy)]
  pub enum Target {
     LOCATION(Point),
-    ENTITY(Entity),
+    ENTITY(EntityId),
 }
 
 impl From<Point> for Target {
@@ -282,8 +282,8 @@ impl From<Point> for Target {
     }
 }
 
-impl From<Entity> for Target {
-    fn from(n: Entity) -> Self {
+impl From<EntityId> for Target {
+    fn from(n: EntityId) -> Self {
         Target::ENTITY(n)
     }
 }

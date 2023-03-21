@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use hecs::World;
 use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 
