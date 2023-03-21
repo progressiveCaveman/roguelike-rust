@@ -1,22 +1,17 @@
-use crate::State;
+use shipyard::{UniqueView, View, ViewMut, IntoIter, IntoWithId, Get};
 use crate::map::Map;
 use crate::components::{BlocksTile, Position};
 
-pub fn run_map_indexing_system(gs: &mut State) {
-    let world = &mut gs.world;
-    let res = &gs.resources;
-    
-    let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
-
+pub fn run_pathfinding_system(map: UniqueView<Map>, vpos: View<Position>, vblocks: ViewMut<BlocksTile>) {
     map.set_blocked();
     map.clear_tile_content();
-
-    for (id, (_bt, pos)) in world.query_mut::<(Option<&BlocksTile>, &Position)>() {
+    
+    for (id, pos) in vpos.iter().with_id() {
         for pos in pos.ps.iter() {
             let idx = map.xy_idx(pos.x, pos.y);
             if idx > map.tiles.len() { continue }
     
-            if let Some(_bt) = _bt {
+            if let Ok(_bt) = vblocks.get(id) {
                 map.blocked[idx] = true;
             }
     

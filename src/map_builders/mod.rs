@@ -25,6 +25,7 @@ use self::village::VillageBuilder;
 mod common;
 use common::*;
 use resources::Resources;
+use shipyard::World;
 
 use crate::rect::Rect;
 use crate::map::{Map, TileType};

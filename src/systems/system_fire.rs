@@ -1,6 +1,5 @@
-use resources::Resources;
 use rltk::RandomNumberGenerator;
-use shipyard::{EntityId, World};
+use shipyard::{UniqueView, UniqueViewMut, View, ViewMut, IntoIter, IntoWithId, Remove};
 use crate::map::TileType;
 use crate::RunState;
 use crate::components::{CombatStats, Fire, Position};
@@ -9,15 +8,11 @@ use crate::Map;
 
 pub const NEW_FIRE_TURNS: i32 = 10;
 
-pub fn run_fire_system(world: &mut World, res: &mut Resources) {
-    let runstate: &RunState = &res.get::<RunState>().unwrap();
-    if *runstate != RunState::PlayerTurn { return; }
-
-    let mut map = res.get_mut::<Map>().unwrap();
+pub fn run_fire_system(map: UniqueView<Map>, runstate: UniqueViewMut<RunState>, vpos: View<Position>, vstats: ViewMut<CombatStats>, vfire: ViewMut<Fire>) {
     let mut rng = RandomNumberGenerator::new();
-
+    
     // damage all entities on fire. If they are standing somewhere flammable, ignite it
-    for (id, (_stats, _fire, pos)) in world.query::<(&mut CombatStats, &mut Fire, &mut Position)>().iter() {
+    for (id, (pos, stats, fire)) in (&vpos, &vstats, &vfire).iter().with_id() {
         add_effect(
             None,
             EffectType::Damage{ amount: 1 },
@@ -33,18 +28,12 @@ pub fn run_fire_system(world: &mut World, res: &mut Resources) {
     }
 
     // reduce fire turns and remove expired fire components
-    let mut to_remove_fire: Vec<EntityId> = Vec::new();
-
-    for (id, fire) in world.query::<&mut Fire>().iter() {
+    for (id, fire) in (&vfire).iter().with_id() {
         fire.turns -= 1;
 
         if fire.turns <= 0 {
-            to_remove_fire.push(id);
+            vfire.remove(id);
         }
-    }
-
-    for id in to_remove_fire.iter() {
-        world.remove_one::<Fire>(*id).unwrap();
     }
 
     // reduce fire turns on tiles

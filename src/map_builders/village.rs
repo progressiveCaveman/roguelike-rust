@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
+use shipyard::World;
 
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
 

@@ -1,46 +1,33 @@
-use resources::*;
-use rltk::Point;
-use shipyard::{EntityId, World};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueView, UniqueViewMut, AllStoragesViewMut, Remove};
 use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
 use crate::gamelog::GameLog;
 
-pub fn run_cleanup_system(world: &mut World, res: &mut Resources) {
-    let mut log = res.get_mut::<GameLog>().unwrap();
-    let mut dead: Vec<EntityId> = vec![];
-    let mut to_drop_items: Vec<(EntityId, Point)> = vec![];
-
-    for (id, (stats, pos, inv)) in &mut world.query::<(&CombatStats, &Position, Option<&Inventory>)>() {
+pub fn run_cleanup_system(log: UniqueView<GameLog>, runstate: UniqueViewMut<RunState>, mut all_storages: AllStoragesViewMut, vpos: View<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, vpack: ViewMut<InBackpack>, vequip: ViewMut<Equipped>) {
+    for (id, (pos, stats)) in (&vpos, &vstats).iter().with_id() {
         if stats.hp <= 0 {
-            let player = world.get::<Player>(id);
-            let name = world.get::<Name>(id);
+            let player = vplayer.get(id);// world.get::<Player>(id);
+            let name = vname.get(id); // world.get::<Name>(id);
             match player {
-                Err(_) => {
-                    dead.push(id);
-                    if let Some(inv) = inv {
+                Err(_) => { // not a player
+                    if let Ok(inv) = vinv.get(id) {
                         for e in inv.items.iter() {
-                            to_drop_items.push((*e, pos.ps[0]));
+                            (vpack, vequip).remove(*e);
+                            all_storages.add_component(*e, Position { ps: vec![pos.ps[0]] });
+                            // to_drop_items.push((*e, pos.ps[0]));
                         }
                     }
+
+                    all_storages.delete_entity(id);
+                    
                     if let Ok(name) = name {
                         log.messages.push(format!("{} is dead", &name.name));
                     }
                 }
                 Ok(_p) => {
-                    let mut runstate = res.get_mut::<RunState>().unwrap();
                     *runstate = RunState::GameOver;
                 }
             }
         }
-    }
-
-    for (e, point) in to_drop_items.iter() {
-        let _in_bp = world.remove_one::<InBackpack>(*e);
-        let _equipped = world.remove_one::<Equipped>(*e);
-        world.add_component(*e, Position { ps:vec![*point]});    
-    }
-
-    for id in dead.iter() {
-        let _res = world.despawn(*id);
     }
 }

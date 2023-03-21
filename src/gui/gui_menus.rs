@@ -1,5 +1,5 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
 use resources::*;

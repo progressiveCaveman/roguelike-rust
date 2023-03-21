@@ -1,15 +1,16 @@
 use rltk::Point;
-use shipyard::EntityId;
+use shipyard::{EntityId, UniqueView, View, Get};
 
-use crate::{State, components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}};
+use crate::{components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}, utils::Turn};
 
-use super::decisions::{Action, Consideration, Inputs, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
+use super::decisions::{Action, Consideration, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
 
-pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: View<Position>, vitem: View<Item>, vtree: View<Tree>, vlm: View<LumberMill>, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+// pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
 
-    let world = &gs.world;
-    let res = &gs.resources;
-    let turn = res.get::<i32>().unwrap();
+    // let world = &gs.world;
+    // let res = &gs.resources;
+    // let turn = res.get::<i32>().unwrap();
 
     let pos = pos.ps[0];
 
@@ -18,7 +19,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
     let mut logs_in_inv = 0;
     let mut inventory_log: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
-        if let Ok(item) = world.get::<Item>(*e) {
+        if let Ok(item) = vitem.get(*e) {
             if item.typ == ItemType::Log {
                 logs_in_inv += 1;
                 inventory_log = *e;
@@ -32,15 +33,15 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
     let mut lumber_mills: Vec<EntityId> = vec![];
     for (_, entities) in space.tiles.values() {
         for e in entities.iter() {
-            if let Ok(_) = world.get::<Tree>(*e) {
+            if let Ok(_) = vtree.get(*e) {
                 trees.push(*e);
             }
-            if let Ok(item) = world.get::<Item>(*e) {
+            if let Ok(item) = vitem.get(*e) {
                 if item.typ == ItemType::Log {
                     logs.push(*e);
                 }
             }
-            if let Ok(_) = world.get::<LumberMill>(*e) {
+            if let Ok(_) = vlm.get(*e) {
                 if !lumber_mills.contains(e) { //multitile
                     lumber_mills.push(*e);
                 }
@@ -63,7 +64,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
+                        map.distance(vpos, Target::from(pos), Target::from(tree)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1.0 / 100.0, 
@@ -97,7 +98,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(tree)),
+                        map.distance(vpos, Target::from(pos), Target::from(tree)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -136,7 +137,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(*log)),
+                        map.distance(vpos, Target::from(pos), Target::from(*log)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -176,7 +177,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
+                        map.distance(vpos, Target::from(pos), Target::from(lm)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. - 1./20., 
@@ -198,7 +199,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                     ),
                     Consideration::new(
                         "logs in iventory".to_string(), 
-                        inv.count_type(world, ItemType::Log) as f32,
+                        logs_in_inv as f32,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. / 5.0, 
@@ -221,7 +222,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                 cons: vec!(
                     Consideration::new(
                         "Distance to lm".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(lm)),
+                        map.distance(vpos, Target::from(pos), Target::from(lm)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -243,7 +244,7 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
                     ),
                     Consideration::new(
                         "logs in iventory".to_string(), 
-                        inv.count_type(world, ItemType::Log) as f32,
+                        logs_in_inv as f32,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. / 5.0, 
@@ -280,10 +281,11 @@ pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, spac
     potential_actions
 }
 
-pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
-    let world = &gs.world;
-    let res = &gs.resources;
-    let turn = res.get::<i32>().unwrap();
+pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: View<Position>, vitem: View<Item>, vfish: View<Fish>, vfishery: View<FishCleaner>, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+// pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+    // let world = &gs.world;
+    // let res = &gs.resources;
+    // let turn = res.get::<i32>().unwrap();
 
     let pos = pos.ps[0];
 
@@ -292,7 +294,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
     let mut fish_in_inv = 0;
     let mut inventory_fish: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
-        if let Ok(_) = world.get::<Fish>(*e) {
+        if let Ok(_) = vfish.get(*e) {
             fish_in_inv += 1;
             inventory_fish = *e;
         }
@@ -303,7 +305,6 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
     let mut fisheries: Vec<EntityId> = vec![];
 
     for (idx, (tile, entities)) in space.tiles.iter() {
-        let map = res.get::<Map>().unwrap();
         if *tile == TileType::Water {
             // todo actually path to water to test if it should be considered?
             let mut apoint = map.idx_point(*idx);
@@ -323,7 +324,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
             //         logs.push(*e);
             //     }
             // }
-            if let Ok(_) = world.get::<FishCleaner>(*e) {
+            if let Ok(_) = vfishery.get(*e) {
                 if !fisheries.contains(e) { //multitile
                     fisheries.push(*e);
                 }
@@ -346,7 +347,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(wp)),
+                        map.distance(vpos, Target::from(pos), Target::from(wp)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1.0 / 100.0, 
@@ -380,7 +381,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(wp)),
+                        map.distance(vpos, Target::from(pos), Target::from(wp)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 1., 
@@ -420,7 +421,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(f)),
+                        map.distance(vpos, Target::from(pos), Target::from(f)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. - 1./20., 
@@ -442,7 +443,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                     ),
                     Consideration::new(
                         "fish in iventory".to_string(), 
-                        inv.count_type(world, ItemType::Fish) as f32,
+                        fish_in_inv as f32,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. / 5.0, 
@@ -465,7 +466,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                 cons: vec!(
                     Consideration::new(
                         "Distance to fishery".to_string(), 
-                        Inputs::distance(world, res, Target::from(pos), Target::from(f)),
+                        map.distance(vpos, Target::from(pos), Target::from(f)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -487,7 +488,7 @@ pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &Spa
                     ),
                     Consideration::new(
                         "fish in iventory".to_string(), 
-                        inv.count_type(world, ItemType::Fish) as f32,
+                        fish_in_inv as f32,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. / 5.0, 

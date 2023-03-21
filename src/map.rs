@@ -2,8 +2,10 @@ use serde;
 use serde::{Serialize, Deserialize};
 use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
-use shipyard::EntityId;
+use shipyard::{EntityId, Unique, View, Get};
 
+use crate::ai::decisions::Target;
+use crate::components::Position;
 use crate::gui::{OFFSET_X, OFFSET_Y};
 use crate::{SCALE};
 
@@ -16,7 +18,7 @@ pub enum TileType {
     Wall, Floor, StairsDown, StairsUp, Grass, Wheat, Dirt, Water, WoodWall, WoodDoor, WoodFloor
 }
 
-#[derive(Default, Serialize, Deserialize, Clone)]
+#[derive(Default, Serialize, Deserialize, Clone, Unique)]
 pub struct Map {
     pub tiles: Vec<TileType>,
     pub width: i32,
@@ -114,6 +116,42 @@ impl Map {
         if x < 1 || x >= self.width || y < 1 || y >= self.height { return false; }
         let idx = self.xy_idx(x, y);
         !self.blocked[idx]
+    }
+
+    pub fn distance(&self, vpos: View<Position>, f: Target, t: Target) -> f32 {        
+        let idx1 = match f {
+            Target::LOCATION(l) => vec!(self.xy_idx(l.x, l.y)),
+            Target::ENTITY(e) => {
+                if let Ok(p) = vpos.get(e){
+                    p.idxes(self)
+                }else{
+                    vec!(0)
+                }
+            },
+        };
+
+        let idx2 = match t {
+            Target::LOCATION(l) => vec!(self.xy_idx(l.x, l.y)),
+            Target::ENTITY(e) => {
+                if let Ok(p) = vpos.get(e){
+                    p.idxes(self)
+                }else{
+                    vec!(0)
+                }
+            },
+        };
+
+        let mut min = f32::MAX;
+        for i1 in idx1.iter() {
+            for i2 in idx2.iter() {
+                let dist = self.get_pathing_distance(*i1, *i2);
+                if dist < min {
+                    min = dist;
+                }
+            }
+        }
+
+        min
     }
 
     // pub fn refresh_water_map(&mut self) {

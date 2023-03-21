@@ -2,6 +2,7 @@ use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
+use shipyard::World;
 use std::cmp;
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
 use crate::{MAPWIDTH, MAPHEIGHT};

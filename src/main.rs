@@ -29,7 +29,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, EntitiesView, ViewMut, Get};
+use shipyard::{EntityId, World, EntitiesView, ViewMut, Get, Unique};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -56,7 +56,7 @@ pub enum GameMode{
     RL,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Unique)]
 pub enum RunState {
     AwaitingInput,
     PreRun,
@@ -96,7 +96,9 @@ impl State {
     fn run_systems(&mut self) {
         let runstate: RunState = *self.resources.get::<RunState>().unwrap();
 
-        system_fire::run_fire_system(&mut self.world, &mut self.resources);
+        if runstate == RunState::PlayerTurn {
+            system_fire::run_fire_system(&mut self.world, &mut self.resources);
+        }
         system_visibility::run_visibility_system(&mut self.world, &mut self.resources);
 
         if runstate == RunState::AiTurn { 

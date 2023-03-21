@@ -1,8 +1,7 @@
-use resources::Resources;
-use rltk::{Point, BaseMap};
-use shipyard::EntityId;
+use rltk::{Point};
+use shipyard::{EntityId, Component, View, Get};
 
-use crate::{map::Map, components::{Position, ItemType, Inventory, Item}};
+use crate::{components::{Position}, utils::{InvalidPoint, Turn}};
 
 pub struct AI {
 }
@@ -73,12 +72,12 @@ pub enum Task {
     Attack
 }
 
-#[derive(Clone, Debug)]
+#[derive(Component, Clone, Debug)]
 pub struct Intent {
     pub name: String,
     pub task: Task,
     pub target: Vec<Target>, // most tasks have one target, more targets are specified in name, ie `DepositItemToInventory` expects [item, inventory]
-    pub turn: i32, // turn this intent originated
+    pub turn: Turn, // turn this intent originated
 }
 
 #[derive(Clone, Debug)]
@@ -187,78 +186,78 @@ pub enum ResponseCurveType {
     Logistic,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum InputType {
-    // MyHealth,
-    // MySpeed,
-    DistanceToEntity,
-    DistanceToComponentType,
-    ItemStockpileCount,
-    ItemRange,
-    HasItem
-}
+// #[derive(Clone, Debug, PartialEq)]
+// pub enum InputType {
+//     // MyHealth,
+//     // MySpeed,
+//     DistanceToEntity,
+//     DistanceToComponentType,
+//     ItemStockpileCount,
+//     ItemRange,
+//     HasItem
+// }
 
-pub struct Inputs {
+// pub struct Inputs {
 
-}
+// }
 
-impl Inputs {
-    pub fn distance(world: &World, res: &Resources, f: Target, t: Target) -> f32 {
-        let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
+// impl Inputs {
+//     // pub fn distance(world: &World, res: &Resources, f: Target, t: Target) -> f32 {
+//     //     let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
         
-        let idx1 = match f {
-            Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
-            Target::ENTITY(e) => {
-                if let Ok(p) = world.get::<Position>(e){
-                    p.idxes(map)
-                }else{
-                    vec!(0)
-                }
-            },
-        };
+//     //     let idx1 = match f {
+//     //         Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
+//     //         Target::ENTITY(e) => {
+//     //             if let Ok(p) = world.get::<Position>(e){
+//     //                 p.idxes(map)
+//     //             }else{
+//     //                 vec!(0)
+//     //             }
+//     //         },
+//     //     };
 
-        let idx2 = match t {
-            Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
-            Target::ENTITY(e) => {
-                if let Ok(p) = world.get::<Position>(e){
-                    p.idxes(map)
-                }else{
-                    vec!(0)
-                }
-            },
-        };
+//     //     let idx2 = match t {
+//     //         Target::LOCATION(l) => vec!(map.xy_idx(l.x, l.y)),
+//     //         Target::ENTITY(e) => {
+//     //             if let Ok(p) = world.get::<Position>(e){
+//     //                 p.idxes(map)
+//     //             }else{
+//     //                 vec!(0)
+//     //             }
+//     //         },
+//     //     };
 
-        let mut min = f32::MAX;
-        for i1 in idx1.iter() {
-            for i2 in idx2.iter() {
-                let dist = map.get_pathing_distance(*i1, *i2);
-                if dist < min {
-                    min = dist;
-                }
-            }
-        }
+//     //     let mut min = f32::MAX;
+//     //     for i1 in idx1.iter() {
+//     //         for i2 in idx2.iter() {
+//     //             let dist = map.get_pathing_distance(*i1, *i2);
+//     //             if dist < min {
+//     //                 min = dist;
+//     //             }
+//     //         }
+//     //     }
 
-        min
-    }
+//     //     min
+//     // }
 
-    pub fn inventory_count(world: &World, holder: EntityId, item_type: ItemType) -> f32 {
-        let mut to_count_type: Vec<EntityId> = vec![];
-        if let Ok(mut inv) = world.get_mut::<Inventory>(holder) {
-            to_count_type.append(&mut inv.items);
-        }
+//     // pub fn inventory_count(world: &World, holder: EntityId, item_type: ItemType) -> f32 {
+//     //     let mut to_count_type: Vec<EntityId> = vec![];
+//     //     if let Ok(mut inv) = world.get_mut::<Inventory>(holder) {
+//     //         to_count_type.append(&mut inv.items);
+//     //     }
 
-        let mut count = 0;
-        for e in to_count_type {
-            if let Ok(item) = world.get::<Item>(e) {
-                if item.typ == item_type {
-                    count += 1;
-                }
-            }
-        }
+//     //     let mut count = 0;
+//     //     for e in to_count_type {
+//     //         if let Ok(item) = world.get::<Item>(e) {
+//     //             if item.typ == item_type {
+//     //                 count += 1;
+//     //             }
+//     //         }
+//     //     }
 
-        return count as f32;
-    }
-}
+//     //     return count as f32;
+//     // }
+// }
 
 /*
 Use:
@@ -289,15 +288,15 @@ impl From<EntityId> for Target {
 }
 
 impl Target {
-    pub fn get_point(&self, world: &World) -> Point {
+    pub fn get_point(&self, vpos: View<Position>) -> Point {
         match self {
             Target::LOCATION(loc) => *loc,
             Target::ENTITY(entity) => {
-                if let Ok(pos) = world.get::<Position>(*entity) {
+                if let Ok(pos) = vpos.get(*entity) {
                     pos.ps[0]
                 } else {
                     // dbg!("ERROR: Target::ENTITY position not found");
-                    Point { x: -1, y: -1 }
+                    Point::invalid_point()
                 }
             },
         }
