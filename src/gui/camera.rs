@@ -2,6 +2,7 @@ use crate::{utils::Scale, gui::Palette, map::{TileType}, GameMode, SCALE, compon
 
 use super::{Map,Position, OFFSET_X, OFFSET_Y};
 use rltk::{Point, Rltk, RGB, RGBA};
+use shipyard::{View, Get, IntoIter, IntoWithId};
 
 const SHOW_BOUNDARIES : bool = true;
 const RENDER_DJIKSTRA: bool = false;
@@ -91,24 +92,26 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
     // ctx.set_active_console(1);
 
     // draw entities
-    for (_, (pos, render, player)) in world.query::<(&Position, &Renderable, Option<&Player>)>().iter() {
-        if let Some(_) = player {
-            if gamemode == GameMode::Sim { continue; }
-        }
-
-        for pos in pos.ps.iter() {
-            let idx = map.xy_idx(pos.x, pos.y);
-            if pos.y > min_y - 1 && pos.x > min_x - 1 && (gamemode == GameMode::Sim || get_player_viewshed(gs).is_visible(*pos) ) { 
-                let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
-
-                let entity_screen_x = xoff as i32 + pos.x - min_x;
-                let entity_screen_y = yoff as i32 + pos.y - min_y;
-                if entity_screen_x > -1 && entity_screen_x < size.0 as i32 && entity_screen_y > 0 && entity_screen_y < size.1 as i32 {
-                    ctx.set(entity_screen_x, entity_screen_y, render.fg, bgcolor, render.glyph);
+    world.run(|vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>, | {
+        for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
+            if let Ok(_) = vplayer.get(id) {
+                if gamemode == GameMode::Sim { continue; }
+            }
+    
+            for pos in pos.ps.iter() {
+                let idx = map.xy_idx(pos.x, pos.y);
+                if pos.y > min_y - 1 && pos.x > min_x - 1 && (gamemode == GameMode::Sim || get_player_viewshed(gs).is_visible(*pos) ) { 
+                    let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
+    
+                    let entity_screen_x = xoff as i32 + pos.x - min_x;
+                    let entity_screen_y = yoff as i32 + pos.y - min_y;
+                    if entity_screen_x > -1 && entity_screen_x < size.0 as i32 && entity_screen_y > 0 && entity_screen_y < size.1 as i32 {
+                        ctx.set(entity_screen_x, entity_screen_y, render.fg, bgcolor, render.glyph);
+                    }
                 }
             }
         }
-    }
+    });
 
     ctx.set_active_console(0);
 }

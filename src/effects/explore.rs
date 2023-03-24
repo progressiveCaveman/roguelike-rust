@@ -1,7 +1,7 @@
 use rltk::{Point, DijkstraMap};
 use shipyard::EntityId;
 
-use crate::{State, utils::{InvalidPoint, dijkstra_backtrace}, map::{Map, TileType}, components::{Position, SpatialKnowledge}, movement::try_move_entity};
+use crate::{State, utils::{InvalidPoint, dijkstra_backtrace, WorldGet}, map::{Map, TileType}, components::{Position, SpatialKnowledge}, movement::try_move_entity};
 
 use super::EffectSpawner;
 

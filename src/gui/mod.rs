@@ -1,8 +1,9 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
 use resources::*;
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 use crate::ai::decisions::Intent;
 use crate::player::get_player_map_knowledge;
+use crate::utils::WorldGet;
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::gamelog::GameLog;

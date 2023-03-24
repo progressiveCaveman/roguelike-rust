@@ -1,37 +1,54 @@
-use resources::*;
-use shipyard::{EntityId, World};
+use shipyard::{EntityId, AllStoragesViewMut, View, UniqueView, IntoIter, IntoWithId, Get, ViewMut, EntitiesViewMut, Remove, AddComponent};
 use crate::effects::add_effect;
 use crate::gui::Palette;
+use crate::utils::PlayerID;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
 use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Consumable, DealsDamage, AreaOfEffect, Confusion, Equippable, Equipped, InBackpack, Fire, Inventory};
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};
 
-pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
-    let mut log = res.get_mut::<GameLog>().unwrap();
-    let player_id = res.get::<EntityId>().unwrap();
-    let map = res.get::<Map>().unwrap();
-    let mut p_builder = res.get_mut::<ParticleBuilder>().unwrap();
+pub fn run_item_use_system(store: AllStoragesViewMut) {
+    let mut log = store.borrow::<UniqueView<GameLog>>().unwrap();//res.get_mut::<GameLog>().unwrap();
+    let player_id = store.borrow::<UniqueView<PlayerID>>().ok().unwrap(); //res.get::<EntityId>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();//res.get::<Map>().unwrap();
+    let mut p_builder = store.borrow::<UniqueView<ParticleBuilder>>().unwrap();//res.get_mut::<ParticleBuilder>().unwrap();
     let mut to_remove: Vec<(EntityId, EntityId)> = Vec::new();
     let mut to_remove_wants_use: Vec<EntityId> = Vec::new();
     let mut to_unequip: Vec<(EntityId, Name, EntityId)> = Vec::new();
     let mut to_equip: Vec<(EntityId, Equippable, Name, EntityId)> = Vec::new();
 
-    for (id, use_item) in &mut world.query::<&WantsToUseItem>().iter() {
+    let entity_store = store.borrow::<EntitiesViewMut>().unwrap();
+
+    let vwants = store.borrow::<ViewMut<WantsToUseItem>>().unwrap();
+    let vaoe = store.borrow::<View<AreaOfEffect>>().unwrap();
+    let vstats = store.borrow::<ViewMut<CombatStats>>().unwrap();
+    let vfire = store.borrow::<View<Fire>>().unwrap();
+    let vprovideshealing = store.borrow::<View<ProvidesHealing>>().unwrap();
+    let vname = store.borrow::<View<Name>>().unwrap();
+    let vpos = store.borrow::<View<Position>>().unwrap();
+    let vdealsdamage = store.borrow::<View<DealsDamage>>().unwrap();
+    let vconfusion = store.borrow::<View<Confusion>>().unwrap();
+    let vconsumable = store.borrow::<View<Consumable>>().unwrap();
+    let vequippable = store.borrow::<View<Equippable>>().unwrap();
+    let vequipped = store.borrow::<ViewMut<Equipped>>().unwrap();
+    let vinv = store.borrow::<View<Inventory>>().unwrap();
+    let vinbackpack = store.borrow::<ViewMut<InBackpack>>().unwrap();
+
+    for (id, use_item) in store.borrow::<View<WantsToUseItem>>().unwrap().iter().with_id() { // &mut world.query::<&WantsToUseItem>().iter() {
         let mut used_item = true;
 
         // Find all targets
         let mut targets: Vec<EntityId> = Vec::new();
         let mut target_tiles: Vec<usize> = Vec::new();
         match use_item.target {
-            None => targets.push(*player_id),
+            None => targets.push(player_id.0),
             Some(t) => {
-                match world.get::<AreaOfEffect>(use_item.item) {
+                match vaoe.get(use_item.item) {
                     Err(_e) => {
                         // Single target
                         let idx = map.xy_idx(t.x, t.y);
                         for entity in map.tile_content[idx].iter() {
-                            let stats = world.get::<CombatStats>(*entity);
+                            let stats = vstats.get(*entity);
                             match stats {
                                 Err(_e) => {}
                                 Ok(_stats) => { targets.push(*entity) }
@@ -46,7 +63,7 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
                             let idx = map.xy_idx(pt.x, pt.y);
                             target_tiles.push(idx);
                             for entity in map.tile_content[idx].iter() {
-                                let stats = world.get::<CombatStats>(*entity);
+                                let stats = vstats.get(*entity);
                                 match stats {
                                     Err(_e) => {}
                                     Ok(_stats) => { targets.push(*entity) }
@@ -60,7 +77,7 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         }
 
         // Apply fire if it applies fire
-        let item_fires = world.get::<Fire>(use_item.item);
+        let item_fires = vfire.get(use_item.item);
         match item_fires {
             Err(_e) => {}
             Ok(fire) => {
@@ -74,13 +91,13 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         }
 
         // Apply heal if it provides healing
-        let item_heals = world.get::<ProvidesHealing>(use_item.item);
+        let item_heals = vprovideshealing.get(use_item.item);
         match item_heals {
             Err(_e) => {}
             Ok(healer) => {
                 used_item = false;
                 for target in targets.iter() {
-                    let stats = world.get_mut::<CombatStats>(*target);
+                    let stats = vstats.get(*target);
                     match stats {
                         Err(_e) => {},
                         Ok(_stats) => {
@@ -89,13 +106,13 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
                                 EffectType::Heal { amount: healer.heal }, 
                                 Targets::Single { target: *target }
                             );
-                            if id == *player_id { // todo should this code be in /effects?
-                                let name = world.get::<Name>(use_item.item).unwrap();
+                            if id == player_id.0 { // todo should this code be in /effects?
+                                let name = vname.get(use_item.item).unwrap();
                                 log.messages.push(format!("You use the {}, healing {} hp", name.name, healer.heal));
                             }
                             used_item = true;
 
-                            if let Ok(pos) = world.get::<Position>(*target) {
+                            if let Ok(pos) = vpos.get(*target) {
                                 for pos in pos.ps.iter() {
                                     p_builder.request(pos.x, pos.y, 0.0, -3.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('♥'), 1000.0)
                                 }
@@ -108,7 +125,7 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         to_remove_wants_use.push(id);
 
         // Apply damage to target if it deals damage
-        let deals_damage = world.get::<DealsDamage>(use_item.item);
+        let deals_damage = vdealsdamage.get(use_item.item);
         match deals_damage {
             Err(_e) => {}
             Ok(dd) => {
@@ -119,14 +136,14 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
                         EffectType::Damage{ amount: dd.damage },
                         Targets::Single{ target: *target }
                     );
-                    if id == *player_id {
-                        let monster_name = world.get::<Name>(*target).unwrap();
-                        let item_name = world.get::<Name>(use_item.item).unwrap();
+                    if id == player_id.0 {
+                        let monster_name = vname.get(*target).unwrap();
+                        let item_name = vname.get(use_item.item).unwrap();
                         log.messages.push(format!("You use {} on {}, dealing {} hp", item_name.name, monster_name.name, dd.damage));
                     }
                     used_item = true;
 
-                    if let Ok(pos) = world.get::<Position>(*target) {
+                    if let Ok(pos) = vpos.get(*target) {
                         for pos in pos.ps.iter() {
                             p_builder.request(pos.x, pos.y, 0.0, 0.0, Palette::COLOR_4, Palette::MAIN_BG, rltk::to_cp437('‼'), 250.0)
                         }
@@ -136,7 +153,7 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         }
 
         // Apply confusion
-        let confusion = world.get::<Confusion>(use_item.item);
+        let confusion = vconfusion.get(use_item.item);
         match confusion {
             Err(_e) => {},
             Ok(confusion) => {
@@ -147,14 +164,14 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
                         EffectType::Confusion { turns: confusion.turns }, 
                         Targets::Single { target: *target }
                     );
-                    if id == *player_id {
-                        let monster_name = world.get::<Name>(*target).unwrap();
-                        let item_name = world.get::<Name>(use_item.item).unwrap();
+                    if id == player_id.0 {
+                        let monster_name = vname.get(*target).unwrap();
+                        let item_name = vname.get(use_item.item).unwrap();
                         log.messages.push(format!("You use {} on {}, confusing them", item_name.name, monster_name.name));
                     }
                     used_item = true;
 
-                    if let Ok(pos) = world.get::<Position>(*target) {
+                    if let Ok(pos) = vpos.get(*target) {
                         for pos in pos.ps.iter() {
                             p_builder.request(pos.x, pos.y, 0.0, 0.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('?'), 300.0)
                         }
@@ -164,7 +181,7 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         }
 
         // Remove item if it's consumable
-        let consumable = world.get::<Consumable>(use_item.item);
+        let consumable = vconsumable.get(use_item.item);
         match consumable {
             Err(_e) => {}
             Ok(_) => {
@@ -175,52 +192,52 @@ pub fn run_item_use_system(world: &mut World, res: &mut Resources) {
         }
 
         // Equip if item is equippable
-        let equippable = world.get::<Equippable>(use_item.item);
+        let equippable = vequippable.get(use_item.item);
         match equippable {
             Err(_e) => {}
             Ok(equippable) => {
                 let target = targets[0];
                 
                 // Unequip already equipped item
-                for (id, (equipped, name)) in world.query::<(&Equipped, &Name)>().iter() {
+                for (id, (equipped, name)) in (&vequipped, &vname).iter().with_id() { //world.query::<(&Equipped, &Name)>().iter() {
                     if equipped.owner == target && equipped.slot == equippable.slot {
                         to_unequip.push((id, name.clone(), target));
                     }
                 }
 
                 // Actually equip item
-                let item_name = (*world.get::<Name>(use_item.item).unwrap()).clone();
+                let item_name = (*vname.get(use_item.item).unwrap()).clone();
                 to_equip.push((use_item.item, *equippable, item_name, target));
             }
         }
     }
 
     for (id, item) in to_remove {
-        if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+        if let Ok(mut inv) = vinv.get(id) {
             if let Some(pos) = inv.items.iter().position(|x| *x == item) {
                 inv.items.remove(pos);
             }
         }
 
-        world.despawn(item).unwrap();
+        store.delete_entity(item);
     }
 
     for id in to_remove_wants_use {
-        world.remove_one::<WantsToUseItem>(id).unwrap();
+        vwants.remove(id);
     }
 
     for (id, name, target) in to_unequip {
-        world.remove_one::<Equipped>(id).unwrap();
-        world.add_component(id, InBackpack{owner: target}).unwrap();
-        if target == *player_id {
+        vequipped.remove(id);
+        vinbackpack.add_component_unchecked(id, InBackpack{owner: target});
+        if target == player_id.0 {
             log.messages.push(format!("You unequip your {}", name.name));
         }
     }
 
     for (id, equippable, name, target) in to_equip {
-        world.add_component(id, Equipped{owner: target, slot: equippable.slot}).unwrap();
-        world.remove_one::<InBackpack>(id).unwrap();
-        if target == *player_id {
+        vinbackpack.remove(id);
+        vequipped.add_component_unchecked(id, Equipped{owner: target, slot: equippable.slot});
+        if target == player_id.0 {
             log.messages.push(format!("You equip your {}", name.name));
         }
     }

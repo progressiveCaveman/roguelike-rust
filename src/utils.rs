@@ -101,22 +101,25 @@ impl InvalidPoint for Point {
     }
 }
 
+#[derive(Debug, Clone, Unique)]
+pub struct PlayerID(pub EntityId);
+
 #[derive(Clone, Debug, Unique)]
 pub struct Turn(i32);
 
-// pub trait WorldGet {
-//     fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent>;
-// }
+pub trait WorldGet {
+    fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent>;
+}
 
-// impl WorldGet for World {
-//     fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent> {
-//         if let Ok(s) = self.borrow::<ViewMut<T>>(){
-//             return (&s).get(entity);
-//         }
+impl WorldGet for World {
+    fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent> {
+        if let Ok(s) = self.borrow::<ViewMut<T>>(){
+            return (&s).get(entity);
+        }
 
-//         return Err(shipyard::error::MissingComponent {
-//             id: entity,
-//             name: "Missing Component",
-//         });
-//     }
-// }
+        return Err(shipyard::error::MissingComponent {
+            id: entity,
+            name: "Missing Component",
+        });
+    }
+}

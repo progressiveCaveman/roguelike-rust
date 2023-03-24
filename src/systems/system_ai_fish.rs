@@ -1,7 +1,7 @@
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 use rltk::Point;
-use shipyard::EntityId;
+use shipyard::{EntityId, View, IntoIter, IntoWithId};
 use crate::map::{TileType, Map};
 use crate::components::{Position, Fish};
 use crate::utils::point_diff;
@@ -15,21 +15,23 @@ pub fn run_fish_ai(gs: &mut State) {
     {
         let map: &Map = &mut gs.resources.get::<Map>().unwrap();
         
-        for (id, (pos, _)) in gs.world.query::<(&Position, &Fish)>().iter() {        
-            if pos.ps.len() == 1{
-                // if at edge of map, remove fish
-
-                let pos = pos.ps[0];
-
-                if pos.x >= map.width - 2 {
-                    to_remove.push(id);
+        gs.world.run(|vpos: View<Position>, vfish: View<Fish>| {
+            for (id, (pos, fish)) in (&vpos, &vfish).iter().with_id() {
+                if pos.ps.len() == 1{
+                    // if at edge of map, remove fish
+    
+                    let pos = pos.ps[0];
+    
+                    if pos.x >= map.width - 2 {
+                        to_remove.push(id);
+                    } else {
+                        to_try_move.push((id, pos));
+                    }
                 } else {
-                    to_try_move.push((id, pos));
+                    dbg!("ERROR: multi-tile fish not supported");
                 }
-            } else {
-                dbg!("ERROR: multi-tile fish not supported");
             }
-        }
+        });
     }
 
     for (e, pos) in to_try_move {
@@ -55,6 +57,6 @@ pub fn run_fish_ai(gs: &mut State) {
     }
 
     for e in to_remove.iter() {
-        gs.world.despawn(*e).unwrap();
+        gs.world.delete_entity(*e);
     }
 }

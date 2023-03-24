@@ -1,9 +1,10 @@
 use resources::Resources;
 use rltk::{FontCharType, Rltk, Point, RGBA};
-use shipyard::{EntityId, World};
+use shipyard::{EntityId, World, Unique};
 
 use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}};
 
+#[derive(Debug)]
 struct ParticleRequest {
     x: i32,
     y: i32,
@@ -15,6 +16,7 @@ struct ParticleRequest {
     lifetime_ms: f32
 }
 
+#[derive(Debug, Unique)]
 pub struct ParticleBuilder {
     requests: Vec<ParticleRequest>
 }

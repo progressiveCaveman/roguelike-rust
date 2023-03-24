@@ -1,7 +1,7 @@
 use shipyard::{ViewMut, Get};
 
 use super::*;
-use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog};
+use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog, utils::WorldGet};
 
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
@@ -17,13 +17,13 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
                 return;
             }
         });
-        if let Err(_) = world.get_mut::<Position>(id) {
+        if let Err(_) = world.get::<Position>(id) {
             dbg!("Entity doesn't have a position");
             return;
         }
     
-        if let Ok(name) = world.get_mut::<Name>(id) {
-            if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+        if let Ok(name) = world.get::<Name>(id) {
+            if let Ok(mut inv) = world.get::<Inventory>(id) {
                 inv.items.push(target);
 
                 let mut entities: Vec<EntityId> = vec![];
@@ -45,7 +45,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
             }
         }
     
-        let _res = world.remove_one::<Position>(target);
+        let _res = world.remove::<Position>(target);
         let _r = world.add_component(target, InBackpack {owner: id});
     
         if id == *player_id {
@@ -53,7 +53,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
             log.messages.push(format!("You pick up the {}", name.name));
         }
     
-        let _re = world.remove_one::<WantsToPickupItem>(id);    
+        let _re = world.remove::<WantsToPickupItem>(id);    
     }
 }
 
@@ -66,14 +66,14 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         }else{
             unreachable!()
         };
-        if let Ok(mut inv) = world.get_mut::<Inventory>(id) {
+        if let Ok(mut inv) = world.get::<Inventory>(id) {
             if let Some(pos) = inv.items.iter().position(|x| *x == target) {
                 inv.items.remove(pos);
             }
         }
         
-        let _in_bp = world.remove_one::<InBackpack>(id);
-        let _equipped = world.remove_one::<Equipped>(id);
+        let _in_bp = world.remove::<InBackpack>(id);
+        let _equipped = world.remove::<Equipped>(id);
         world.add_component(target, Position { ps:vec![pos]});
     }
 }

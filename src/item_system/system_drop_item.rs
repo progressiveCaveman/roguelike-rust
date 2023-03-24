@@ -1,25 +1,23 @@
-use resources::*;
-use shipyard::{EntityId, World};
-use crate::components::{Name, WantsToDropItem};
+use shipyard::{EntityId, UniqueView, View, IntoIter, IntoWithId, Get, ViewMut, Remove};
+use crate::components::{Name, WantsToDropItem, Player};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::GameLog;
 
-pub fn run_drop_item_system(world: &mut World, res: &mut Resources) {
-    let mut log = res.get_mut::<GameLog>().unwrap();
-    let player_id = res.get_mut::<EntityId>().unwrap();
+pub fn run_drop_item_system(log: UniqueView<GameLog>, vplayer: View<Player>, vwants: ViewMut<WantsToDropItem>, vname: View<Name>) {
     let mut to_drop: Vec<(EntityId, EntityId)> = Vec::new();
 
-    for (id, wants_drop) in &mut world.query::<&WantsToDropItem>().iter() {
+    for (id, wants_drop) in vwants.iter().with_id() {
         to_drop.push((id, wants_drop.item));
 
-        let item_name = world.get::<Name>(wants_drop.item).unwrap();
-        if id == *player_id {
-            log.messages.push(format!("You drop the {}", item_name.name));
+        if let Ok(_) = vplayer.get(id) {
+            if let Ok(item_name) = vname.get(wants_drop.item){
+                log.messages.push(format!("You drop the {}", item_name.name));
+            }
         }
     }
 
     for (id, item) in to_drop.iter() {
-        world.remove_one::<WantsToDropItem>(*id).unwrap();
+        vwants.remove(*id);
         add_effect(
             Some(*id), 
             EffectType::Drop {}, 

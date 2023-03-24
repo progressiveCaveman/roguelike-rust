@@ -1,5 +1,5 @@
 mod system_drop_item;
-use shipyard::World;
+use shipyard::{View, IntoIter, IntoWithId};
 pub use system_drop_item::run_drop_item_system;
 
 mod system_item_use;
@@ -8,13 +8,12 @@ pub use system_item_use::run_item_use_system;
 mod system_unequip_item;
 pub use system_unequip_item::run_unequip_item_system;
 
-use resources::*;
 use crate::ai::decisions::{Intent, Task, Target};
 use crate::components::{WantsToPickupItem, Inventory};
 use crate::effects::{add_effect, EffectType, Targets};
 
-pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
-    for (id, (_, wants_pickup)) in &mut world.query::<(&Inventory, &WantsToPickupItem)>() {
+pub fn run_inventory_system(vinv: View<Inventory>, vwants: View<WantsToPickupItem>, vintent: View<Intent>) {
+    for (id, (_, wants_pickup)) in (&vinv, &vwants).iter().with_id() {
         add_effect(
             Some(id), 
             EffectType::PickUp {}, 
@@ -22,7 +21,7 @@ pub fn run_inventory_system(world: &mut World, res: &mut Resources) {
         );
     }
 
-    for (id, (_, intent)) in &mut world.query::<(&Inventory, &Intent)>() {
+    for (id, (_, intent)) in (&vinv, &vintent).iter().with_id() {
         if intent.task == Task::PickUpItem {
             if let Target::ENTITY(e) = intent.target[0] {
                 add_effect(

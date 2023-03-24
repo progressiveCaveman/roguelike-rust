@@ -1,7 +1,7 @@
 use rltk::{Point, NavigationPath};
-use shipyard::EntityId;
+use shipyard::{EntityId, World};
 
-use crate::utils::{point_plus};
+use crate::utils::{point_plus, WorldGet};
 use crate::{State, GameMode};
 use crate::map::{Map, TileType};
 use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, BlocksTile, Locomotive, LocomotionType};
@@ -14,7 +14,7 @@ pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
 
     // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
 
-    if let Ok(mut pos) = gs.world.get_mut::<Position>(entity) {
+    if let Ok(mut pos) = gs.world.get::<Position>(entity) {
         // if let Ok(_loc) = &gs.world.get::<Locomotive>(entity) {
 
             let canmove = can_move(&gs.world, &map, entity, &pos, dp);
@@ -36,7 +36,7 @@ pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
 
             // do movement
             if is_camera || canmove {                
-                if let Ok(mut vs) = gs.world.get_mut::<Viewshed>(entity) {
+                if let Ok(mut vs) = gs.world.get::<Viewshed>(entity) {
                     vs.dirty = true;
                 }
 
@@ -52,7 +52,7 @@ pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
                 }
     
                 // If this is a player, change the position in resources according to first in pos.ps
-                match &gs.world.get_mut::<Player>(entity) {
+                match &gs.world.get::<Player>(entity) {
                     Err(_e) => {},
                     Ok(_player) => {
                         let mut ppos = gs.resources.get_mut::<rltk::Point>().unwrap();
