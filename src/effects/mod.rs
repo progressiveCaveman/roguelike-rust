@@ -132,3 +132,13 @@ fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         EffectType::Heal {..} => heal::heal(gs, effect, target),
     }
 }
+
+
+
+/*
+
+Make separate systems for each effect and separate queues
+
+Worflow is: process general queue -> (all the other systems)
+
+ */

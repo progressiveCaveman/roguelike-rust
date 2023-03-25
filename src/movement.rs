@@ -8,8 +8,8 @@ use crate::components::{Position, Player, Viewshed, CombatStats, WantsToAttack, 
 
 /// dp is delta
 pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
-    let mut map = gs.resources.get_mut::<Map>().unwrap();
-    let mode = gs.resources.get::<GameMode>().unwrap();
+    let mut map = gs.get_map();//gs.resources.get_mut::<Map>().unwrap();
+    let mode = gs.get_game_mode();//gs.resources.get::<GameMode>().unwrap();
     let mut needs_wants_to_attack: Option<(EntityId, WantsToAttack)> = None;
 
     // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
@@ -55,9 +55,9 @@ pub fn try_move_entity(entity: EntityId, dp: Point, gs: &mut State) {
                 match &gs.world.get::<Player>(entity) {
                     Err(_e) => {},
                     Ok(_player) => {
-                        let mut ppos = gs.resources.get_mut::<rltk::Point>().unwrap();
-                        ppos.x = pos.ps[0].x;
-                        ppos.y = pos.ps[0].y;
+                        let mut ppos = gs.get_player_pos();//gs.resources.get_mut::<rltk::Point>().unwrap();
+                        ppos.0.x = pos.ps[0].x;
+                        ppos.0.y = pos.ps[0].y;
                     }
                 }
 

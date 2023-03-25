@@ -4,7 +4,7 @@ use shipyard::{View, ViewMut, UniqueView, IntoIter, IntoWithId, Get};
 use crate::map::{Map};
 use crate::components::{Position, Viewshed, SpatialKnowledge};
 
-pub fn run_pathfinding_system(map: UniqueView<Map>, vpos: View<Position>, vvs: ViewMut<Viewshed>, vspace: View<SpatialKnowledge>) {
+pub fn run_visibility_system(map: UniqueView<Map>, vpos: View<Position>, vvs: ViewMut<Viewshed>, vspace: View<SpatialKnowledge>) {
     for (id, (pos, vs)) in (&vpos, &vvs).iter().with_id() {
         // if vs.dirty {
             let pos = pos.ps.first().unwrap();

@@ -167,6 +167,8 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
     // for each LumberMill
     for lm in lumber_mills {
         if logs_in_inv > 0 {
+            let inv_count = 
+
             potential_actions.push(Action {
                 intent: Intent {
                     name: "move to lumber mill".to_string(),

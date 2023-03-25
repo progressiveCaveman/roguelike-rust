@@ -1,10 +1,11 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use shipyard::{EntityId, World};
+use shipyard::{EntityId, World, View, IntoIter};
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
 use resources::*;
 use crate::gui::{ItemMenuResult, Palette};
-use crate::components::{Name, InBackpack, Equipped, Equippable};
+use crate::components::{Name, InBackpack, Equipped, Equippable, Inventory, Player};
+use crate::utils::WorldGet;
 use crate::{RunState};
 
 pub enum ItemActionSelection {Cancel, NoSelection, Used, Dropped, Unequipped}
@@ -70,13 +71,13 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
 }
 
 pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
-    let player_id = res.get::<EntityId>().unwrap();
+    let player_id = *res.get::<EntityId>().unwrap();
 
     dbg!("Inventory display code is outdated");
     // Items in backpack
-    let mut query = world.query::<(&InBackpack, &Name)>();
-    let inventory = query.iter().filter(|item| item.1.0.owner == *player_id);
-    let backpack_count = inventory.count();
+    // let mut query = //world.query::<(&InBackpack, &Name)>();
+    let inventory = world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
+    let backpack_count = inventory.items.len();
     let mut y = 25 - (backpack_count / 2);
     ctx.draw_box(10, y - 2, 31, backpack_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);
 
@@ -95,9 +96,15 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     }
 
     // Items equipped
-    let mut query = world.query::<(&Equipped, &Name)>();
-    let equipped_items = query.iter().filter(|item| item.1.0.owner == *player_id);
-    let equipped_count = equipped_items.count();
+    // let mut query = world.query::<(&Equipped, &Name)>();
+    let equipped_count = world.run(|vplayer: View<Player>, vequipped: View<Equipped>|{
+        let mut count = 0;
+        for (_, _) in (&vplayer, &vequipped).iter(){
+            count += 1;
+        }
+        count
+    });//query.iter().filter(|item| item.1.0.owner == *player_id);
+    // let equipped_count = equipped_items.count();
     
     let mut y = 25 - (equipped_count / 2);
     ctx.draw_box(45, y - 2, 31, equipped_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);

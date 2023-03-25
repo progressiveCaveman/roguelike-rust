@@ -1,7 +1,6 @@
 use rltk;
 use rltk::{Point, BaseMap};
 use shipyard::EntityId;
-use crate::ai::labors::{get_wood_gathering_actions, get_fishing_actions};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
 use crate::utils::{get_neighbors, point_diff};
@@ -119,24 +118,24 @@ fn update_decisions(gs: &mut State) {
 
     let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
 
-    for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
+    // for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
 
-        // if we have a fresh intent, skip
-        if let Some(intent) = intent {
-            if intent.turn + 5 < *turn {
-                continue;
-            }
-        }
+    //     // if we have a fresh intent, skip
+    //     if let Some(intent) = intent {
+    //         if intent.turn + 5 < *turn {
+    //             continue;
+    //         }
+    //     }
         
-        let mut potential_actions:Vec<Action> = vec!();
+    //     let mut potential_actions:Vec<Action> = vec!();
 
-        potential_actions.append(&mut get_wood_gathering_actions(gs, id, pos, space, inv));
-        potential_actions.append(&mut get_fishing_actions(gs, id, pos, space, inv));
+    //     potential_actions.append(&mut get_wood_gathering_actions(gs, id, pos, space, inv));
+    //     potential_actions.append(&mut get_fishing_actions(gs, id, pos, space, inv));
 
-        let best = AI::choose_action(potential_actions);
-        // dbg!(best.clone());
-        wants_intent.push((id, best));
-    }
+    //     let best = AI::choose_action(potential_actions);
+    //     // dbg!(best.clone());
+    //     wants_intent.push((id, best));
+    // }
 
     for (id, intent) in wants_intent {
         let world = &mut gs.world;

@@ -45,7 +45,7 @@ pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32
 
 pub fn render_camera(gs: &State, ctx : &mut Rltk) {
     let world = &gs.world;
-    let res = &gs.resources;
+    // let res = &gs.resources;
 
     ctx.set_active_console(1);
 
@@ -54,9 +54,9 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
     let yoff:f32 = (OFFSET_Y as f32 / scale).ceil();
     let size = ctx.get_char_size();
 
-    let map = res.get::<Map>().unwrap();
-    let gamemode = *res.get::<GameMode>().unwrap();
-    let player_pos = *res.get::<Point>().unwrap();
+    let map = gs.get_map();//res.get::<Map>().unwrap();
+    let gamemode = gs.get_game_mode();//*res.get::<GameMode>().unwrap();
+    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
     let player_knowledge = get_player_map_knowledge(gs);
 
     let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
@@ -71,10 +71,10 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
             if tx >= 0 && tx < map_width && ty >= 0 && ty < map_height {
                 let idx = map.xy_idx(tx, ty);
                 let p = Point { x: tx, y: ty };
-                if gamemode == GameMode::Sim || player_knowledge.contains_key(&idx) {
+                if *gamemode == GameMode::Sim || player_knowledge.contains_key(&idx) {
                     let (glyph, mut fg, mut bg) = get_tile_glyph(idx, &*map);
 
-                    if gamemode != GameMode::Sim && !get_player_viewshed(gs).is_visible(p) {
+                    if *gamemode != GameMode::Sim && !get_player_viewshed(gs).is_visible(p) {
                         fg = fg.scaled(0.5);
                         bg = bg.scaled(0.5);
                     }
@@ -95,12 +95,12 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
     world.run(|vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>, | {
         for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
             if let Ok(_) = vplayer.get(id) {
-                if gamemode == GameMode::Sim { continue; }
+                if *gamemode == GameMode::Sim { continue; }
             }
     
             for pos in pos.ps.iter() {
                 let idx = map.xy_idx(pos.x, pos.y);
-                if pos.y > min_y - 1 && pos.x > min_x - 1 && (gamemode == GameMode::Sim || get_player_viewshed(gs).is_visible(*pos) ) { 
+                if pos.y > min_y - 1 && pos.x > min_x - 1 && (*gamemode == GameMode::Sim || get_player_viewshed(gs).is_visible(*pos) ) { 
                     let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
     
                     let entity_screen_x = xoff as i32 + pos.x - min_x;

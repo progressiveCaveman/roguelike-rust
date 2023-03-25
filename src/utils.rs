@@ -105,7 +105,13 @@ impl InvalidPoint for Point {
 pub struct PlayerID(pub EntityId);
 
 #[derive(Clone, Debug, Unique)]
-pub struct Turn(i32);
+pub struct Turn(pub i32);
+
+#[derive(Clone, Unique)]
+pub struct RNG(pub rltk::RandomNumberGenerator);
+
+#[derive(Clone, Debug, Unique)]
+pub struct PPoint(pub Point);
 
 pub trait WorldGet {
     fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent>;

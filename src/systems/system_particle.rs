@@ -1,6 +1,6 @@
 use resources::Resources;
-use rltk::{FontCharType, Rltk, Point, RGBA};
-use shipyard::{EntityId, World, Unique};
+use rltk::{FontCharType, Point, RGBA};
+use shipyard::{EntityId, World, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut};
 
 use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}};
 
@@ -53,13 +53,13 @@ pub fn spawn_particles(world: &mut World, res: &mut Resources) {
     particle_builder.clear();
 }
 
-pub fn update_particles(world: &mut World, _res: &mut Resources, ctx: &Rltk) {
-    for (id, (particle, lifetime)) in world.query::<(&mut Particle, &mut Lifetime)>().iter() {
+pub fn update_particles(store: AllStoragesViewMut, vpart: ViewMut<Particle>, vlifetime: View<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
+    for (id, (particle, lifetime)) in (&vpart, &vlifetime).iter().with_id() {//world.query::<(&mut Particle, &mut Lifetime)>().iter() {
         lifetime.ms -= ctx.frame_time_ms;
 
-        let vel = world.get::<Velocity>(id);
+        let vel = vvel.get(id);
         if let Ok(vel) = vel {
-            for pos in world.get_mut::<Position>(id).unwrap().ps.iter_mut() {
+            for pos in vpos.get(id).unwrap().ps.iter_mut() {
                 particle.float_x += (vel.x) * (ctx.frame_time_ms / 1000.0);
                 particle.float_y += (vel.y) * (ctx.frame_time_ms / 1000.0);
                 pos.x = particle.float_x as i32;
@@ -68,18 +68,19 @@ pub fn update_particles(world: &mut World, _res: &mut Resources, ctx: &Rltk) {
         }
     }
 
-    remove_dead_particles(world);
+    remove_dead_particles(store, vlifetime);
 }
 
-pub fn remove_dead_particles(world: &mut World) {
+pub fn remove_dead_particles(mut store: AllStoragesViewMut, vlifetime: View<Lifetime>) {
     let mut particles_to_remove: Vec<EntityId> = Vec::new();
-    for (id, lifetime) in world.query::<&mut Lifetime>().iter() {
+    for (id, lifetime) in vlifetime.iter().with_id() {//world.query::<&mut Lifetime>().iter() {
         if lifetime.ms <= 0.0 {
             particles_to_remove.push(id);
         }
     }
 
     for id in particles_to_remove {
-        world.despawn(id).unwrap();
+        store.delete_entity(id);
+        // world.despawn(id).unwrap();
     }
 }

@@ -6,7 +6,6 @@ use crate::player::get_player_map_knowledge;
 use crate::utils::WorldGet;
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
-use crate::gamelog::GameLog;
 use crate::map::Map;
 
 pub mod camera;
@@ -55,25 +54,25 @@ impl Palette {
 pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 
     let world = &gs.world;
-    let res = &gs.resources;
+    // let res = &gs.resources;
 
-    let player_id: &EntityId = &res.get::<EntityId>().unwrap();
-    let player_stats = world.get::<CombatStats>(*player_id).unwrap();
+    let player_id = gs.get_player().0;//&res.get::<EntityId>().unwrap();
+    let player_stats = world.get::<CombatStats>(player_id).unwrap();
     let hp_gui = format!("{} / {} HP", player_stats.hp, player_stats.max_hp);
-    let map = res.get::<Map>().unwrap();
-    let turn = res.get::<i32>().unwrap();
+    let map = gs.get_map();//res.get::<Map>().unwrap();
+    let turn = gs.get_turn();//res.get::<i32>().unwrap();
 
     // horizontal line
     ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
 
     // player stats
     ctx.print_color(1, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
-    ctx.print_color(1, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {}", *turn));
+    ctx.print_color(1, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {:?}", *turn));
     ctx.print_color(1, 9, Palette::MAIN_FG, Palette::MAIN_BG, format!("Depth: {}", map.depth));
 
 
     // On fire display
-    let fire = world.get::<Fire>(*player_id);
+    let fire = world.get::<Fire>(player_id);
     match fire {
         Ok(_) => {
             ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE"); 
@@ -86,7 +85,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     }
 
     // message log
-    let log = res.get::<GameLog>().unwrap();
+    let log = gs.get_log();//res.get::<GameLog>().unwrap();
     let mut y = 1;
     for m in log.messages.iter().rev() {
         if y < 9 {
@@ -109,12 +108,11 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 
 pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
-    let res = &gs.resources;
-    let player_pos = *res.get::<Point>().unwrap();
+    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
 
     let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
-    let map = res.get::<Map>().unwrap();
-    let gamemode = *res.get::<GameMode>().unwrap();
+    let map = gs.get_map();//res.get::<Map>().unwrap();
+    let gamemode = gs.get_game_mode();//*res.get::<GameMode>().unwrap();
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
@@ -123,7 +121,7 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     if map_mouse_pos.0 >= map.width || map_mouse_pos.1 >= map.height || map_mouse_pos.0 < 0 || map_mouse_pos.1 < 0 { return; }
     
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
+    if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
     let mut ypos = OFFSET_Y;
 

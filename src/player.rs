@@ -12,10 +12,9 @@ use crate::gamelog::GameLog;
 
 pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<EntityId>)>{
     let world = &gs.world;
-    let res = &gs.resources;
-    let player_id = res.get::<EntityId>().unwrap();
+    let player_id = gs.get_player().0;//res.get::<EntityId>().unwrap();
 
-    if let Ok(space) =  world.get::<SpatialKnowledge>(*player_id) {
+    if let Ok(space) =  world.get::<SpatialKnowledge>(player_id) {
         space.tiles.clone()
     } else {
         HashMap::new()
@@ -24,10 +23,9 @@ pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Ent
 
 pub fn get_player_viewshed(gs: &State) -> Viewshed {
     let world = &gs.world;
-    let res = &gs.resources;
-    let player_id = res.get::<EntityId>().unwrap();
+    let player_id = gs.get_player().0;//res.get::<EntityId>().unwrap();
 
-    let vs = world.get::<Viewshed>(*player_id).unwrap();
+    let vs = world.get::<Viewshed>(player_id).unwrap();
 
     vs.clone()
 }
@@ -61,12 +59,12 @@ pub fn get_item(world: &mut World, res: &mut Resources){
 
 pub fn reveal_map(gs: &mut State){
     let world = &gs.world;
-    let res = &gs.resources;
-    let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
-    let player_id = res.get::<EntityId>().unwrap();
+    // let res = &gs.resources;
+    let map: &mut Map = &mut gs.get_map();//&mut res.get_mut::<Map>().unwrap();
+    let player_id = gs.get_player().0;//res.get::<EntityId>().unwrap();
 
 
-    if let Ok(mut space) =  world.get::<SpatialKnowledge>(*player_id) {
+    if let Ok(mut space) =  world.get::<SpatialKnowledge>(player_id) {
         for i in 0..map.tiles.len() {
             space.tiles.insert(i, (map.tiles[i], map.tile_content[i].clone()));
         }
