@@ -38,7 +38,7 @@ use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use utils::{WorldGet, PlayerID, Turn};
 
-use crate::utils::{PPoint, RNG};
+use crate::utils::{PPoint, RNG, FrameTime};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
@@ -277,6 +277,9 @@ impl GameState for State {
         }
         ctx.set_active_console(0);
         ctx.cls();
+
+        let mut i = self.world.borrow::<UniqueView<FrameTime>>().unwrap();
+        i.0 = ctx.frame_time_ms;
         
         self.world.run(system_particle::update_particles);
         // system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
@@ -512,6 +515,7 @@ fn main() -> rltk::BError {
     gs.world.add_unique(RunState::MainMenu{menu_selection: gui_menus::MainMenuSelection::Roguelike});
     gs.world.add_unique(gamelog::GameLog{messages: vec!["Welcome to the roguelike!".to_string()]});
     gs.world.add_unique(system_particle::ParticleBuilder::new());
+    gs.world.add_unique(FrameTime(0.));
 
     rltk::main_loop(context, gs)
 }

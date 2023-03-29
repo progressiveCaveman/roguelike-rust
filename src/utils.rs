@@ -113,6 +113,9 @@ pub struct RNG(pub rltk::RandomNumberGenerator);
 #[derive(Clone, Debug, Unique)]
 pub struct PPoint(pub Point);
 
+#[derive(Clone, Debug, Unique)]
+pub struct FrameTime(pub f32);
+
 pub trait WorldGet {
     fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent>;
 }

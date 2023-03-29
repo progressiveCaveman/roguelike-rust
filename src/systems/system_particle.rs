@@ -1,7 +1,7 @@
 use rltk::{FontCharType, Point, RGBA};
 use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView};
 
-use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}};
+use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime};
 
 #[derive(Debug)]
 struct ParticleRequest {
@@ -51,15 +51,15 @@ pub fn spawn_particles(particle_builder: UniqueView<ParticleBuilder>, store: All
     particle_builder.clear();
 }
 
-pub fn update_particles(store: AllStoragesViewMut, vpart: ViewMut<Particle>, vlifetime: View<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
+pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>,vpart: ViewMut<Particle>, vlifetime: View<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
     for (id, (particle, lifetime)) in (&vpart, &vlifetime).iter().with_id() {//world.query::<(&mut Particle, &mut Lifetime)>().iter() {
-        lifetime.ms -= ctx.frame_time_ms;
+        lifetime.ms -= frametime.0;
 
         let vel = vvel.get(id);
         if let Ok(vel) = vel {
             for pos in vpos.get(id).unwrap().ps.iter_mut() {
-                particle.float_x += (vel.x) * (ctx.frame_time_ms / 1000.0);
-                particle.float_y += (vel.y) * (ctx.frame_time_ms / 1000.0);
+                particle.float_x += (vel.x) * (frametime.0 / 1000.0);
+                particle.float_y += (vel.y) * (frametime.0 / 1000.0);
                 pos.x = particle.float_x as i32;
                 pos.y = particle.float_y as i32;
             }
