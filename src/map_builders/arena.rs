@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rltk::{RandomNumberGenerator, Point};
-use shipyard::World;
+use shipyard::{World, AllStoragesViewMut};
 
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
 
@@ -28,8 +28,8 @@ impl MapBuilder for AernaBuilder {
     }
 
     fn spawn_entities(&mut self, world: &mut World) {
-        entity_factory::spawner(world, 4, self.map.height / 2, 0, SpawnerType::Orc, 10);
-        entity_factory::spawner(world, self.map.width - 5, self.map.height / 2, 1, SpawnerType::Orc, 10);
+        world.run(|store: AllStoragesViewMut|{entity_factory::spawner(store, 4, self.map.height / 2, 0, SpawnerType::Orc, 10)});
+        world.run(|store: AllStoragesViewMut|{entity_factory::spawner(store, self.map.width - 5, self.map.height / 2, 1, SpawnerType::Orc, 10)});
     }
 
     fn get_map_history(&self) -> Vec<Map> {

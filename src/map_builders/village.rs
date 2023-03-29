@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rltk::{RandomNumberGenerator, Point};
-use shipyard::World;
+use shipyard::{World, AllStoragesViewMut};
 
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
 
@@ -29,29 +29,31 @@ impl MapBuilder for VillageBuilder {
 
     fn spawn_entities(&mut self, world: &mut World) {
         let mut rng = RandomNumberGenerator::new();
+        world.run(|store: AllStoragesViewMut|{
 
-        for y in 1..self.map.height/2 {
-            for x in 1..self.map.width-1 {
-                let roll = rng.roll_dice(1, 100);
-                if roll < 35 { 
-                    entity_factory::tree(world, x, y);
-                } 
+            for y in 1..self.map.height/2 {
+                for x in 1..self.map.width-1 {
+                    let roll = rng.roll_dice(1, 100);
+                    if roll < 35 { 
+                        entity_factory::tree(store, x, y);
+                    } 
+                }
             }
-        }
 
-        entity_factory::spawner(world, 1, self.map.height - 7, 0, SpawnerType::Fish, 1);
+            entity_factory::spawner(store, 1, self.map.height - 7, 0, SpawnerType::Fish, 1);
 
-        for i in 1..=10 {
-            entity_factory::plank_house(world, 20 + 10 * i, self.map.height - 14, 4, 4);
-        }
+            for i in 1..=10 {
+                entity_factory::plank_house(store, 20 + 10 * i, self.map.height - 14, 4, 4);
+            }
 
-        entity_factory::chief_house(world, 40, self.map.height - 27, 20, 8);
-        entity_factory::lumber_mill(world, 20, self.map.height - 27, 8, 8);
-        entity_factory::fish_cleaner(world, 10, self.map.height - 17, 5, 5);
+            entity_factory::chief_house(store, 40, self.map.height - 27, 20, 8);
+            entity_factory::lumber_mill(store, 20, self.map.height - 27, 8, 8);
+            entity_factory::fish_cleaner(store, 10, self.map.height - 17, 5, 5);
 
-        for i in 0..20{
-            entity_factory::villager(world, 15, self.map.height - 25 - i);
-        }
+            for i in 0..20{
+                entity_factory::villager(store, 15, self.map.height - 25 - i);
+            }
+        });
     }
 
     fn get_map_history(&self) -> Vec<Map> {

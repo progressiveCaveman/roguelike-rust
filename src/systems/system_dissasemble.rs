@@ -36,7 +36,7 @@ pub fn run_dissasemble_system(mut all_storages: AllStoragesViewMut, vpos: View<P
                     };
     
                     if spawn_log {
-                        entity_factory::log(world, tpoint.x, tpoint.y);
+                        entity_factory::log(all_storages, tpoint.x, tpoint.y);
                     }
     
                     all_storages.delete_entity(e);

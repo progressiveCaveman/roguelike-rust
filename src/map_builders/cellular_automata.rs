@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rltk::{RandomNumberGenerator, Point};
-use shipyard::World;
+use shipyard::{World, AllStoragesViewMut};
 
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
 
@@ -28,9 +28,11 @@ impl MapBuilder for CellularAutomataBuilder {
     }
 
     fn spawn_entities(&mut self, world: &mut World) {
-        for area in self.noise_areas.iter() {
-            entity_factory::spawn_region(world, area.1, self.depth);
-        }
+        world.run(|store: AllStoragesViewMut|{
+            for area in self.noise_areas.iter() {
+                entity_factory::spawn_region(store, area.1, self.depth);
+            }
+        });
     }
 
     fn get_map_history(&self) -> Vec<Map> {

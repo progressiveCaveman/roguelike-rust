@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point}, effects::{add_effect, EffectType, Targets}};
 use rltk::{Rltk, VirtualKeyCode};
+use shipyard::{AllStoragesViewMut};
 
 pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     let game_mode = gs.get_game_mode();//*gs.resources.get::<GameMode>().unwrap();
@@ -65,7 +66,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::G => player::get_item(gs),
                     VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}, Targets::Single { target: player_id }),
                     VirtualKeyCode::R => player::reveal_map(gs),
-                    VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: entity_factory::tmp_fireball(&mut gs.world) },
+                    VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: gs.world.run(|store: AllStoragesViewMut|{entity_factory::tmp_fireball(store)}) },
                     VirtualKeyCode::I => return RunState::ShowInventory,
                     VirtualKeyCode::W => return player::skip_turn(gs),
                     VirtualKeyCode::Escape => return RunState::SaveGame,

@@ -1,9 +1,9 @@
 use rltk;
 use rltk::{Point, BaseMap};
-use shipyard::EntityId;
+use shipyard::{EntityId, View, IntoIter, IntoWithId, Get};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
-use crate::utils::{get_neighbors, point_diff, WorldGet};
+use crate::utils::{get_neighbors, WorldGet, get_path};
 use crate::{State};
 use crate::ai::decisions::{Target, Intent, Task};
 use crate::components::{Position, Villager, DijkstraMapToMe, Fish};
@@ -19,63 +19,66 @@ pub fn run_villager_ai_system(gs: &mut State) {
         let world = &mut gs.world;
         let map: &mut Map = &mut gs.get_map();//&mut res.get_mut::<Map>().unwrap();
 
-        for (id, (_, pos, intent)) in world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
-            match intent.task {
-                Task::Fish => {
-                    to_fish.push((id, pos.ps[0]));
-                },
-                Task::Explore => {
-                    add_effect(Some(id), EffectType::Explore {  }, Targets::Single { target: id })
-                },
-                Task::ExchangeInfo => todo!(),
-                Task::MoveTo => {
-                    if let Target::ENTITY(target) = intent.target[0] {
-                        if let Ok(target_pos) = world.get::<Position>(target) {
-                            if let Ok(dijkstra) = world.get::<DijkstraMapToMe>(target) {
-                                let my_idx = map.point_idx(pos.ps[0]);
-                                let neighbor_indices = map.get_available_exits(my_idx);
-
-                                let mut tidx:i32 = -1;
-                                for &i in neighbor_indices.iter() {
-                                    if tidx == -1 || dijkstra.map.map[i.0] < dijkstra.map.map[tidx as usize]{
-                                        tidx = i.0 as i32;
+        world.run(|vvillager: View<Villager>, vpos: View<Position>, vintent: View<Intent>, vdijkstra: View<DijkstraMapToMe>| {
+            for (id, (_, pos, intent)) in (&vvillager, &vpos, &vintent).iter().with_id() {//world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
+                match intent.task {
+                    Task::Fish => {
+                        to_fish.push((id, pos.ps[0]));
+                    },
+                    Task::Explore => {
+                        add_effect(Some(id), EffectType::Explore {  }, Targets::Single { target: id })
+                    },
+                    Task::ExchangeInfo => todo!(),
+                    Task::MoveTo => {
+                        if let Target::ENTITY(target) = intent.target[0] {
+                            if let Ok(target_pos) = vpos.get(target) {//world.get::<Position>(target) {
+                                if let Ok(dijkstra) = vdijkstra.get(target) {//world.get::<DijkstraMapToMe>(target) {
+                                    let my_idx = map.point_idx(pos.ps[0]);
+                                    let neighbor_indices = map.get_available_exits(my_idx);
+    
+                                    let mut tidx:i32 = -1;
+                                    for &i in neighbor_indices.iter() {
+                                        if tidx == -1 || dijkstra.map.map[i.0] < dijkstra.map.map[tidx as usize]{
+                                            tidx = i.0 as i32;
+                                        }
                                     }
+    
+                                    to_move_from_to.push((id, pos.ps[0], map.idx_point(tidx as usize)));
+                                }else{
+                                    to_move_from_to.push((id, pos.ps[0], target_pos.ps[0]));
                                 }
-
-                                to_move_from_to.push((id, pos.ps[0], map.idx_point(tidx as usize)));
-                            }else{
-                                to_move_from_to.push((id, pos.ps[0], target_pos.ps[0]));
                             }
+                        } else if let Target::LOCATION(loc) = intent.target[0] {
+                            to_move_from_to.push((id, pos.ps[0], loc));
                         }
-                    } else if let Target::LOCATION(loc) = intent.target[0] {
-                        to_move_from_to.push((id, pos.ps[0], loc));
-                    }
-                },
-                Task::Destroy => {
-
-                },
-                Task::PickUpItem => {
-                    
-                },
-                Task::DropItem => todo!(),
-                Task::UseItem => todo!(),
-                Task::EquipItem => todo!(),
-                Task::UnequipItem => todo!(),
-                Task::UseWorkshop => todo!(),
-                Task::DepositItemToInventory => {
-                    
-                },
-                Task::Attack => todo!(),
+                    },
+                    Task::Destroy => {
+    
+                    },
+                    Task::PickUpItem => {
+                        
+                    },
+                    Task::DropItem => todo!(),
+                    Task::UseItem => todo!(),
+                    Task::EquipItem => todo!(),
+                    Task::UnequipItem => todo!(),
+                    Task::UseWorkshop => todo!(),
+                    Task::DepositItemToInventory => {
+                        
+                    },
+                    Task::Attack => todo!(),
+                }
             }
-        }
+        });
     }
 
     for (e, from, to) in to_move_from_to {
-        let path = movement::get_path(&gs.get_map(), from, to);
+        let path = get_path(&gs.get_map(), from, to);
 
         if path.success && path.steps.len() > 1 {
-            let p = gs.get_map().idx_point(path.steps[1]);
-            movement::try_move_entity(e, point_diff(from, p), gs);
+            // let p = gs.get_map().idx_point(path.steps[1]);
+            // movement::try_move_entity(e, point_diff(from, p), gs);
+            add_effect(Some(e), EffectType::Move {  }, Targets::Tile { tile_idx: path.steps[1] });
         }
     }
 

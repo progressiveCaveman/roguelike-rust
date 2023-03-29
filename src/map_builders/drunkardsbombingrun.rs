@@ -1,7 +1,7 @@
 use rltk::{RandomNumberGenerator, Point};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
-use shipyard::World;
+use shipyard::{World, AllStoragesViewMut};
 use std::cmp;
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
 use crate::{MAPWIDTH, MAPHEIGHT};
@@ -36,9 +36,11 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
     }
     
     fn spawn_entities(&mut self, world: &mut World) {
-        for room in self.rooms.iter().skip(1) {
-            entity_factory::spawn_room(world, &self.map, room, self.depth);
-        }
+        world.run(|store: AllStoragesViewMut|{
+            for room in self.rooms.iter().skip(1) {
+                entity_factory::spawn_room(store, &self.map, room, self.depth);
+            }
+        });
     }
 
     fn get_map_history(&self) -> Vec<Map> {

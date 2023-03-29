@@ -17,7 +17,7 @@ pub use inventory::pick_up;
 
 mod movement;
 
-use shipyard::{EntityId, Component};
+use shipyard::{EntityId};
 
 use crate::State;
 

@@ -1,5 +1,5 @@
 use rltk::{RandomNumberGenerator, Point};
-use shipyard::World;
+use shipyard::{World, AllStoragesViewMut};
 
 use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
 
@@ -29,9 +29,11 @@ impl MapBuilder for SimpleMapBuilder {
     }
     
     fn spawn_entities(&mut self, world: &mut World) {
-        for room in self.rooms.iter().skip(1) {
-            entity_factory::spawn_room(world, &self.map, room, self.depth);
-        }
+        world.run(|store: AllStoragesViewMut|{
+            for room in self.rooms.iter().skip(1) {
+                entity_factory::spawn_room(store, &self.map, room, self.depth);
+            }
+        });
     }
 
     fn get_map_history(&self) -> Vec<Map> {

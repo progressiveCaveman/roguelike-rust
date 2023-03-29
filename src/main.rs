@@ -27,7 +27,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut};
+use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -131,7 +131,8 @@ impl State {
             self.world.run(system_ai_spawner::run_spawner_system);
             self.world.run(system_ai_fish::run_fish_ai);
             system_ai_villager::run_villager_ai_system(self);
-            system_ai_monster::run_monster_ai_system(self);   
+            self.world.run(system_ai_monster::run_monster_ai_system);
+            // system_ai_monster::run_monster_ai_system(self);   
         }
         self.world.run(system_map_indexing::run_map_indexing_system);
 
@@ -255,7 +256,7 @@ impl State {
         self.world.clear();
 
         // Create player
-        let player_id = entity_factory::player(&mut self.world, (0, 0));
+        let player_id = self.world.run(|store: AllStoragesViewMut|{entity_factory::player(store, (0, 0))});//entity_factory::player(&mut self.world, (0, 0));
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(PlayerID(player_id));
 
@@ -504,7 +505,7 @@ fn main() -> rltk::BError {
     gs.world.add_unique(Turn(0));
     gs.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
-    let player_id = entity_factory::player(&mut gs.world, (0, 0));
+    let player_id = gs.world.run(|store: AllStoragesViewMut|{entity_factory::player(store, (0, 0))});//entity_factory::player(&mut gs.world, (0, 0));
     gs.world.add_unique(PlayerID(player_id));
 
     gs.world.add_unique(GameMode::NotSelected);
