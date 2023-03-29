@@ -1,10 +1,10 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use shipyard::{EntityId, World, View, IntoIter, IntoWithId};
+use shipyard::{EntityId, World, View, IntoIter, IntoWithId, UniqueView};
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
 use crate::gui::{ItemMenuResult, Palette};
 use crate::components::{Name, InBackpack, Equipped, Equippable, Inventory, Player};
-use crate::utils::WorldGet;
+use crate::utils::{WorldGet, PlayerID};
 use crate::{RunState, State};
 
 pub enum ItemActionSelection {Cancel, NoSelection, Used, Dropped, Unequipped}
@@ -18,7 +18,7 @@ pub enum MainMenuResult {NoSelection {selected: MainMenuSelection}, Selection {s
 pub enum GameOverResult {NoSelection, QuitToMenu}
 
 pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
-    let runstate = gs.get_run_state();//res.get::<RunState>().unwrap();
+    let runstate = gs.world.borrow::<UniqueView<RunState>>().unwrap();
 
     let get_fg = |sel, menu_item| {
         if sel == menu_item { return Palette::COLOR_RED }
@@ -70,7 +70,7 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
 }
 
 pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
-    let player_id = gs.get_player().0;//*res.get::<EntityId>().unwrap();
+    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
     dbg!("Inventory display code is outdated");
     // Items in backpack

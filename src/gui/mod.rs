@@ -1,7 +1,9 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
+use shipyard::UniqueView;
 use crate::ai::decisions::Intent;
+use crate::gamelog::GameLog;
 use crate::player::get_player_map_knowledge;
-use crate::utils::WorldGet;
+use crate::utils::{WorldGet, PlayerID, PPoint, Turn};
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::map::Map;
@@ -54,11 +56,11 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
     // let res = &gs.resources;
 
-    let player_id = gs.get_player().0;//&res.get::<EntityId>().unwrap();
+    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let player_stats = world.get::<CombatStats>(player_id).unwrap();
     let hp_gui = format!("{} / {} HP", player_stats.hp, player_stats.max_hp);
-    let map = gs.get_map();//res.get::<Map>().unwrap();
-    let turn = gs.get_turn();//res.get::<i32>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
 
     // horizontal line
     ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
@@ -83,7 +85,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     }
 
     // message log
-    let log = gs.get_log();//res.get::<GameLog>().unwrap();
+    let log = gs.world.borrow::<UniqueView<GameLog>>().unwrap();
     let mut y = 1;
     for m in log.messages.iter().rev() {
         if y < 9 {
@@ -106,11 +108,11 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 
 pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
-    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
+    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
 
     let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
-    let map = gs.get_map();//res.get::<Map>().unwrap();
-    let gamemode = gs.get_game_mode();//*res.get::<GameMode>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let gamemode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
@@ -218,9 +220,9 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
 }
 
 pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
-    let map = gs.get_map();//res.get::<Map>().unwrap();
-    let player_id = gs.get_player().0;//*res.get::<EntityId>().unwrap();
-    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
     ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
 
     let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(player_pos, ctx);

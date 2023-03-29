@@ -1,8 +1,8 @@
-use crate::{utils::Scale, gui::Palette, map::{TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH, State, player::{get_player_map_knowledge, get_player_viewshed}};
+use crate::{utils::{Scale, PPoint}, gui::Palette, map::{TileType}, GameMode, SCALE, components::{Player, Renderable}, MAPHEIGHT, MAPWIDTH, State, player::{get_player_map_knowledge, get_player_viewshed}};
 
 use super::{Map,Position, OFFSET_X, OFFSET_Y};
 use rltk::{Point, Rltk, RGB, RGBA};
-use shipyard::{View, Get, IntoIter, IntoWithId};
+use shipyard::{View, Get, IntoIter, IntoWithId, UniqueView};
 
 const SHOW_BOUNDARIES : bool = true;
 const RENDER_DJIKSTRA: bool = false;
@@ -54,9 +54,9 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
     let yoff:f32 = (OFFSET_Y as f32 / scale).ceil();
     let size = ctx.get_char_size();
 
-    let map = gs.get_map();//res.get::<Map>().unwrap();
-    let gamemode = gs.get_game_mode();//*res.get::<GameMode>().unwrap();
-    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let gamemode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
     let player_knowledge = get_player_map_knowledge(gs);
 
     let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);

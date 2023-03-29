@@ -1,14 +1,14 @@
-use shipyard::{ViewMut, Get};
+use shipyard::{ViewMut, Get, UniqueView, UniqueViewMut};
 
 use super::*;
-use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, utils::WorldGet};
+use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, utils::{WorldGet, PlayerID}, gamelog::GameLog};
 
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
         let world = &mut gs.world;
 
-        let mut log = gs.get_log();//res.get_mut::<GameLog>().unwrap();
-        let player_id = gs.get_player().0;//res.get::<EntityId>().unwrap();
+        let mut log = gs.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
+        let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     
         gs.world.run(|mut positions: ViewMut<Position>| {
             if let Err(_) = (&mut positions).get(target) {

@@ -1,8 +1,8 @@
 use rltk::{Point, DijkstraMap};
-use shipyard::{World};
+use shipyard::{World, UniqueView};
 
 use super::*;
-use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed}, utils::{WorldGet, dijkstra_backtrace, point_plus, normalize}, map::{Map, TileType}, GameMode};
+use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed}, utils::{WorldGet, dijkstra_backtrace, point_plus, normalize, PPoint}, map::{Map, TileType}, GameMode};
 
 pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     // if let EffectType::Heal{amount} = effect.effect_type {
@@ -12,8 +12,8 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     //         }
     //     });
     // }
-    let mut map = gs.get_map();//gs.resources.get_mut::<Map>().unwrap();
-    let mode = gs.get_game_mode();//gs.resources.get::<GameMode>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let mut mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
     let mut needs_wants_to_attack: Option<(EntityId, WantsToAttack)> = None;
 
     let entity = effect.creator.unwrap();
@@ -66,9 +66,9 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
             match &gs.world.get::<Player>(entity) {
                 Err(_e) => {},
                 Ok(_player) => {
-                    let mut ppos = gs.get_player_pos();//gs.resources.get_mut::<rltk::Point>().unwrap();
-                    ppos.0.x = pos.ps[0].x;
-                    ppos.0.y = pos.ps[0].y;
+                    let ppos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+                    ppos.x = pos.ps[0].x;
+                    ppos.y = pos.ps[0].y;
                 }
             }
 
@@ -92,7 +92,7 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
         let mut target = (0 as usize, std::f32::MAX); // tile_idx, distance
         let dijkstra_map: DijkstraMap;
         {
-            let map: &mut Map = &mut gs.get_map();//&mut res.get_mut::<Map>().unwrap();
+            let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
             // let mut log = res.get_mut::<GameLog>().unwrap();
 
             let e_pos = if let Ok(pos) = gs.world.get::<Position>(entity){
@@ -113,7 +113,7 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
 
             entity_point = e_pos.any_point();
             let starts: Vec<usize> = e_pos.idxes(map);
-            dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, map, 800.0);
+            dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, &**map, 800.0);
             for (i, tile) in map.tiles.iter().enumerate() {
                 if *tile != TileType::Wall && !e_space.tiles.contains_key(&i) {
                     let distance_to_start = dijkstra_map.map[i];

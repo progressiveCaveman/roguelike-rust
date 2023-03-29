@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point}, effects::{add_effect, EffectType, Targets}};
+use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point, PPoint, PlayerID}, effects::{add_effect, EffectType, Targets}, map::Map};
 use rltk::{Rltk, VirtualKeyCode};
-use shipyard::{AllStoragesViewMut};
+use shipyard::{AllStoragesViewMut, UniqueView, UniqueViewMut};
 
 pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
-    let game_mode = gs.get_game_mode();//*gs.resources.get::<GameMode>().unwrap();
-    let map = gs.get_map();//*gs.resources.get::<GameMode>().unwrap();
+    let mut game_mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
 
-    let player_id = gs.get_player().0;//*gs.resources.get::<EntityId>().unwrap();
-    let player_pos = gs.get_player_pos().0;//*gs.resources.get::<EntityId>().unwrap();
+    let player_id = gs.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
 
     // hold shift to move by 10 squares at a time
     let mut movemod = 1;
@@ -27,7 +27,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     dir_targets[&8] = map.point_idx(dir_to_point(player_pos, 8, movemod));
     dir_targets[&9] = map.point_idx(dir_to_point(player_pos, 9, movemod));
 
-    match game_mode {
+    match *game_mode {
         GameMode::NotSelected => unreachable!(), 
         GameMode::Sim => {
             match ctx.key {

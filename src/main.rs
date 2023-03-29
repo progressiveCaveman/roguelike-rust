@@ -90,36 +90,8 @@ pub struct State {
 }
 
 impl State {
-    pub fn get_map(&mut self) -> &Map {
-        &self.world.borrow::<UniqueViewMut<Map>>().unwrap()
-    }
-
-    pub fn get_run_state(&mut self) -> &RunState {
-        &self.world.borrow::<UniqueViewMut<RunState>>().unwrap()
-    }
-
-    pub fn get_player(&mut self) -> &PlayerID {
-        &self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap()
-    }
-
-    pub fn get_player_pos(&mut self) -> &PPoint {
-        &self.world.borrow::<UniqueViewMut<PPoint>>().unwrap()
-    }
-
-    pub fn get_turn(&mut self) -> &Turn {
-        &self.world.borrow::<UniqueViewMut<Turn>>().unwrap()
-    }
-
-    pub fn get_log(&mut self) -> &GameLog {
-        &self.world.borrow::<UniqueViewMut<GameLog>>().unwrap()
-    }
-
-    pub fn get_game_mode(&mut self) -> &GameMode {
-        &self.world.borrow::<UniqueViewMut<GameMode>>().unwrap()
-    }
-
     fn run_systems(&mut self) {
-        let runstate: RunState = *self.get_run_state();//*self.world.borrow::<UniqueView<RunState>>().unwrap();//*self.resources.get::<RunState>().unwrap();
+        let runstate: RunState = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
         if runstate == RunState::PlayerTurn {
             self.world.run(system_fire::run_fire_system);
@@ -151,7 +123,7 @@ impl State {
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
         let mut ids_to_delete: Vec<EntityId> = Vec::new();
 
-        let player_id = self.get_player();//self.world.borrow::<UniqueView<PlayerID>>().unwrap();
+        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap();
 
         dbg!("This function just doesn't work");
         //
@@ -221,9 +193,9 @@ impl State {
         map_builder.spawn_entities(&mut self.world);
 
         // Update player position
-        let mut player_position = self.get_player_pos().0;//self.resources.get_mut::<Point>().unwrap();
-        player_position = Point::new(start_pos.x, start_pos.y);
-        let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
+        let mut player_position = self.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
+        *player_position = PPoint(Point::new(start_pos.x, start_pos.y));
+        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
         let mut player_pos_comp = self.world.get::<Position>(player_id).unwrap();
         player_pos_comp.ps[0].x = start_pos.x;
         player_pos_comp.ps[0].y = start_pos.y;
@@ -241,13 +213,13 @@ impl State {
         // Generate new map
         let current_depth;
         {
-            let map = self.get_map();//self.resources.get_mut::<Map>().unwrap();
+            let map = self.world.borrow::<UniqueViewMut<Map>>().unwrap();
             current_depth = map.depth;
         }
         self.generate_map(current_depth + 1);
 
         // Notify player
-        let mut log = self.get_log();//self.resources.get_mut::<GameLog>().unwrap();
+        let mut log = self.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
         log.messages.push("You descend in the staircase".to_string());
     }
 
@@ -278,13 +250,13 @@ impl GameState for State {
         ctx.set_active_console(0);
         ctx.cls();
 
-        let mut i = self.world.borrow::<UniqueView<FrameTime>>().unwrap();
+        let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
         i.0 = ctx.frame_time_ms;
         
         self.world.run(system_particle::update_particles);
         // system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 
-        let mut new_runstate: RunState = *self.get_run_state();//*self.resources.get::<RunState>().unwrap();
+        let mut new_runstate: RunState = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
         match new_runstate {
             RunState::MainMenu{..} => {}
@@ -317,7 +289,7 @@ impl GameState for State {
             }
             RunState::AiTurn => {
                 {
-                    let mut turn = self.get_turn();//self.resources.get_mut::<i32>().unwrap();
+                    let mut turn = self.world.borrow::<UniqueViewMut<Turn>>().unwrap();
                     turn.0 += 1;
 
                     // let map = &mut self.resources.get_mut::<Map>().unwrap();
@@ -346,7 +318,7 @@ impl GameState for State {
                     gui_menus::ItemActionSelection::Used => {
                         let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
-                            let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
+                            let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                             let is_item_ranged = self.world.get::<Ranged>(item);
                             match is_item_ranged {
                                 Ok(is_item_ranged) => {
@@ -364,12 +336,12 @@ impl GameState for State {
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
-                        let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
+                        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                         self.world.add_component(player_id, WantsToDropItem {item});
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
-                        let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
+                        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                         self.world.add_component(player_id, WantsToUnequipItem{item});
                         new_runstate = RunState::PlayerTurn;
                     }
@@ -382,7 +354,7 @@ impl GameState for State {
                     gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
-                        let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
+                        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                         self.world.add_component(player_id, WantsToUseItem{item, target: res.1});
                         new_runstate = RunState::PlayerTurn;
                     }
@@ -396,7 +368,7 @@ impl GameState for State {
                         match selected {
                             gui_menus::MainMenuSelection::Roguelike => {
                                 {
-                                    let mut gamemode = self.get_game_mode();//self.resources.get_mut::<GameMode>().unwrap();
+                                    let mut gamemode = self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
                                     *gamemode = GameMode::RL;
                                 }
                                 self.generate_map(1);
@@ -405,8 +377,8 @@ impl GameState for State {
                             }
                             gui_menus::MainMenuSelection::Simulator => {
                                 {
-                                    let mut gamemode = self.get_game_mode();//self.resources.get_mut::<GameMode>().unwrap();
-                                    gamemode = &GameMode::Sim;
+                                    let mut gamemode = self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
+                                    *gamemode = GameMode::Sim;
                                 }
                                 self.generate_map(1);
                                 

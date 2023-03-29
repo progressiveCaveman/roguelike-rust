@@ -1,9 +1,9 @@
 use rltk;
 use rltk::{Point, BaseMap};
-use shipyard::{EntityId, View, IntoIter, IntoWithId, Get};
+use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
-use crate::utils::{get_neighbors, WorldGet, get_path};
+use crate::utils::{get_neighbors, WorldGet, get_path, Turn};
 use crate::{State};
 use crate::ai::decisions::{Target, Intent, Task};
 use crate::components::{Position, Villager, DijkstraMapToMe, Fish};
@@ -17,7 +17,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
     {
         let world = &mut gs.world;
-        let map: &mut Map = &mut gs.get_map();//&mut res.get_mut::<Map>().unwrap();
+        let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
 
         world.run(|vvillager: View<Villager>, vpos: View<Position>, vintent: View<Intent>, vdijkstra: View<DijkstraMapToMe>| {
             for (id, (_, pos, intent)) in (&vvillager, &vpos, &vintent).iter().with_id() {//world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
@@ -73,10 +73,10 @@ pub fn run_villager_ai_system(gs: &mut State) {
     }
 
     for (e, from, to) in to_move_from_to {
-        let path = get_path(&gs.get_map(), from, to);
+        let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+        let path = get_path(&map, from, to);
 
         if path.success && path.steps.len() > 1 {
-            // let p = gs.get_map().idx_point(path.steps[1]);
             // movement::try_move_entity(e, point_diff(from, p), gs);
             add_effect(Some(e), EffectType::Move {  }, Targets::Tile { tile_idx: path.steps[1] });
         }
@@ -85,7 +85,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
     for (e, p) in to_fish {
         let world = &mut gs.world;
         
-        let map = gs.get_map();// &res.get::<Map>().unwrap();
+        let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
 
         let n = get_neighbors(p);
         let adj_water: Vec<&Point> = n.iter().filter(|p| {
@@ -114,7 +114,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
 fn update_decisions(gs: &mut State) {
 
     let world = &gs.world;
-    let turn = gs.get_turn();//res.get::<i32>().unwrap();
+    let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
 
     let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
 

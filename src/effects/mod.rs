@@ -17,9 +17,9 @@ pub use inventory::pick_up;
 
 mod movement;
 
-use shipyard::{EntityId};
+use shipyard::{EntityId, UniqueView};
 
-use crate::State;
+use crate::{State, map::Map};
 
 lazy_static! {
     pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
@@ -100,7 +100,7 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
 
         {
             // let res = &gs.resources;
-            let map = gs.get_map();//res.get::<Map>().unwrap();
+            let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
 
             for entity in map.tile_content[tile_idx].iter() {
                 entities.push(*entity);
