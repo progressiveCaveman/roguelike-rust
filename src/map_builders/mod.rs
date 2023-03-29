@@ -24,7 +24,6 @@ use self::village::VillageBuilder;
 
 mod common;
 use common::*;
-use resources::Resources;
 use shipyard::World;
 
 use crate::rect::Rect;
@@ -39,7 +38,7 @@ pub struct MapGenData {
 
 pub trait MapBuilder {
     fn build_map(&mut self);
-    fn spawn_entities(&mut self, world: &mut World, res: &mut Resources);
+    fn spawn_entities(&mut self, world: &mut World);
     fn get_map(&mut self) -> Map;
     fn get_starting_position(&mut self) -> Position;
     fn get_map_history(&self) -> Vec<Map>;

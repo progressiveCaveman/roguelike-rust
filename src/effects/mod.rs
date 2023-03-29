@@ -7,8 +7,6 @@ pub use damage::inflict_damage;
 mod confusion;
 pub use confusion::inflict_confusion;
 
-mod explore;
-
 mod fire;
 pub use fire::inflict_fire;
 
@@ -16,9 +14,12 @@ mod heal;
 
 mod inventory;
 pub use inventory::pick_up;
-use shipyard::EntityId;
 
-use crate::{Map, State};
+mod movement;
+
+use shipyard::{EntityId, Component};
+
+use crate::State;
 
 lazy_static! {
     pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
@@ -32,6 +33,7 @@ pub enum EffectType {
     Drop { },
     Explore { },
     Heal { amount: i32 },
+    Move {},
 }
 
 #[derive(Clone)]
@@ -88,6 +90,7 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::Explore {  } => false,
         EffectType::Drop {  } => false,
         EffectType::Heal {..} => true,
+        EffectType::Move {  } => false,
     }
 }
 
@@ -96,8 +99,8 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
         let mut entities: Vec<EntityId> = vec![];
 
         {
-            let res = &gs.resources;
-            let map = res.get::<Map>().unwrap();
+            // let res = &gs.resources;
+            let map = gs.get_map();//res.get::<Map>().unwrap();
 
             for entity in map.tile_content[tile_idx].iter() {
                 entities.push(*entity);
@@ -118,6 +121,7 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
         EffectType::Explore { } => {},
         EffectType::Drop { } => {},
         EffectType::Heal {..} => {}, // todo make this cause a burst of life or something
+        EffectType::Move {  } => movement::try_move(gs, effect, tile_idx), 
     }
 }
 
@@ -127,17 +131,17 @@ fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         EffectType::Confusion{..} => confusion::inflict_confusion(gs, effect, target),
         EffectType::Fire{..} => fire::inflict_fire(gs, effect, target),
         EffectType::PickUp {  } => inventory::pick_up(gs, effect, target),
-        EffectType::Explore {  } => explore::autoexplore(gs, effect, target),
+        EffectType::Explore {  } => movement::autoexplore(gs, effect, target),
         EffectType::Drop {  } => inventory::drop_item(gs, effect, target),
         EffectType::Heal {..} => heal::heal(gs, effect, target),
+        EffectType::Move {  } => {},
     }
 }
-
-
 
 /*
 
 Make separate systems for each effect and separate queues
+Add
 
 Worflow is: process general queue -> (all the other systems)
 

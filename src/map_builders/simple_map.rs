@@ -1,4 +1,3 @@
-use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use shipyard::World;
 
@@ -29,9 +28,9 @@ impl MapBuilder for SimpleMapBuilder {
         self.rooms_and_corridors(10, 4, 8);
     }
     
-    fn spawn_entities(&mut self, world: &mut World, res: &mut Resources) {
+    fn spawn_entities(&mut self, world: &mut World) {
         for room in self.rooms.iter().skip(1) {
-            entity_factory::spawn_room(world, res, room, self.depth);
+            entity_factory::spawn_room(world, &self.map, room, self.depth);
         }
     }
 

@@ -3,10 +3,10 @@ use rltk::{Point, BaseMap};
 use shipyard::EntityId;
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
-use crate::utils::{get_neighbors, point_diff};
-use crate::{State, movement};
-use crate::ai::decisions::{Action, AI, Target, Intent, Task};
-use crate::components::{Position, Villager, SpatialKnowledge, Inventory, DijkstraMapToMe, Fish};
+use crate::utils::{get_neighbors, point_diff, WorldGet};
+use crate::{State};
+use crate::ai::decisions::{Target, Intent, Task};
+use crate::components::{Position, Villager, DijkstraMapToMe, Fish};
 
 pub fn run_villager_ai_system(gs: &mut State) {
     
@@ -17,8 +17,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
     {
         let world = &mut gs.world;
-        let res = &mut gs.resources;
-        let map: &mut Map = &mut res.get_mut::<Map>().unwrap();
+        let map: &mut Map = &mut gs.get_map();//&mut res.get_mut::<Map>().unwrap();
 
         for (id, (_, pos, intent)) in world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
             match intent.task {
@@ -82,9 +81,8 @@ pub fn run_villager_ai_system(gs: &mut State) {
 
     for (e, p) in to_fish {
         let world = &mut gs.world;
-        let res = &mut gs.resources;
         
-        let map = &res.get::<Map>().unwrap();
+        let map = gs.get_map();// &res.get::<Map>().unwrap();
 
         let n = get_neighbors(p);
         let adj_water: Vec<&Point> = n.iter().filter(|p| {
@@ -113,11 +111,11 @@ pub fn run_villager_ai_system(gs: &mut State) {
 fn update_decisions(gs: &mut State) {
 
     let world = &gs.world;
-    let res = &gs.resources;
-    let turn = res.get::<i32>().unwrap();
+    let turn = gs.get_turn();//res.get::<i32>().unwrap();
 
     let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
 
+    dbg!("commented code");
     // for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
 
     //     // if we have a fresh intent, skip

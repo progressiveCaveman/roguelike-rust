@@ -1,13 +1,12 @@
 use super::*;
 use crate::{components::Fire};
 
-pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, target_idx: usize) {
-    let res = &gs.resources;
-    let mut map = res.get_mut::<Map>().unwrap();
+pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
+    let mut map = gs.get_map();//res.get_mut::<Map>().unwrap();
 
     if let EffectType::Fire { turns } = effect.effect_type {
-        if map.is_flammable(target_idx) {
-                map.fire_turns[target_idx] += turns;
+        if map.is_flammable(tile_idx) {
+                map.fire_turns[tile_idx] += turns;
         }
     }
 }

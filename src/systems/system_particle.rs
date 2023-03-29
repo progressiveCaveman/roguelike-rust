@@ -1,6 +1,5 @@
-use resources::Resources;
 use rltk::{FontCharType, Point, RGBA};
-use shipyard::{EntityId, World, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut};
+use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView};
 
 use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}};
 
@@ -39,10 +38,9 @@ impl ParticleBuilder {
     }
 }
 
-pub fn spawn_particles(world: &mut World, res: &mut Resources) {
-    let mut particle_builder = res.get_mut::<ParticleBuilder>().unwrap();
+pub fn spawn_particles(particle_builder: UniqueView<ParticleBuilder>, store: AllStoragesViewMut) {
     for p in particle_builder.requests.iter() {
-        let _id = world.add_entity((
+        let _id = store.add_entity((
             Renderable {glyph: p.glyph, fg: p.fg, bg: p.bg, always_render: true, order: RenderOrder::Particle, ..Default::default()},
             Position {ps: vec![Point{x: p.x, y: p.y}]},
             Velocity {x: p.vel_x, y: p.vel_y},

@@ -4,7 +4,6 @@ extern crate lazy_static;
 use map::TileType;
 use rltk::{RGBA};
 use rltk::{Rltk, GameState, RltkBuilder, Point};
-use resources::Resources;
 
 mod item_system;
 
@@ -17,7 +16,6 @@ use gui::camera;
 mod player;
 mod map;
 mod components;
-mod movement;
 mod rect;
 mod gamelog;
 mod input_handler;
@@ -29,12 +27,12 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, EntitiesView, ViewMut, Get, Unique, View, UniqueView, UniqueViewMut};
+use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
 
-use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, InBackpack, Player, Viewshed, Equipped, WantsToUnequipItem};
+use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, Viewshed, WantsToUnequipItem};
 use map::Map;
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
@@ -131,7 +129,7 @@ impl State {
         if runstate == RunState::AiTurn { 
             self.world.run(system_pathfinding::run_pathfinding_system);
             self.world.run(system_ai_spawner::run_spawner_system);
-            system_ai_fish::run_fish_ai(self);
+            self.world.run(system_ai_fish::run_fish_ai);
             system_ai_villager::run_villager_ai_system(self);
             system_ai_monster::run_monster_ai_system(self);   
         }
@@ -146,7 +144,7 @@ impl State {
         self.world.run(system_map_indexing::run_map_indexing_system);
 
         effects::run_effects_queue(self);
-        system_particle::spawn_particles(&mut self.world, &mut self.resources);
+        self.world.run(system_particle::spawn_particles);
     }
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
@@ -154,6 +152,7 @@ impl State {
 
         let player_id = self.get_player();//self.world.borrow::<UniqueView<PlayerID>>().unwrap();
 
+        dbg!("This function just doesn't work");
         //
         // self.world.run(|v_pos: View<Pos>, v_vel: View<Vel>| {
         //     for (i, _) in (&v_pos, !&v_vel).iter() {
@@ -164,22 +163,22 @@ impl State {
 
 
 
-        self.world.run(|ves: EntitiesView, | {
-            for (id, ())
+        // self.world.run(|ves: EntitiesView, | {
+        //     for (id, ())
 
-            let mut to_delete = true;
-            if let Ok(_p) = self.world.get::<Player>(id) { to_delete = false; }
+        //     let mut to_delete = true;
+        //     if let Ok(_p) = self.world.get::<Player>(id) { to_delete = false; }
             
-            if let Ok(backpack) = self.world.get::<InBackpack>(id) {
-                if backpack.owner == *player_id { to_delete = false; }
-            }
+        //     if let Ok(backpack) = self.world.get::<InBackpack>(id) {
+        //         if backpack.owner == *player_id { to_delete = false; }
+        //     }
 
-            if let Ok(equipped) = self.world.get::<Equipped>(id) {
-                if equipped.owner == *player_id { to_delete = false; }
-            }
+        //     if let Ok(equipped) = self.world.get::<Equipped>(id) {
+        //         if equipped.owner == *player_id { to_delete = false; }
+        //     }
 
-            if to_delete { ids_to_delete.push(id); }
-        });
+        //     if to_delete { ids_to_delete.push(id); }
+        // });
 
         ids_to_delete
     }
@@ -218,11 +217,11 @@ impl State {
         }
 
         // Spawn monsters and items
-        map_builder.spawn_entities(&mut self.world, &mut self.resources);
+        map_builder.spawn_entities(&mut self.world);
 
         // Update player position
-        let mut player_position = self.resources.get_mut::<Point>().unwrap();
-        *player_position = Point::new(start_pos.x, start_pos.y);
+        let mut player_position = self.get_player_pos().0;//self.resources.get_mut::<Point>().unwrap();
+        player_position = Point::new(start_pos.x, start_pos.y);
         let player_id = self.get_player().0;//self.resources.get::<EntityId>().unwrap();
         let mut player_pos_comp = self.world.get::<Position>(player_id).unwrap();
         player_pos_comp.ps[0].x = start_pos.x;
@@ -315,7 +314,7 @@ impl GameState for State {
             RunState::AiTurn => {
                 {
                     let mut turn = self.get_turn();//self.resources.get_mut::<i32>().unwrap();
-                    turn.c += 1;
+                    turn.0 += 1;
 
                     // let map = &mut self.resources.get_mut::<Map>().unwrap();
                     // let gamemode = *self.resources.get::<GameMode>().unwrap();
@@ -327,7 +326,7 @@ impl GameState for State {
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
-                let result = gui_menus::show_inventory(&mut self.world, &mut self.resources, ctx);
+                let result = gui_menus::show_inventory(&mut self, ctx);
                 match result.0 {
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Cancel => { new_runstate = RunState::AwaitingInput }
@@ -337,7 +336,7 @@ impl GameState for State {
                 }
             }
             RunState::ShowItemActions{item} => {
-                let result = gui_menus::show_item_actions(&mut self.world, &mut self.resources, item, ctx);
+                let result = gui_menus::show_item_actions(&mut self.world, item, ctx);
                 match result {
                     gui_menus::ItemActionSelection::NoSelection => {}
                     gui_menus::ItemActionSelection::Used => {
@@ -357,7 +356,7 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            self.world.add_component(*id, WantsToUseItem {item, target: None}).unwrap();
+                            self.world.add_component(*id, WantsToUseItem {item, target: None});
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
@@ -374,7 +373,7 @@ impl GameState for State {
                 }
             }
             RunState::ShowTargeting{range, item} => {
-                let res = gui::ranged_target(&mut self.world, &mut self.resources, ctx, range);
+                let res = gui::ranged_target(&mut self, ctx, range);
                 match res.0 {
                     gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
@@ -386,7 +385,7 @@ impl GameState for State {
                 }
             }
             RunState::MainMenu{..} => {
-                let result = gui_menus::main_menu(&mut self.world, &mut self.resources, ctx);
+                let result = gui_menus::main_menu(&mut self, ctx);
                 match result {
                     gui_menus::MainMenuResult::NoSelection{selected} => {new_runstate = RunState::MainMenu{menu_selection: selected}}
                     gui_menus::MainMenuResult::Selection{selected} => {
@@ -502,7 +501,7 @@ fn main() -> rltk::BError {
 
     gs.world.add_unique(Map::new(1, TileType::Wall));
     gs.world.add_unique(PPoint(Point::new(0, 0)));
-    gs.world.add_unique(Turn{c: 0});
+    gs.world.add_unique(Turn(0));
     gs.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
     let player_id = entity_factory::player(&mut gs.world, (0, 0));

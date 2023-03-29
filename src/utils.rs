@@ -1,4 +1,4 @@
-use rltk::{DijkstraMap, BaseMap, Point, RGBA};
+use rltk::{DijkstraMap, BaseMap, Point, RGBA, NavigationPath};
 use shipyard::{World, EntityId, ViewMut, Get, Unique};
 
 use crate::map::Map;
@@ -54,17 +54,17 @@ pub fn get_neighbors(point: Point) -> Vec<Point> {
 // }
 
 // translates dir according to roguelike numpad convention - 1 is SW, 9 is NE
-pub fn dir_to_point(dir: usize, dismod: i32) -> Point {
+pub fn dir_to_point(pos: Point, dir: usize, dismod: i32) -> Point {
     match dir {
-        1 => Point { x: -dismod, y: dismod },
-        2 => Point { x: 0, y: dismod },
-        3 => Point { x: dismod, y: dismod },
-        4 => Point { x: -dismod, y: 0 },
-        6 => Point { x: dismod, y: 0 },
-        7 => Point { x: -dismod, y: -dismod },
-        8 => Point { x: 0, y: -dismod },
-        9 => Point { x: dismod, y: -dismod },
-        _ => Point { x: 0, y: 0 }
+        1 => Point { x: pos.x - dismod, y: pos.y + dismod },
+        2 => Point { x: pos.x + 0, y: pos.y + dismod },
+        3 => Point { x: pos.x + dismod, y: pos.y + dismod },
+        4 => Point { x: pos.x - dismod, y: pos.y + 0 },
+        6 => Point { x: pos.x + dismod, y: pos.y + 0 },
+        7 => Point { x: pos.x - dismod, y: pos.y - dismod },
+        8 => Point { x: pos.x + 0, y: pos.y - dismod },
+        9 => Point { x: pos.x + dismod, y: pos.y - dismod },
+        _ => Point { x: pos.x + 0, y: pos.y + 0 }
     }
 }
 
@@ -128,4 +128,18 @@ impl WorldGet for World {
             name: "Missing Component",
         });
     }
+}
+
+pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
+    let path = rltk::a_star_search(
+        map.point_idx(from) as i32,
+        map.point_idx(tp) as i32,
+        map
+    );
+
+    return path;
+}
+
+pub fn normalize(num: i32) -> i32 {
+    num / num.abs()
 }

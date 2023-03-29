@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use shipyard::World;
 
@@ -28,9 +27,9 @@ impl MapBuilder for CellularAutomataBuilder {
         self.build()
     }
 
-    fn spawn_entities(&mut self, world: &mut World, res: &mut Resources) {
+    fn spawn_entities(&mut self, world: &mut World) {
         for area in self.noise_areas.iter() {
-            entity_factory::spawn_region(world, res, area.1, self.depth);
+            entity_factory::spawn_region(world, area.1, self.depth);
         }
     }
 

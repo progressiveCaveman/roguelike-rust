@@ -1,4 +1,3 @@
-use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
@@ -36,9 +35,9 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
         self.rooms_and_corridors(20, 4, 8);
     }
     
-    fn spawn_entities(&mut self, world: &mut World, res: &mut Resources) {
+    fn spawn_entities(&mut self, world: &mut World) {
         for room in self.rooms.iter().skip(1) {
-            entity_factory::spawn_room(world, res, room, self.depth);
+            entity_factory::spawn_room(world, &self.map, room, self.depth);
         }
     }
 

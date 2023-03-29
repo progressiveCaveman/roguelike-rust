@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use resources::*;
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
-use shipyard::{EntityId, World};
+use shipyard::{EntityId, World, AllStoragesViewMut};
 use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType, LocomotionType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
@@ -58,10 +57,9 @@ pub fn room_table(depth: i32) -> WeightedTable {
         .add("Tower Shield", depth - 1)
 }
 
-pub fn spawn_room(world: &mut World, res: &mut Resources, room: &Rect, depth: i32) {
+pub fn spawn_room(world: &mut World, map: &Map, room: &Rect, depth: i32) {
     let mut possible_targets : Vec<usize> = Vec::new();
     { // Borrow scope - to keep access to the map separated
-        let map = res.get::<Map>().unwrap();
         for y in room.y1 + 1 .. room.y2 {
             for x in room.x1 + 1 .. room.x2 {
                 let idx = map.xy_idx(x, y);
@@ -72,10 +70,10 @@ pub fn spawn_room(world: &mut World, res: &mut Resources, room: &Rect, depth: i3
         }
     }
 
-    spawn_region(world, res, &possible_targets, depth);
+    spawn_region(world, &possible_targets, depth);
 }
 
-pub fn spawn_region(ecs: &mut World, _res: &mut Resources, area : &[usize], map_depth: i32) {
+pub fn spawn_region(ecs: &mut World, area : &[usize], map_depth: i32) {
     let spawn_table = room_table(map_depth);
     let mut spawn_points : HashMap<usize, String> = HashMap::new();
     let mut areas : Vec<usize> = Vec::from(area);
@@ -528,8 +526,8 @@ pub fn lumber_mill(world: &mut World, x: i32, y: i32, width: i32, height: i32) -
 
 /// misc
 
-pub fn tmp_fireball(world: &mut World) -> EntityId {
-    world.add_entity((
+pub fn tmp_fireball(mut store: AllStoragesViewMut) -> EntityId {
+    store.add_entity((
         Name {name: "Fireball".to_string()},
         Item {typ: ItemType::Scroll},
         Consumable {},

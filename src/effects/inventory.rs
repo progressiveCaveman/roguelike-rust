@@ -1,15 +1,14 @@
 use shipyard::{ViewMut, Get};
 
 use super::*;
-use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, gamelog::GameLog, utils::WorldGet};
+use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Name, Equipped}, utils::WorldGet};
 
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
         let world = &mut gs.world;
-        let res = &gs.resources;
 
-        let mut log = res.get_mut::<GameLog>().unwrap();
-        let player_id = res.get::<EntityId>().unwrap();
+        let mut log = gs.get_log();//res.get_mut::<GameLog>().unwrap();
+        let player_id = gs.get_player().0;//res.get::<EntityId>().unwrap();
     
         gs.world.run(|mut positions: ViewMut<Position>| {
             if let Err(_) = (&mut positions).get(target) {
@@ -48,7 +47,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         let _res = world.remove::<Position>(target);
         let _r = world.add_component(target, InBackpack {owner: id});
     
-        if id == *player_id {
+        if id == player_id {
             let name = world.get::<Name>(target).unwrap();
             log.messages.push(format!("You pick up the {}", name.name));
         }

@@ -1,6 +1,4 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
-use resources::*;
-use shipyard::{EntityId, World};
 use crate::ai::decisions::Intent;
 use crate::player::get_player_map_knowledge;
 use crate::utils::WorldGet;
@@ -219,16 +217,16 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     // }
 }
 
-pub fn ranged_target(world: &mut World, res: &mut Resources, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
-    let map = res.get::<Map>().unwrap();
-    let player_id = *res.get::<EntityId>().unwrap();
-    let player_pos = *res.get::<Point>().unwrap();
+pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+    let map = gs.get_map();//res.get::<Map>().unwrap();
+    let player_id = gs.get_player().0;//*res.get::<EntityId>().unwrap();
+    let player_pos = gs.get_player_pos().0;//*res.get::<Point>().unwrap();
     ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
 
     let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
 
     let mut valid_cells: Vec<Point> = Vec::new();
-    match world.get::<Viewshed>(player_id) {
+    match gs.world.get::<Viewshed>(player_id) {
         Err(_e) => {return (ItemMenuResult::Cancel, None)},
         Ok(player_vs) => {
             for pt in player_vs.visible_tiles.iter() {

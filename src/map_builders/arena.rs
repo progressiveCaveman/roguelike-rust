@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use resources::Resources;
 use rltk::{RandomNumberGenerator, Point};
 use shipyard::World;
 
@@ -28,7 +27,7 @@ impl MapBuilder for AernaBuilder {
         self.build()
     }
 
-    fn spawn_entities(&mut self, world: &mut World, res: &mut Resources) {
+    fn spawn_entities(&mut self, world: &mut World) {
         entity_factory::spawner(world, 4, self.map.height / 2, 0, SpawnerType::Orc, 10);
         entity_factory::spawner(world, self.map.width - 5, self.map.height / 2, 1, SpawnerType::Orc, 10);
     }

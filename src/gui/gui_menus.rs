@@ -1,12 +1,11 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use shipyard::{EntityId, World, View, IntoIter};
+use shipyard::{EntityId, World, View, IntoIter, IntoWithId};
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
-use resources::*;
 use crate::gui::{ItemMenuResult, Palette};
 use crate::components::{Name, InBackpack, Equipped, Equippable, Inventory, Player};
 use crate::utils::WorldGet;
-use crate::{RunState};
+use crate::{RunState, State};
 
 pub enum ItemActionSelection {Cancel, NoSelection, Used, Dropped, Unequipped}
 
@@ -18,8 +17,8 @@ pub enum MainMenuResult {NoSelection {selected: MainMenuSelection}, Selection {s
 
 pub enum GameOverResult {NoSelection, QuitToMenu}
 
-pub fn main_menu(_world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> MainMenuResult {
-    let runstate = res.get::<RunState>().unwrap();
+pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
+    let runstate = gs.get_run_state();//res.get::<RunState>().unwrap();
 
     let get_fg = |sel, menu_item| {
         if sel == menu_item { return Palette::COLOR_RED }
@@ -70,13 +69,13 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
     }
 }
 
-pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
-    let player_id = *res.get::<EntityId>().unwrap();
+pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
+    let player_id = gs.get_player().0;//*res.get::<EntityId>().unwrap();
 
     dbg!("Inventory display code is outdated");
     // Items in backpack
     // let mut query = //world.query::<(&InBackpack, &Name)>();
-    let inventory = world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
+    let inventory = gs.world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
     let backpack_count = inventory.items.len();
     let mut y = 25 - (backpack_count / 2);
     ctx.draw_box(10, y - 2, 31, backpack_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);
@@ -84,20 +83,23 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     let title = "Inventory";
     ctx.print_color(13, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut useable: Vec<EntityId> = Vec::new();
-    for (j, (id, (_pack, name))) in world.query::<(&InBackpack, &Name)>().iter().filter(|item| item.1.0.owner == *player_id).enumerate() {
-        ctx.set(12, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
-        ctx.set(13, y, Palette::COLOR_PURPLE, Palette::MAIN_BG, 97 + j as rltk::FontCharType);
-        ctx.set(14, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
-
-        ctx.print_color(16, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
-        useable.push(id);
-        y += 1;
-    }
+    let mut useable: Vec<EntityId> = gs.world.run(|vpack: View<InBackpack>, vname: View<Name>| {
+        let mut useable: Vec<EntityId> = Vec::new();
+        for (j, (id, (_pack, name))) in (&vpack, &vname).iter().with_id().filter(|item| item.1.0.owner == player_id).enumerate()  {
+            ctx.set(12, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
+            ctx.set(13, y, Palette::COLOR_PURPLE, Palette::MAIN_BG, 97 + j as rltk::FontCharType);
+            ctx.set(14, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
+    
+            ctx.print_color(16, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
+            useable.push(id);
+            y += 1;
+        }
+        useable
+    });
 
     // Items equipped
     // let mut query = world.query::<(&Equipped, &Name)>();
-    let equipped_count = world.run(|vplayer: View<Player>, vequipped: View<Equipped>|{
+    let equipped_count = gs.world.run(|vplayer: View<Player>, vequipped: View<Equipped>|{
         let mut count = 0;
         for (_, _) in (&vplayer, &vequipped).iter(){
             count += 1;
@@ -112,17 +114,20 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut equipped: Vec<EntityId> = Vec::new();
-    for (j, (id, (_pack, name))) in world.query::<(&Equipped, &Name)>().iter().filter(|item| item.1.0.owner == *player_id).enumerate() {
-        let offset = j + backpack_count;
-        ctx.set(47, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
-        ctx.set(48, y, Palette::COLOR_PURPLE, Palette::MAIN_BG, 97 + offset as rltk::FontCharType);
-        ctx.set(49, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
-
-        ctx.print_color(51, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
-        equipped.push(id);
-        y += 1;
-    }
+    let mut equipped: Vec<EntityId> = gs.world.run(| vewquipped: View<Equipped>, vname: View<Name> | {
+        let mut equipped: Vec<EntityId> = Vec::new();
+        for (j, (id, (_pack, name))) in (&vewquipped, &vname).iter().with_id().filter(|item| item.1.0.owner == player_id).enumerate() {
+            let offset = j + backpack_count;
+            ctx.set(47, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
+            ctx.set(48, y, Palette::COLOR_PURPLE, Palette::MAIN_BG, 97 + offset as rltk::FontCharType);
+            ctx.set(49, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
+    
+            ctx.print_color(51, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
+            equipped.push(id);
+            y += 1;
+        }
+        equipped
+    });
 
     match ctx.key {
         None => (ItemMenuResult::NoResponse, None),
@@ -143,7 +148,7 @@ pub fn show_inventory(world: &mut World, res: &mut Resources, ctx: &mut Rltk) ->
     }
 }
 
-pub fn show_item_actions(world: &mut World, _res: &mut Resources, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
+pub fn show_item_actions(world: &mut World, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
     let item_name = world.get::<Name>(item).unwrap();
     ctx.draw_box(15, 23, 31, 5, Palette::MAIN_FG, Palette::MAIN_BG);
     ctx.print_color(18, 23, Palette::MAIN_FG, Palette::MAIN_BG, item_name.name.to_string());
