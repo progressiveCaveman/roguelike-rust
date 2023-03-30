@@ -28,13 +28,13 @@ pub fn get_player_viewshed(gs: &State) -> Viewshed {
     vs.get(player_id).unwrap().clone()
 }
 
-pub fn reveal_map(gs: &mut State){
-    let world = &gs.world;
+pub fn reveal_map(gs: &State){
+    // let world = &gs.world;
     // let res = &gs.resources;
-    let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    if let Ok(mut vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
+    if let Ok(mut vspace) = gs.world.borrow::<ViewMut<SpatialKnowledge>>() {
         if let Ok(space) = (&mut vspace).get(player_id) {
             for i in 0..map.tiles.len() {
                 space.tiles.insert(i, (map.tiles[i], map.tile_content[i].clone()));
@@ -43,7 +43,7 @@ pub fn reveal_map(gs: &mut State){
     }
 }
 
-pub fn try_next_level(gs: &mut State) -> bool {
+pub fn try_next_level(gs: &State) -> bool {
     let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let player_idx = map.xy_idx(player_pos.x, player_pos.y);

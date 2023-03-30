@@ -217,7 +217,7 @@ pub fn run_item_use_system(mut store: AllStoragesViewMut) {
             }
         }
 
-        store.delete_entity(item);
+        add_effect(None, EffectType::Delete {}, Targets::Single { target: item });
     }
 
     for id in to_remove_wants_use {

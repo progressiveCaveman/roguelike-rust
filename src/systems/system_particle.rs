@@ -51,17 +51,19 @@ pub fn spawn_particles(mut particle_builder: UniqueViewMut<ParticleBuilder>, mut
     particle_builder.clear();
 }
 
-pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
+pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, mut vpos: ViewMut<Position>) {
     for (id, (particle, lifetime)) in (&mut vpart, &mut vlifetime).iter().with_id() {
         lifetime.ms -= frametime.0;
 
         let vel = vvel.get(id);
         if let Ok(vel) = vel {
-            for pos in vpos.get(id).unwrap().ps.iter_mut() {
-                particle.float_x += (vel.x) * (frametime.0 / 1000.0);
-                particle.float_y += (vel.y) * (frametime.0 / 1000.0);
-                pos.x = particle.float_x as i32;
-                pos.y = particle.float_y as i32;
+            if let Ok(pos) = (&mut vpos).get(id) {
+                for pos in pos.ps.iter_mut() {
+                    particle.float_x += (vel.x) * (frametime.0 / 1000.0);
+                    particle.float_y += (vel.y) * (frametime.0 / 1000.0);
+                    pos.x = particle.float_x as i32;
+                    pos.y = particle.float_y as i32;
+                }
             }
         }
     }

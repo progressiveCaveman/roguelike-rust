@@ -27,7 +27,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut};
+use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, EntitiesViewMut, View};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -38,6 +38,7 @@ use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use utils::{PlayerID, Turn};
 
+use crate::components::{Player, InBackpack, Equipped};
 use crate::utils::{PPoint, RNG, FrameTime};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
@@ -123,35 +124,26 @@ impl State {
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
         let mut ids_to_delete: Vec<EntityId> = Vec::new();
 
-        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap();
+        let entities = self.world.borrow::<EntitiesViewMut>().unwrap();
+        let player_id = self.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-        dbg!("This function just doesn't work");
-        //
-        // self.world.run(|v_pos: View<Pos>, v_vel: View<Vel>| {
-        //     for (i, _) in (&v_pos, !&v_vel).iter() {
-        //         dbg!(i);
-        //     }
-        // });
+        let vplayer = self.world.borrow::<View<Player>>().unwrap();
+        let vpack = self.world.borrow::<View<InBackpack>>().unwrap();
+        let vequipped = self.world.borrow::<View<Equipped>>().unwrap();
 
+        for id in entities.iter() {
+            let mut to_delete = true;
 
+            if let Ok(_) = vplayer.get(id) {
+                to_delete = false;
+            }else if let Ok(backpack) = vpack.get(id) {
+                if backpack.owner == player_id { to_delete = false; }
+            }else if let Ok(equipped) = vequipped.get(id) {
+                if equipped.owner == player_id { to_delete = false; }
+            }
 
-
-        // self.world.run(|ves: EntitiesView, | {
-        //     for (id, ())
-
-        //     let mut to_delete = true;
-        //     if let Ok(_p) = self.world.get::<Player>(id) { to_delete = false; }
-            
-        //     if let Ok(backpack) = self.world.get::<InBackpack>(id) {
-        //         if backpack.owner == *player_id { to_delete = false; }
-        //     }
-
-        //     if let Ok(equipped) = self.world.get::<Equipped>(id) {
-        //         if equipped.owner == *player_id { to_delete = false; }
-        //     }
-
-        //     if to_delete { ids_to_delete.push(id); }
-        // });
+            if to_delete { ids_to_delete.push(id); }
+        }
 
         ids_to_delete
     }
@@ -197,7 +189,7 @@ impl State {
         *player_position = PPoint(Point::new(start_pos.x, start_pos.y));
         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
         let mut vpos = self.world.borrow::<ViewMut<Position>>().unwrap();
-        let mut player_pos_comp = vpos.get(player_id).unwrap();
+        let player_pos_comp = (&mut vpos).get(player_id).unwrap();
         player_pos_comp.ps[0].x = start_pos.x;
         player_pos_comp.ps[0].y = start_pos.y;
 

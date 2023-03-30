@@ -4,6 +4,8 @@ use std::collections::VecDeque;
 mod damage;
 pub use damage::inflict_damage;
 
+mod delete;
+
 mod confusion;
 pub use confusion::inflict_confusion;
 
@@ -35,6 +37,7 @@ pub enum EffectType {
     Heal { amount: i32 },
     Move {},
     Wait {},
+    Delete {},
 }
 
 #[derive(Clone)]
@@ -89,10 +92,11 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::Fire{..} => true,
         EffectType::PickUp {  } => false,
         EffectType::Explore {  } => false,
-        EffectType::Drop {  } => false,
+        EffectType::Drop {  } => true,
         EffectType::Heal {..} => true,
-        EffectType::Move {  } => false,
-        EffectType::Wait {  } => false,
+        EffectType::Move {  } => true,
+        EffectType::Wait {  } => true,
+        EffectType::Delete {..} => true,
     }
 }
 
@@ -124,7 +128,8 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
         EffectType::Drop { } => {},
         EffectType::Heal {..} => {}, // todo make this cause a burst of life or something
         EffectType::Move {  } => movement::try_move(gs, effect, tile_idx),
-        EffectType::Wait {  } => {}, 
+        EffectType::Wait {  } => {},
+        EffectType::Delete {..} => {}, 
     }
 }
 
@@ -139,6 +144,7 @@ fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         EffectType::Heal {..} => heal::heal(gs, effect, target),
         EffectType::Move {  } => { },
         EffectType::Wait {  } => movement::skip_turn(gs, effect, target),
+        EffectType::Delete {..} => delete::delete(gs, effect, target),
     }
 }
 

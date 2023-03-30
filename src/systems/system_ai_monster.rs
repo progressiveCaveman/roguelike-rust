@@ -57,14 +57,11 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
                 continue;
             }
 
-            let mut retargeted = false;
-            let mut target = ppos;
-
             // TODO mutlitile monsters currently only attack from their first position
-            let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, pos.ps[0]);
-            if distance < 1.5 && !retargeted {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(ppos, pos.ps[0]);
+            if distance < 1.5 {
                 needs_wants_to_attack.push(id);
-            } else if vs.visible_tiles.contains(&target){
+            } else if vs.visible_tiles.contains(&ppos){
 
                 // in order to stop multi-tile monsters from blocking themselves, make them not block before running A*
                 // this is still just a hack since multi-tile monsters still path through 1 wide areas
@@ -72,7 +69,7 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
                     let idx = map.xy_idx(pos.x, pos.y);
                     map.blocked[idx] = false;
                 }
-                let path = utils::get_path(&map, pos.ps[0], target);
+                let path = utils::get_path(&map, pos.ps[0], ppos);
 
                 // make monster block again
                 for pos in pos.ps.iter() {

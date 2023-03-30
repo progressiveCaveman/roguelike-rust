@@ -68,7 +68,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::G => add_effect(Some(player_id), EffectType::PickUp {}, Targets::Tile { tile_idx: player_pos_idx}),//player::get_item(gs),
                     VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}, Targets::Single { target: player_id }),
                     VirtualKeyCode::R => player::reveal_map(gs),
-                    VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: gs.world.run(|store: AllStoragesViewMut|{entity_factory::tmp_fireball(&mut store)}) },
+                    VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::tmp_fireball(&mut store)}) },
                     VirtualKeyCode::I => return RunState::ShowInventory,
                     VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}, Targets::Single { target: player_id }),//return player::skip_turn(gs),
                     VirtualKeyCode::Escape => return RunState::SaveGame,
