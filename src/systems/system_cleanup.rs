@@ -1,25 +1,27 @@
-use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueViewMut, AllStoragesViewMut, Remove};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueViewMut, Remove, AddComponent, EntityId};
 use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
+use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::GameLog;
 
-pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueViewMut<RunState>, mut all_storages: AllStoragesViewMut, vpos: View<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, mut vpack: ViewMut<InBackpack>, mut vequip: ViewMut<Equipped>) {
+pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueViewMut<RunState>, mut vpos: ViewMut<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, mut vpack: ViewMut<InBackpack>, mut vequip: ViewMut<Equipped>) {
+    let mut to_add_pos: Vec<(EntityId, Position)> = vec![];
+    
     for (id, (pos, stats)) in (&vpos, &vstats).iter().with_id() {
         if stats.hp <= 0 {
-            let player = vplayer.get(id);// world.get::<Player>(id);
-            let name = vname.get(id); // world.get::<Name>(id);
+            let player = vplayer.get(id);
+            let name = vname.get(id);
             match player {
                 Err(_) => { // not a player
                     if let Ok(inv) = vinv.get(id) {
                         for e in inv.items.iter() {
                             vpack.remove(*e);
                             vequip.remove(*e);
-                            all_storages.add_component(*e, Position { ps: vec![pos.ps[0]] });
-                            // to_drop_items.push((*e, pos.ps[0]));
+                            to_add_pos.push((*e, Position { ps: vec![pos.ps[0]] }));
                         }
                     }
 
-                    all_storages.delete_entity(id);
+                    add_effect(None, EffectType::Delete {}, Targets::Single { target: id });
                     
                     if let Ok(name) = name {
                         log.messages.push(format!("{} is dead", &name.name));
@@ -30,5 +32,9 @@ pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueV
                 }
             }
         }
+    }
+
+    for (e, p) in to_add_pos.iter() {
+        vpos.add_component_unchecked(*e, p.clone());
     }
 }

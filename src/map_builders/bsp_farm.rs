@@ -89,11 +89,11 @@ impl BspFarmBuilder {
                 apply_room_to_map(&mut self.map, &new_rect, TileType::Wheat, true);
             }else{
                 if room.width() > MIN_BUILDING_SIZE + 1 && room.height() > MIN_BUILDING_SIZE + 1 {
-                    let bWidth = rng.range(MIN_BUILDING_SIZE, room.width());
-                    let bHeight = rng.range(MIN_BUILDING_SIZE, room.height());
-                    let bx = rng.range(0, room.width() - bWidth);
-                    let by = rng.range(0, room.height() - bHeight);
-                    let room = Rect::new(room.x1 + bx, room.y1 + by, bWidth, bHeight);
+                    let b_width = rng.range(MIN_BUILDING_SIZE, room.width());
+                    let b_height = rng.range(MIN_BUILDING_SIZE, room.height());
+                    let bx = rng.range(0, room.width() - b_width);
+                    let by = rng.range(0, room.height() - b_height);
+                    let room = Rect::new(room.x1 + bx, room.y1 + by, b_width, b_height);
                     apply_room_to_map(&mut self.map, &room, TileType::WoodWall, false);
                 }
             }

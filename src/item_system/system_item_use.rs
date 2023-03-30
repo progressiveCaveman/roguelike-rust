@@ -7,7 +7,7 @@ use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Cons
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};
 
-pub fn run_item_use_system(mut store: AllStoragesViewMut) {
+pub fn run_item_use_system(store: AllStoragesViewMut) {
     let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();//res.get_mut::<GameLog>().unwrap();
     let player_id = store.borrow::<UniqueView<PlayerID>>().ok().unwrap(); //res.get::<EntityId>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();//res.get::<Map>().unwrap();

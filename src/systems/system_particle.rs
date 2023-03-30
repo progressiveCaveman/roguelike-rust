@@ -1,7 +1,7 @@
 use rltk::{FontCharType, Point, RGBA};
 use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView, UniqueViewMut};
 
-use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime};
+use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime, effects::{add_effect, EffectType, Targets}};
 
 #[derive(Debug)]
 struct ParticleRequest {
@@ -51,7 +51,7 @@ pub fn spawn_particles(mut particle_builder: UniqueViewMut<ParticleBuilder>, mut
     particle_builder.clear();
 }
 
-pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, mut vpos: ViewMut<Position>) {
+pub fn update_particles(frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, mut vpos: ViewMut<Position>) {
     for (id, (particle, lifetime)) in (&mut vpart, &mut vlifetime).iter().with_id() {
         lifetime.ms -= frametime.0;
 
@@ -68,19 +68,18 @@ pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTi
         }
     }
 
-    remove_dead_particles(store, vlifetime);
+    remove_dead_particles(vlifetime);
 }
 
-pub fn remove_dead_particles(mut store: AllStoragesViewMut, vlifetime: ViewMut<Lifetime>) {
+pub fn remove_dead_particles(vlifetime: ViewMut<Lifetime>) {
     let mut particles_to_remove: Vec<EntityId> = Vec::new();
-    for (id, lifetime) in vlifetime.iter().with_id() {//world.query::<&mut Lifetime>().iter() {
+    for (id, lifetime) in vlifetime.iter().with_id() {
         if lifetime.ms <= 0.0 {
             particles_to_remove.push(id);
         }
     }
 
     for id in particles_to_remove {
-        store.delete_entity(id);
-        // world.despawn(id).unwrap();
+        add_effect(None, EffectType::Delete {  }, Targets::Single { target: id });
     }
 }

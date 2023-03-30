@@ -14,7 +14,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         let mut log = gs.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
         let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     
-        let shouldReturn = gs.world.run(|mut positions: ViewMut<Position>| {
+        let should_return = gs.world.run(|mut positions: ViewMut<Position>| {
             if let Err(_) = (&mut positions).get(target) {
                 dbg!("Entity doesn't have a position");
                 return true;
@@ -22,7 +22,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
             false
         });
 
-        if shouldReturn { return; }
+        if should_return { return; }
 
         if let Err(_) = vpos.get(id) {
             dbg!("Entity doesn't have a position");

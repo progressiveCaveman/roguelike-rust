@@ -50,7 +50,7 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
         }
     }
 
-    for e in to_remove.iter() {
+    for _ in to_remove.iter() {
         // gs.world.delete_entity(*e);
         dbg!("ERROR: Need to delete entity");
     }
