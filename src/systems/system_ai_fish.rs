@@ -11,7 +11,7 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
     let mut to_try_move: Vec<(EntityId, Point)> = vec![];
     let mut to_remove: Vec<EntityId> = vec![];
 
-    for (id, (pos, fish)) in (&vpos, &vfish).iter().with_id() {
+    for (id, (pos, _)) in (&vpos, &vfish).iter().with_id() {
         if pos.ps.len() == 1{
             // if at edge of map, remove fish
 

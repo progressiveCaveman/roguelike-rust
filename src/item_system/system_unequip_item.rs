@@ -1,10 +1,12 @@
-use shipyard::{UniqueView, View, ViewMut, IntoIter, IntoWithId, Get, Remove, AddComponent};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, Remove, AddComponent, UniqueViewMut, EntityId};
 
 use crate::{components::{Equipped, InBackpack, Name, WantsToUnequipItem, Inventory, Player}, gamelog::GameLog};
 
-pub fn run_unequip_item_system(log: UniqueView<GameLog>, vplayer: View<Player>, vinv: View<Inventory>, vwants: ViewMut<WantsToUnequipItem>, vequip: ViewMut<Equipped>, vbackpack: ViewMut<InBackpack>, vname: View<Name>) {
+pub fn run_unequip_item_system(mut log: UniqueViewMut<GameLog>, vplayer: View<Player>, vinv: View<Inventory>, mut vwants: ViewMut<WantsToUnequipItem>, mut vequip: ViewMut<Equipped>, mut vbackpack: ViewMut<InBackpack>, vname: View<Name>) {
+    let mut to_remove_wants: Vec<EntityId> = vec![];
+    
     for (id, (_, wants_unequip)) in (&vinv, &vwants).iter().with_id() {
-        vwants.remove(id);
+        to_remove_wants.push(id);
         vequip.remove(wants_unequip.item);
         vbackpack.add_component_unchecked(wants_unequip.item, InBackpack { owner: id });
 
@@ -13,5 +15,9 @@ pub fn run_unequip_item_system(log: UniqueView<GameLog>, vplayer: View<Player>, 
                 log.messages.push(format!("You unequip the {}", item_name.name));
             }
         }
+    }
+
+    for e in to_remove_wants.iter() {
+        vwants.remove(*e);
     }
 }

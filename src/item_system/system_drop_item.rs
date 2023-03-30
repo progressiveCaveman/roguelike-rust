@@ -1,9 +1,9 @@
-use shipyard::{EntityId, UniqueView, View, IntoIter, IntoWithId, Get, ViewMut, Remove};
+use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, ViewMut, Remove, UniqueViewMut};
 use crate::components::{Name, WantsToDropItem, Player};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::gamelog::GameLog;
 
-pub fn run_drop_item_system(log: UniqueView<GameLog>, vplayer: View<Player>, vwants: ViewMut<WantsToDropItem>, vname: View<Name>) {
+pub fn run_drop_item_system(mut log: UniqueViewMut<GameLog>, vplayer: View<Player>, mut vwants: ViewMut<WantsToDropItem>, vname: View<Name>) {
     let mut to_drop: Vec<(EntityId, EntityId)> = Vec::new();
 
     for (id, wants_drop) in vwants.iter().with_id() {

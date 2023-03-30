@@ -1,8 +1,8 @@
-use shipyard::{UniqueView, View, ViewMut, IntoIter, IntoWithId, Get};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueViewMut};
 use crate::map::Map;
 use crate::components::{BlocksTile, Position};
 
-pub fn run_map_indexing_system(map: UniqueView<Map>, vpos: View<Position>, vblocks: ViewMut<BlocksTile>) {
+pub fn run_map_indexing_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vblocks: ViewMut<BlocksTile>) {
     map.set_blocked();
     map.clear_tile_content();
     

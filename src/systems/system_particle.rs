@@ -1,5 +1,5 @@
 use rltk::{FontCharType, Point, RGBA};
-use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView};
+use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView, UniqueViewMut};
 
 use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime};
 
@@ -38,7 +38,7 @@ impl ParticleBuilder {
     }
 }
 
-pub fn spawn_particles(particle_builder: UniqueView<ParticleBuilder>, store: AllStoragesViewMut) {
+pub fn spawn_particles(mut particle_builder: UniqueViewMut<ParticleBuilder>, mut store: AllStoragesViewMut) {
     for p in particle_builder.requests.iter() {
         let _id = store.add_entity((
             Renderable {glyph: p.glyph, fg: p.fg, bg: p.bg, always_render: true, order: RenderOrder::Particle, ..Default::default()},
@@ -51,7 +51,7 @@ pub fn spawn_particles(particle_builder: UniqueView<ParticleBuilder>, store: All
     particle_builder.clear();
 }
 
-pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>,vpart: ViewMut<Particle>, vlifetime: View<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
+pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, vpart: ViewMut<Particle>, vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
     for (id, (particle, lifetime)) in (&vpart, &vlifetime).iter().with_id() {//world.query::<(&mut Particle, &mut Lifetime)>().iter() {
         lifetime.ms -= frametime.0;
 
@@ -69,7 +69,7 @@ pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTi
     remove_dead_particles(store, vlifetime);
 }
 
-pub fn remove_dead_particles(mut store: AllStoragesViewMut, vlifetime: View<Lifetime>) {
+pub fn remove_dead_particles(mut store: AllStoragesViewMut, vlifetime: ViewMut<Lifetime>) {
     let mut particles_to_remove: Vec<EntityId> = Vec::new();
     for (id, lifetime) in vlifetime.iter().with_id() {//world.query::<&mut Lifetime>().iter() {
         if lifetime.ms <= 0.0 {

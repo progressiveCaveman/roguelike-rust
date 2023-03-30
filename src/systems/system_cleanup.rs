@@ -1,9 +1,9 @@
-use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueView, UniqueViewMut, AllStoragesViewMut, Remove};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueViewMut, AllStoragesViewMut, Remove};
 use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
 use crate::gamelog::GameLog;
 
-pub fn run_cleanup_system(log: UniqueView<GameLog>, runstate: UniqueViewMut<RunState>, mut all_storages: AllStoragesViewMut, vpos: View<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, vpack: ViewMut<InBackpack>, vequip: ViewMut<Equipped>) {
+pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueViewMut<RunState>, mut all_storages: AllStoragesViewMut, vpos: View<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, mut vpack: ViewMut<InBackpack>, mut vequip: ViewMut<Equipped>) {
     for (id, (pos, stats)) in (&vpos, &vstats).iter().with_id() {
         if stats.hp <= 0 {
             let player = vplayer.get(id);// world.get::<Player>(id);
@@ -12,7 +12,8 @@ pub fn run_cleanup_system(log: UniqueView<GameLog>, runstate: UniqueViewMut<RunS
                 Err(_) => { // not a player
                     if let Ok(inv) = vinv.get(id) {
                         for e in inv.items.iter() {
-                            (vpack, vequip).remove(*e);
+                            vpack.remove(*e);
+                            vequip.remove(*e);
                             all_storages.add_component(*e, Position { ps: vec![pos.ps[0]] });
                             // to_drop_items.push((*e, pos.ps[0]));
                         }

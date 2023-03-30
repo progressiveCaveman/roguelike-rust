@@ -34,6 +34,7 @@ pub enum EffectType {
     Explore { },
     Heal { amount: i32 },
     Move {},
+    Wait {},
 }
 
 #[derive(Clone)]
@@ -91,6 +92,7 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
         EffectType::Drop {  } => false,
         EffectType::Heal {..} => true,
         EffectType::Move {  } => false,
+        EffectType::Wait {  } => false,
     }
 }
 
@@ -121,7 +123,8 @@ fn affect_tile(gs: &mut State, effect: &EffectSpawner, tile_idx : usize) {
         EffectType::Explore { } => {},
         EffectType::Drop { } => {},
         EffectType::Heal {..} => {}, // todo make this cause a burst of life or something
-        EffectType::Move {  } => movement::try_move(gs, effect, tile_idx), 
+        EffectType::Move {  } => movement::try_move(gs, effect, tile_idx),
+        EffectType::Wait {  } => {}, 
     }
 }
 
@@ -134,7 +137,8 @@ fn affect_entity(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         EffectType::Explore {  } => movement::autoexplore(gs, effect, target),
         EffectType::Drop {  } => inventory::drop_item(gs, effect, target),
         EffectType::Heal {..} => heal::heal(gs, effect, target),
-        EffectType::Move {  } => {},
+        EffectType::Move {  } => { },
+        EffectType::Wait {  } => movement::skip_turn(gs, effect, target),
     }
 }
 

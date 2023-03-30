@@ -288,7 +288,7 @@ impl From<EntityId> for Target {
 }
 
 impl Target {
-    pub fn get_point(&self, vpos: View<Position>) -> Point {
+    pub fn get_point(&self, vpos: &View<Position>) -> Point {
         match self {
             Target::LOCATION(loc) => *loc,
             Target::ENTITY(entity) => {

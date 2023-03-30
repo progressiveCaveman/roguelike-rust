@@ -6,17 +6,17 @@ use crate::{entity_factory};
 use crate::components::{Position, Tree};
 
 pub fn run_dissasemble_system(mut all_storages: AllStoragesViewMut, vpos: View<Position>, vintent: View<Intent>, vtree: View<Tree>) {
-    for (id, (pos, intent)) in (&vpos, &vintent).iter().with_id() {
+    for (_, (pos, intent)) in (&vpos, &vintent).iter().with_id() {
         if intent.task == Task::Destroy {
-            let target = intent.target[0].get_point(vpos);
+            let target = intent.target[0].get_point(&vpos);
 
             if target == Point::invalid_point() {
                 continue;
             }
             
             // check distance
-            for p in pos.ps {
-                let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, p);
+            for p in pos.ps.iter() {
+                let distance = rltk::DistanceAlg::Pythagoras.distance2d(target, *p);
                 if distance > 1.5 {
                     // dbg!("entity not next to target", distance);
                     continue;
@@ -36,7 +36,7 @@ pub fn run_dissasemble_system(mut all_storages: AllStoragesViewMut, vpos: View<P
                     };
     
                     if spawn_log {
-                        entity_factory::log(all_storages, tpoint.x, tpoint.y);
+                        entity_factory::log(&mut all_storages, tpoint.x, tpoint.y);
                     }
     
                     all_storages.delete_entity(e);

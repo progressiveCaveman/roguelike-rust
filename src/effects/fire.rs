@@ -1,14 +1,14 @@
-use shipyard::UniqueView;
+use shipyard::{UniqueViewMut};
 
 use super::*;
 use crate::{components::Fire, map::Map};
 
 pub fn inflict_fire_tile(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
-    let mut map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let mut map = gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
 
     if let EffectType::Fire { turns } = effect.effect_type {
         if map.is_flammable(tile_idx) {
-                map.fire_turns[tile_idx] += turns;
+            map.fire_turns[tile_idx] += turns;
         }
     }
 }

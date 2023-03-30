@@ -83,7 +83,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     let title = "Inventory";
     ctx.print_color(13, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut useable: Vec<EntityId> = gs.world.run(|vpack: View<InBackpack>, vname: View<Name>| {
+    let useable: Vec<EntityId> = gs.world.run(|vpack: View<InBackpack>, vname: View<Name>| {
         let mut useable: Vec<EntityId> = Vec::new();
         for (j, (id, (_pack, name))) in (&vpack, &vname).iter().with_id().filter(|item| item.1.0.owner == player_id).enumerate()  {
             ctx.set(12, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
@@ -114,7 +114,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let mut equipped: Vec<EntityId> = gs.world.run(| vewquipped: View<Equipped>, vname: View<Name> | {
+    let equipped: Vec<EntityId> = gs.world.run(| vewquipped: View<Equipped>, vname: View<Name> | {
         let mut equipped: Vec<EntityId> = Vec::new();
         for (j, (id, (_pack, name))) in (&vewquipped, &vname).iter().with_id().filter(|item| item.1.0.owner == player_id).enumerate() {
             let offset = j + backpack_count;

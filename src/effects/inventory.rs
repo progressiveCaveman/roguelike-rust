@@ -5,24 +5,26 @@ use crate::{components::{Position, Inventory, InBackpack, WantsToPickupItem, Nam
 
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     if let Some(id) = effect.creator {
-        let world = &mut gs.world;
-
         let mut log = gs.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
         let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     
-        gs.world.run(|mut positions: ViewMut<Position>| {
+        let shouldReturn = gs.world.run(|mut positions: ViewMut<Position>| {
             if let Err(_) = (&mut positions).get(target) {
                 dbg!("Entity doesn't have a position");
-                return;
+                return true;
             }
+            false
         });
-        if let Err(_) = world.get::<Position>(id) {
+
+        if shouldReturn { return; }
+
+        if let Err(_) = gs.world.get::<Position>(id) {
             dbg!("Entity doesn't have a position");
             return;
         }
     
-        if let Ok(name) = world.get::<Name>(id) {
-            if let Ok(mut inv) = world.get::<Inventory>(id) {
+        if let Ok(name) = gs.world.get::<Name>(id) {
+            if let Ok(inv) = gs.world.get::<Inventory>(id) {
                 inv.items.push(target);
 
                 let mut entities: Vec<EntityId> = vec![];
@@ -44,15 +46,15 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
             }
         }
     
-        let _res = world.remove::<Position>(target);
-        let _r = world.add_component(target, InBackpack {owner: id});
+        let _res = gs.world.remove::<Position>(target);
+        let _r = gs.world.add_component(target, InBackpack {owner: id});
     
         if id == player_id {
-            let name = world.get::<Name>(target).unwrap();
+            let name = gs.world.get::<Name>(target).unwrap();
             log.messages.push(format!("You pick up the {}", name.name));
         }
     
-        let _re = world.remove::<WantsToPickupItem>(id);    
+        let _re = gs.world.remove::<WantsToPickupItem>(id);    
     }
 }
 

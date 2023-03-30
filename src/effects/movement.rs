@@ -2,7 +2,7 @@ use rltk::{Point, DijkstraMap};
 use shipyard::{World, UniqueView};
 
 use super::*;
-use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed}, utils::{WorldGet, dijkstra_backtrace, point_plus, normalize, PPoint}, map::{Map, TileType}, GameMode};
+use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed, Fire}, utils::{WorldGet, dijkstra_backtrace, point_plus, normalize, PPoint, PlayerID}, map::{Map, TileType}, GameMode, RunState};
 
 pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     // if let EffectType::Heal{amount} = effect.effect_type {
@@ -82,7 +82,6 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     }
 }
 
-
 pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
     if let Some(entity) = effect.creator {
         // TODO Check for adjacent enemies and attack them
@@ -148,6 +147,16 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
         
         // try_move_entity(entity, target.0, gs);
         try_move(gs, effect, target.0)
+    }
+}
+
+pub fn skip_turn(gs: &mut State, effect: &EffectSpawner, _: EntityId) {
+    if let Some(id) = effect.creator {
+        if let Ok(stats) = gs.world.get::<CombatStats>(id){
+            if let Err(_) = gs.world.get::<Fire>(id) {
+                stats.hp = i32::min(stats.hp + stats.regen_rate, stats.max_hp);
+            }
+        }
     }
 }
 

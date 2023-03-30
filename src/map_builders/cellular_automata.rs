@@ -28,9 +28,9 @@ impl MapBuilder for CellularAutomataBuilder {
     }
 
     fn spawn_entities(&mut self, world: &mut World) {
-        world.run(|store: AllStoragesViewMut|{
+        world.run(|mut store: AllStoragesViewMut|{
             for area in self.noise_areas.iter() {
-                entity_factory::spawn_region(store, area.1, self.depth);
+                entity_factory::spawn_region(&mut store, area.1, self.depth);
             }
         });
     }

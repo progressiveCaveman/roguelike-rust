@@ -4,28 +4,25 @@ use crate::effects::{add_effect, EffectType, Targets};
 use crate::utils::{PPoint, self, PlayerID};
 use crate::gui::Palette;
 use crate::{systems::system_particle::ParticleBuilder};
-use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion, WantsToPickupItem};
+use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion};
 use crate::map::Map;
 
 pub fn run_monster_ai_system(store: AllStoragesViewMut) {
 
-    let map = store.borrow::<UniqueViewMut<Map>>().unwrap();
+    let mut map = store.borrow::<UniqueViewMut<Map>>().unwrap();
     let player_id = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let ppos = store.borrow::<UniqueView<PPoint>>().unwrap().0;
     let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();
     
-    let vmonster = store.borrow::<View<Monster>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
     let vvs = store.borrow::<View<Viewshed>>().unwrap();
-    let vconfusion = store.borrow::<ViewMut<Confusion>>().unwrap();
+    let mut vconfusion = store.borrow::<ViewMut<Confusion>>().unwrap();
     let vmonster = store.borrow::<View<Monster>>().unwrap();
-    let vmonster = store.borrow::<View<Monster>>().unwrap();
-    let vwantsattack = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
-    let vwantspickup = store.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
-
+    let mut vwantsattack = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
+    // let mut vwantspickup = store.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
 
     let mut needs_wants_to_attack: Vec<EntityId> = Vec::new();
-    let mut needs_wants_to_pick_up: Vec<(EntityId, EntityId)> = Vec::new();
+    // let needs_wants_to_pick_up: Vec<(EntityId, EntityId)> = Vec::new();
     let mut to_update_confusion: Vec<(EntityId, Confusion)> = Vec::new();
 
     // let mut to_try_move: Vec<(EntityId, Point)> = Vec::new();
@@ -97,14 +94,14 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
         vwantsattack.add_component_unchecked(*id, WantsToAttack {target: player_id});
     }
 
-    for (id, item) in needs_wants_to_pick_up.iter() {
-        vwantspickup.add_component_unchecked(*id, WantsToPickupItem{ collected_by: *id, item: *item });
-    }
+    // for (id, item) in needs_wants_to_pick_up.iter() {
+    //     vwantspickup.add_component_unchecked(*id, WantsToPickupItem{ collected_by: *id, item: *item });
+    // }
 
     for (id, _confusion) in to_update_confusion.iter() {
         let mut to_remove = false;
         {
-            let mut c = vconfusion.get(*id).unwrap();//world.get_mut::<Confusion>(*id).unwrap();
+            let mut c = *vconfusion.get(*id).unwrap();//world.get_mut::<Confusion>(*id).unwrap();
             c.turns -= 1;
             if c.turns <= 0 { to_remove = true }
         }

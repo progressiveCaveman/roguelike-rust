@@ -36,9 +36,9 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
     }
     
     fn spawn_entities(&mut self, world: &mut World) {
-        world.run(|store: AllStoragesViewMut|{
+        world.run(|mut store: AllStoragesViewMut|{
             for room in self.rooms.iter().skip(1) {
-                entity_factory::spawn_room(store, &self.map, room, self.depth);
+                entity_factory::spawn_room(&mut store, &self.map, room, self.depth);
             }
         });
     }

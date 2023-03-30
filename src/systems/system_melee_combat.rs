@@ -1,13 +1,13 @@
-use shipyard::{EntityId, UniqueView, View, AllStoragesViewMut, ViewMut, IntoIter, IntoWithId, Get, Remove};
+use shipyard::{EntityId, View, AllStoragesViewMut, ViewMut, IntoIter, IntoWithId, Get, Remove, UniqueViewMut};
 use crate::{components::{CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBonus, Name, Position, WantsToAttack}, systems::system_particle::ParticleBuilder, effects::add_effect, gui::Palette};
 use crate::gamelog::GameLog;
 use crate::effects::{EffectType, Targets};
 
 pub fn run_melee_combat_system(store: AllStoragesViewMut) {
-    let log = store.borrow::<UniqueView<GameLog>>().unwrap();
-    let particle_builder = store.borrow::<UniqueView<ParticleBuilder>>().unwrap();
+    let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();
+    let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();
 
-    let vwants = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
+    let mut vwants = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
     let vname = store.borrow::<View<Name>>().unwrap();
     let vstats = store.borrow::<View<CombatStats>>().unwrap();
     let vmeleepower = store.borrow::<View<MeleePowerBonus>>().unwrap();

@@ -1,18 +1,17 @@
 use rltk::RandomNumberGenerator;
-use shipyard::{UniqueView, UniqueViewMut, View, ViewMut, IntoIter, IntoWithId, Remove};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Remove, UniqueViewMut};
 use crate::map::TileType;
-use crate::RunState;
 use crate::components::{CombatStats, Fire, Position};
 use crate::effects::{EffectType, Targets, add_effect};
 use crate::Map;
 
 pub const NEW_FIRE_TURNS: i32 = 10;
 
-pub fn run_fire_system(map: UniqueView<Map>, runstate: UniqueViewMut<RunState>, vpos: View<Position>, vstats: ViewMut<CombatStats>, vfire: ViewMut<Fire>) {
+pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats: ViewMut<CombatStats>, mut vfire: ViewMut<Fire>) {
     let mut rng = RandomNumberGenerator::new();
     
     // damage all entities on fire. If they are standing somewhere flammable, ignite it
-    for (id, (pos, stats, fire)) in (&vpos, &vstats, &vfire).iter().with_id() {
+    for (id, (pos, _, _)) in (&vpos, &vstats, &vfire).iter().with_id() {
         add_effect(
             None,
             EffectType::Damage{ amount: 1 },
