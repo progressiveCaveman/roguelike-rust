@@ -1,9 +1,9 @@
 use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
-use shipyard::UniqueView;
+use shipyard::{UniqueView, View, Get};
 use crate::ai::decisions::Intent;
 use crate::gamelog::GameLog;
 use crate::player::get_player_map_knowledge;
-use crate::utils::{WorldGet, PlayerID, PPoint, Turn};
+use crate::utils::{PlayerID, PPoint, Turn};
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::map::Map;
@@ -57,7 +57,8 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     // let res = &gs.resources;
 
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
-    let player_stats = world.get::<CombatStats>(player_id).unwrap();
+    let vstats = world.borrow::<View<CombatStats>>().unwrap();
+    let player_stats = vstats.get(player_id).unwrap();//world.get::<CombatStats>(player_id).unwrap();
     let hp_gui = format!("{} / {} HP", player_stats.hp, player_stats.max_hp);
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
@@ -72,8 +73,8 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 
 
     // On fire display
-    let fire = world.get::<Fire>(player_id);
-    match fire {
+    let vfire = world.borrow::<View<Fire>>().unwrap();
+    match vfire.get(player_id) {
         Ok(_) => {
             ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE"); 
         },
@@ -123,6 +124,12 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
     if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
 
+    let vname = world.borrow::<View<Name>>().unwrap();
+    let vpos = world.borrow::<View<Position>>().unwrap();
+    let vstats = world.borrow::<View<CombatStats>>().unwrap();
+    let vinv = world.borrow::<View<Inventory>>().unwrap();
+    let vintent = world.borrow::<View<Intent>>().unwrap();
+
     let mut ypos = OFFSET_Y;
 
     // ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
@@ -137,33 +144,33 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Entities:");
     
     for e in map.tile_content[idx].iter() {
-        if let Ok(name) = world.get::<Name>(*e) {
+        if let Ok(name) = vname.get(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?} {}", e, name.name));
         }
 
-        if let Ok(pos) = world.get::<Position>(*e) {
+        if let Ok(pos) = vpos.get(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", pos.ps[0]));
         }
 
-        if let Ok(stats) = world.get::<CombatStats>(*e) {
+        if let Ok(stats) = vstats.get(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("HP: {}/{}", stats.hp, stats.max_hp));
         }
 
-        if let Ok(intent) = world.get::<Intent>(*e) {
+        if let Ok(intent) = vintent.get(*e) {
             ypos += 1;
             ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
         }
 
-        if let Ok(inv) = world.get::<Inventory>(*e) {
+        if let Ok(inv) = vinv.get(*e) {
             if inv.items.len() > 0 {
                 ypos += 1;
                 ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Inventory:"));
     
                 for item in inv.items.iter() {
-                    if let Ok(name) = world.get::<Name>(*item) {
+                    if let Ok(name) = vname.get(*item) {
                         ypos += 1;
                         ctx.print_color(3, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}, {}", item, name.name));    
                     }
@@ -228,7 +235,8 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
     let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
 
     let mut valid_cells: Vec<Point> = Vec::new();
-    match gs.world.get::<Viewshed>(player_id) {
+    let vvs = gs.world.borrow::<View<Viewshed>>().unwrap();
+    match vvs.get(player_id) {
         Err(_e) => {return (ItemMenuResult::Cancel, None)},
         Ok(player_vs) => {
             for pt in player_vs.visible_tiles.iter() {

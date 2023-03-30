@@ -1,10 +1,10 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use shipyard::{EntityId, World, View, IntoIter, IntoWithId, UniqueView};
+use shipyard::{EntityId, World, View, IntoIter, IntoWithId, UniqueView, Get};
 use std::convert::TryFrom;
 use rltk::{Rltk, VirtualKeyCode};
 use crate::gui::{ItemMenuResult, Palette};
 use crate::components::{Name, InBackpack, Equipped, Equippable, Inventory, Player};
-use crate::utils::{WorldGet, PlayerID};
+use crate::utils::{PlayerID};
 use crate::{RunState, State};
 
 pub enum ItemActionSelection {Cancel, NoSelection, Used, Dropped, Unequipped}
@@ -75,7 +75,8 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     dbg!("Inventory display code is outdated");
     // Items in backpack
     // let mut query = //world.query::<(&InBackpack, &Name)>();
-    let inventory = gs.world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
+    let vinv = gs.world.borrow::<View<Inventory>>().unwrap();
+    let inventory = vinv.get(player_id).unwrap();//gs.world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
     let backpack_count = inventory.items.len();
     let mut y = 25 - (backpack_count / 2);
     ctx.draw_box(10, y - 2, 31, backpack_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);
@@ -149,16 +150,22 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
 }
 
 pub fn show_item_actions(world: &mut World, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
-    let item_name = world.get::<Name>(item).unwrap();
+    let vpack = world.borrow::<View<InBackpack>>().unwrap();
+    let vequippable = world.borrow::<View<Equippable>>().unwrap();
+    let vequipped = world.borrow::<View<Equipped>>().unwrap();
+    let vname = world.borrow::<View<Name>>().unwrap();
+
+
+    let item_name = vname.get(item).unwrap();
     ctx.draw_box(15, 23, 31, 5, Palette::MAIN_FG, Palette::MAIN_BG);
     ctx.print_color(18, 23, Palette::MAIN_FG, Palette::MAIN_BG, item_name.name.to_string());
 
     let mut in_backpack = false;
     let mut in_equip = false;
     
-    if let Ok(_in_backpack) = world.get::<InBackpack>(item) {
+    if let Ok(_in_backpack) = vpack.get(item) {
         in_backpack = true;
-        if let Ok(_equippable) = world.get::<Equippable>(item) {
+        if let Ok(_equippable) = vequippable.get(item) {
             ctx.print_color(17, 25, Palette::MAIN_FG, Palette::MAIN_BG, "(a) Equip");
         } else {
             ctx.print_color(17, 25, Palette::MAIN_FG, Palette::MAIN_BG, "(a) Use");
@@ -166,7 +173,7 @@ pub fn show_item_actions(world: &mut World, item: EntityId, ctx: &mut Rltk) -> I
         ctx.print_color(18, 25, Palette::COLOR_PURPLE, Palette::MAIN_BG, "a");
         ctx.print_color(17, 26, Palette::MAIN_FG, Palette::MAIN_BG, "(b) Drop");
         ctx.print_color(18, 26, Palette::COLOR_PURPLE, Palette::MAIN_BG, "b");
-    } else if let Ok(_in_equip) = world.get::<Equipped>(item) {
+    } else if let Ok(_in_equip) = vequipped.get(item) {
         in_equip = true;
         ctx.print_color(17, 25, Palette::MAIN_FG, Palette::MAIN_BG, "(a) Unequip");
         ctx.print_color(18, 25, Palette::COLOR_PURPLE, Palette::MAIN_BG, "a");

@@ -1,5 +1,5 @@
 use rltk::{DijkstraMap, BaseMap, Point, RGBA, NavigationPath};
-use shipyard::{World, EntityId, ViewMut, Get, Unique};
+use shipyard::{EntityId, Unique};
 
 use crate::map::Map;
 
@@ -115,23 +115,6 @@ pub struct PPoint(pub Point);
 
 #[derive(Clone, Debug, Unique)]
 pub struct FrameTime(pub f32);
-
-pub trait WorldGet {
-    fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent>;
-}
-
-impl WorldGet for World {
-    fn get<T: shipyard::Component + std::marker::Sync + std::marker::Send>(&self, entity: EntityId) -> Result<&T, shipyard::error::MissingComponent> {
-        if let Ok(s) = self.borrow::<ViewMut<T>>(){
-            return (&s).get(entity);
-        }
-
-        return Err(shipyard::error::MissingComponent {
-            id: entity,
-            name: "Missing Component",
-        });
-    }
-}
 
 pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
     let path = rltk::a_star_search(

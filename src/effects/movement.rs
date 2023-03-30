@@ -1,10 +1,17 @@
 use rltk::{Point, DijkstraMap};
-use shipyard::{World, UniqueView};
+use shipyard::{World, UniqueView, View, Get, UniqueViewMut};
 
 use super::*;
-use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed, Fire}, utils::{WorldGet, dijkstra_backtrace, point_plus, normalize, PPoint, PlayerID}, map::{Map, TileType}, GameMode, RunState};
+use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed, Fire}, utils::{dijkstra_backtrace, point_plus, normalize, PPoint}, map::{Map, TileType}, GameMode};
 
 pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let mut mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+
+    let vpos = gs.world.borrow::<View<Position>>().unwrap();
+    let vplayer = gs.world.borrow::<View<Player>>().unwrap();
+    let vvs = gs.world.borrow::<View<Viewshed>>().unwrap();
+
     // if let EffectType::Heal{amount} = effect.effect_type {
     //     gs.world.run(|mut stats: ViewMut<CombatStats>| {
     //         if let Ok(mut stats) = (&mut stats).get(target) {
@@ -12,15 +19,13 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     //         }
     //     });
     // }
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let mut mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
     let mut needs_wants_to_attack: Option<(EntityId, WantsToAttack)> = None;
 
     let entity = effect.creator.unwrap();
 
     // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
 
-    if let Ok(mut pos) = gs.world.get::<Position>(entity) {
+    if let Ok(mut pos) = vpos.get(entity) {
         //todo check for locomotion component
         let tp = map.idx_point(tile_idx);
         let mut dp = Point{ 
@@ -32,7 +37,7 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
         // In Sim mode, player is basically just a camera object
         let mut is_camera = false;
-        if let Ok(_) = &gs.world.get::<Player>(entity) {
+        if let Ok(_) = vplayer.get(entity) {
             if *mode == GameMode::Sim { is_camera = true; }
         }
 
@@ -47,7 +52,7 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
         // do movement
         if is_camera || canmove {                
-            if let Ok(mut vs) = gs.world.get::<Viewshed>(entity) {
+            if let Ok(mut vs) = vvs.get(entity) {
                 vs.dirty = true;
             }
 
@@ -63,10 +68,10 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
             }
 
             // If this is a player, change the position in resources according to first in pos.ps
-            match &gs.world.get::<Player>(entity) {
+            match vplayer.get(entity) {
                 Err(_e) => {},
                 Ok(_player) => {
-                    let ppos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+                    let mut ppos = gs.world.borrow::<UniqueViewMut<PPoint>>().unwrap().0;
                     ppos.x = pos.ps[0].x;
                     ppos.y = pos.ps[0].y;
                 }
@@ -84,6 +89,9 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
 pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
     if let Some(entity) = effect.creator {
+        let vpos = gs.world.borrow::<View<Position>>().unwrap();
+        let vspace = gs.world.borrow::<View<SpatialKnowledge>>().unwrap();
+    
         // TODO Check for adjacent enemies and attack them
         let entity_point: Point;
         
@@ -94,14 +102,14 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
             let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
             // let mut log = res.get_mut::<GameLog>().unwrap();
 
-            let e_pos = if let Ok(pos) = gs.world.get::<Position>(entity){
+            let e_pos = if let Ok(pos) = vpos.get(entity) {
                 pos
             } else {
                 dbg!("No position found");
                 return;
             };
 
-            let e_space = if let Ok(space) = gs.world.get::<SpatialKnowledge>(entity) {
+            let e_space = if let Ok(space) = vspace.get(entity) {
                 space
             } else {
                 dbg!("Entity doesn't have a concept of space");
@@ -151,9 +159,12 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
 }
 
 pub fn skip_turn(gs: &mut State, effect: &EffectSpawner, _: EntityId) {
+    let vstats = gs.world.borrow::<View<CombatStats>>().unwrap();
+    let vfire = gs.world.borrow::<View<Fire>>().unwrap();
+
     if let Some(id) = effect.creator {
-        if let Ok(stats) = gs.world.get::<CombatStats>(id){
-            if let Err(_) = gs.world.get::<Fire>(id) {
+        if let Ok(stats) = vstats.get(id) {
+            if let Err(_) = vfire.get(id) {
                 stats.hp = i32::min(stats.hp + stats.regen_rate, stats.max_hp);
             }
         }
@@ -161,7 +172,10 @@ pub fn skip_turn(gs: &mut State, effect: &EffectSpawner, _: EntityId) {
 }
 
 pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> bool {
-    if let Ok(loco) = world.get::<Locomotive>(entity){
+    let vloco = world.borrow::<View<Locomotive>>().unwrap();
+    let vblocks = world.borrow::<View<BlocksTile>>().unwrap();
+
+    if let Ok(loco) = vloco.get(entity) {
         for pos in pos.ps.iter() {
             // check for tiles that block
             let dest_idx = map.xy_idx(pos.x + dp.x, pos.y + dp.y);
@@ -180,7 +194,7 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
                     continue;
                 }
     
-                match &world.get::<BlocksTile>(*potential_target) {
+                match vblocks.get(*potential_target) {
                     Ok(_cs) => {
                         return false
                     }
@@ -197,9 +211,10 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
 
 // checks for entities with combat stats on block
 pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> Option<EntityId> {
+    let vstats = world.borrow::<View<BlocksTile>>().unwrap();
 
     // check for combat stats on entity
-    if let Err(_) = world.get::<CombatStats>(entity){
+    if let Err(_) = vstats.get(entity) {
         return None;
     }
 
@@ -211,7 +226,7 @@ pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp
                 continue;
             }
 
-            match &world.get::<CombatStats>(*potential_target) {
+            match vstats.get(*potential_target) {
                 Ok(_cs) => {
                     return Some(*potential_target)
                 }

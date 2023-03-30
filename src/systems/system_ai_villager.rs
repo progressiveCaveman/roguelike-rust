@@ -3,7 +3,7 @@ use rltk::{Point, BaseMap};
 use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
-use crate::utils::{get_neighbors, WorldGet, get_path, Turn};
+use crate::utils::{get_neighbors, get_path, Turn};
 use crate::{State};
 use crate::ai::decisions::{Target, Intent, Task};
 use crate::components::{Position, Villager, DijkstraMapToMe, Fish};
@@ -97,7 +97,9 @@ pub fn run_villager_ai_system(gs: &mut State) {
         for p in adj_water.iter() {
             let idx = map.point_idx(**p);
             for te in &map.tile_content[idx] {
-                if let Ok(_) = world.get::<Fish>(*te) {
+                let vfish = world.borrow::<View<Fish>>().unwrap();
+
+                if let Ok(_) = vfish.get(*te) {
                     //found a target
                     add_effect(
                         Some(e), 

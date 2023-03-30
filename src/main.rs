@@ -36,7 +36,7 @@ use components::{Position, WantsToUseItem, WantsToDropItem, Ranged, Viewshed, Wa
 use map::Map;
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
-use utils::{WorldGet, PlayerID, Turn};
+use utils::{PlayerID, Turn};
 
 use crate::utils::{PPoint, RNG, FrameTime};
 
@@ -196,9 +196,14 @@ impl State {
         let mut player_position = self.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
         *player_position = PPoint(Point::new(start_pos.x, start_pos.y));
         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-        let mut player_pos_comp = self.world.get::<Position>(player_id).unwrap();
+        let mut vpos = self.world.borrow::<ViewMut<Position>>().unwrap();
+        let mut player_pos_comp = vpos.get(player_id).unwrap();
         player_pos_comp.ps[0].x = start_pos.x;
         player_pos_comp.ps[0].y = start_pos.y;
+
+        // update uniqueview ppos
+        let mut ppos = self.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
+        ppos.0 = player_pos_comp.ps[0];
 
         // Mark viewshed as dirty
         // let player_vs = self.world.get_mut::<Viewshed>(*player_id);
@@ -319,8 +324,8 @@ impl GameState for State {
                         let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
                             let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                            let is_item_ranged = self.world.get::<Ranged>(item);
-                            match is_item_ranged {
+                            let vranged = self.world.borrow::<ViewMut<Ranged>>().unwrap();
+                            match vranged.get(item) {
                                 Ok(is_item_ranged) => {
                                     new_runstate = RunState::ShowTargeting{range:is_item_ranged.range, item};
                                 }
