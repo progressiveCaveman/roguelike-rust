@@ -6,7 +6,7 @@ use crate::{components::{Position, Inventory, InBackpack, Name, Equipped, WantsT
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
     let vname = gs.world.borrow::<View<Name>>().unwrap();
-    let vinv = gs.world.borrow::<View<Inventory>>().unwrap();
+    let mut vinv = gs.world.borrow::<ViewMut<Inventory>>().unwrap();
     let mut vwantspickup = gs.world.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
     let mut vpacks = gs.world.borrow::<ViewMut<InBackpack>>().unwrap();
 
@@ -29,8 +29,8 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
             return;
         }
     
-        if let Ok(_) = vname.get(id) {
-            if let Ok(inv) = vinv.get(id) {
+        if let Ok(name) = vname.get(id) {
+            if let Ok(inv) = (&mut vinv).get(id) {
                 inv.items.push(target);
 
                 let mut entities: Vec<EntityId> = vec![];
@@ -39,8 +39,8 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
                     for e2 in entities.iter() {
                         if e2 == e1 {
                             dup = true;
-                            // println!("ERROR: Duplicate item in {} inventory", name.name);
-                            return;
+                            println!("ERROR: Duplicate item in {} inventory", name.name);
+                            // return;
                         }
                     }
                     if !dup {
@@ -66,7 +66,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
 
 pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
     let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
-    let vinv = gs.world.borrow::<View<Inventory>>().unwrap();
+    let mut vinv = gs.world.borrow::<ViewMut<Inventory>>().unwrap();
     let mut vpack = gs.world.borrow::<ViewMut<InBackpack>>().unwrap();
     let mut vequipped = gs.world.borrow::<ViewMut<Equipped>>().unwrap();
 
@@ -76,7 +76,7 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         }else{
             unreachable!()
         };
-        if let Ok(inv) = vinv.get(id) {
+        if let Ok(inv) = (&mut vinv).get(id) {
             if let Some(pos) = inv.items.iter().position(|x| *x == target) {
                 inv.items.remove(pos);
             }

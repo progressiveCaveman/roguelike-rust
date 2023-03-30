@@ -1,16 +1,17 @@
 use rltk::{Point, DijkstraMap};
-use shipyard::{World, UniqueView, View, Get, UniqueViewMut};
+use shipyard::{World, UniqueView, View, Get, UniqueViewMut, ViewMut, AddComponent};
 
 use super::*;
 use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed, Fire}, utils::{dijkstra_backtrace, point_plus, normalize, PPoint}, map::{Map, TileType}, GameMode};
 
 pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let mut mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+    let mut map = gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
+    let mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
 
-    let vpos = gs.world.borrow::<View<Position>>().unwrap();
+    let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
     let vplayer = gs.world.borrow::<View<Player>>().unwrap();
-    let vvs = gs.world.borrow::<View<Viewshed>>().unwrap();
+    let mut vvs = gs.world.borrow::<ViewMut<Viewshed>>().unwrap();
+    let mut vwantsattack = gs.world.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     // if let EffectType::Heal{amount} = effect.effect_type {
     //     gs.world.run(|mut stats: ViewMut<CombatStats>| {
@@ -25,10 +26,10 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
     // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
 
-    if let Ok(mut pos) = vpos.get(entity) {
+    if let Ok(pos) = (&mut vpos).get(entity) {
         //todo check for locomotion component
         let tp = map.idx_point(tile_idx);
-        let mut dp = Point{ 
+        let dp = Point{ 
             x: normalize(tp.x - pos.ps[0].x), 
             y: normalize(tp.y - pos.ps[0].y)
         };
@@ -52,7 +53,7 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
         // do movement
         if is_camera || canmove {                
-            if let Ok(mut vs) = vvs.get(entity) {
+            if let Ok(mut vs) = (&mut vvs).get(entity) {
                 vs.dirty = true;
             }
 
@@ -83,25 +84,24 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     }
 
     if let Some((e, c)) = needs_wants_to_attack {
-        let _res = gs.world.add_component(e, c);
+        vwantsattack.add_component_unchecked(e, c);
     }
 }
 
 pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
     if let Some(entity) = effect.creator {
-        let vpos = gs.world.borrow::<View<Position>>().unwrap();
-        let vspace = gs.world.borrow::<View<SpatialKnowledge>>().unwrap();
-    
+
         // TODO Check for adjacent enemies and attack them
-        let entity_point: Point;
         
         // Use djikstras to find nearest unexplored tile
         let mut target = (0 as usize, std::f32::MAX); // tile_idx, distance
         let dijkstra_map: DijkstraMap;
         {
-            let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
-            // let mut log = res.get_mut::<GameLog>().unwrap();
+            let map = &mut gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
 
+            let vpos = gs.world.borrow::<View<Position>>().unwrap();
+            let vspace = gs.world.borrow::<View<SpatialKnowledge>>().unwrap();
+    
             let e_pos = if let Ok(pos) = vpos.get(entity) {
                 pos
             } else {
@@ -118,7 +118,6 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
 
             let e_idx = map.point_idx(e_pos.any_point());
 
-            entity_point = e_pos.any_point();
             let starts: Vec<usize> = e_pos.idxes(map);
             dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &starts, &**map, 800.0);
             for (i, tile) in map.tiles.iter().enumerate() {
@@ -159,11 +158,11 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner, _: EntityId){
 }
 
 pub fn skip_turn(gs: &mut State, effect: &EffectSpawner, _: EntityId) {
-    let vstats = gs.world.borrow::<View<CombatStats>>().unwrap();
+    let mut vstats = gs.world.borrow::<ViewMut<CombatStats>>().unwrap();
     let vfire = gs.world.borrow::<View<Fire>>().unwrap();
 
     if let Some(id) = effect.creator {
-        if let Ok(stats) = vstats.get(id) {
+        if let Ok(stats) = (&mut vstats).get(id) {
             if let Err(_) = vfire.get(id) {
                 stats.hp = i32::min(stats.hp + stats.regen_rate, stats.max_hp);
             }

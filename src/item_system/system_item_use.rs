@@ -1,4 +1,4 @@
-use shipyard::{EntityId, AllStoragesViewMut, View, UniqueView, IntoIter, IntoWithId, Get, ViewMut, EntitiesViewMut, Remove, AddComponent};
+use shipyard::{EntityId, AllStoragesViewMut, View, UniqueView, IntoIter, IntoWithId, Get, ViewMut, Remove, AddComponent, UniqueViewMut};
 use crate::effects::add_effect;
 use crate::gui::Palette;
 use crate::utils::PlayerID;
@@ -7,19 +7,17 @@ use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Cons
 use crate::map::Map;
 use crate::effects::{EffectType, Targets};
 
-pub fn run_item_use_system(store: AllStoragesViewMut) {
-    let mut log = store.borrow::<UniqueView<GameLog>>().unwrap();//res.get_mut::<GameLog>().unwrap();
+pub fn run_item_use_system(mut store: AllStoragesViewMut) {
+    let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();//res.get_mut::<GameLog>().unwrap();
     let player_id = store.borrow::<UniqueView<PlayerID>>().ok().unwrap(); //res.get::<EntityId>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();//res.get::<Map>().unwrap();
-    let mut p_builder = store.borrow::<UniqueView<ParticleBuilder>>().unwrap();//res.get_mut::<ParticleBuilder>().unwrap();
+    let mut p_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();//res.get_mut::<ParticleBuilder>().unwrap();
     let mut to_remove: Vec<(EntityId, EntityId)> = Vec::new();
     let mut to_remove_wants_use: Vec<EntityId> = Vec::new();
     let mut to_unequip: Vec<(EntityId, Name, EntityId)> = Vec::new();
     let mut to_equip: Vec<(EntityId, Equippable, Name, EntityId)> = Vec::new();
 
-    let entity_store = store.borrow::<EntitiesViewMut>().unwrap();
-
-    let vwants = store.borrow::<ViewMut<WantsToUseItem>>().unwrap();
+    let mut vwants = store.borrow::<ViewMut<WantsToUseItem>>().unwrap();
     let vaoe = store.borrow::<View<AreaOfEffect>>().unwrap();
     let vstats = store.borrow::<ViewMut<CombatStats>>().unwrap();
     let vfire = store.borrow::<View<Fire>>().unwrap();
@@ -30,9 +28,9 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
     let vconfusion = store.borrow::<View<Confusion>>().unwrap();
     let vconsumable = store.borrow::<View<Consumable>>().unwrap();
     let vequippable = store.borrow::<View<Equippable>>().unwrap();
-    let vequipped = store.borrow::<ViewMut<Equipped>>().unwrap();
-    let vinv = store.borrow::<View<Inventory>>().unwrap();
-    let vinbackpack = store.borrow::<ViewMut<InBackpack>>().unwrap();
+    let mut vequipped = store.borrow::<ViewMut<Equipped>>().unwrap();
+    let mut vinv = store.borrow::<ViewMut<Inventory>>().unwrap();
+    let mut vinbackpack = store.borrow::<ViewMut<InBackpack>>().unwrap();
 
     for (id, use_item) in store.borrow::<View<WantsToUseItem>>().unwrap().iter().with_id() { // &mut world.query::<&WantsToUseItem>().iter() {
         let mut used_item = true;
@@ -213,7 +211,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
     }
 
     for (id, item) in to_remove {
-        if let Ok(mut inv) = vinv.get(id) {
+        if let Ok(inv) = (&mut vinv).get(id) {
             if let Some(pos) = inv.items.iter().position(|x| *x == item) {
                 inv.items.remove(pos);
             }

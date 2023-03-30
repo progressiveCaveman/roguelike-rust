@@ -79,8 +79,6 @@ impl VillageBuilder {
     }
 
     fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
         // Set the map to grass with a river
         for y in 1..self.map.height-1 {
             for x in 1..self.map.width-1 {

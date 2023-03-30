@@ -1,5 +1,5 @@
 use rltk::RandomNumberGenerator;
-use shipyard::{View, ViewMut, IntoIter, IntoWithId, Remove, UniqueViewMut};
+use shipyard::{View, ViewMut, IntoIter, IntoWithId, Remove, UniqueViewMut, EntityId};
 use crate::map::TileType;
 use crate::components::{CombatStats, Fire, Position};
 use crate::effects::{EffectType, Targets, add_effect};
@@ -27,13 +27,16 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
     }
 
     // reduce fire turns and remove expired fire components
-    for (id, fire) in (&vfire).iter().with_id() {
+    let mut to_remove: Vec<EntityId> = vec![];
+    (&mut vfire).iter().with_id().for_each(|(id, fire)| {
         fire.turns -= 1;
 
         if fire.turns <= 0 {
-            vfire.remove(id);
+            to_remove.push(id);
+            // vfire.remove(id);
         }
-    }
+    });
+    for e in to_remove.iter() { vfire.remove(*e); }
 
     // reduce fire turns on tiles
     for idx in 0..(map.width*map.height) as usize {

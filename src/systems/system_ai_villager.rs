@@ -1,6 +1,6 @@
 use rltk;
 use rltk::{Point, BaseMap};
-use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView};
+use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView, ViewMut, AddComponent};
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
 use crate::utils::{get_neighbors, get_path, Turn};
@@ -12,14 +12,13 @@ pub fn run_villager_ai_system(gs: &mut State) {
     
     update_decisions(gs);
 
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+
     let mut to_move_from_to: Vec<(EntityId, Point, Point)> = vec![];
     let mut to_fish: Vec<(EntityId, Point)> = vec![];
 
     {
-        let world = &mut gs.world;
-        let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
-
-        world.run(|vvillager: View<Villager>, vpos: View<Position>, vintent: View<Intent>, vdijkstra: View<DijkstraMapToMe>| {
+        gs.world.run(|vvillager: View<Villager>, vpos: View<Position>, vintent: View<Intent>, vdijkstra: View<DijkstraMapToMe>| {
             for (id, (_, pos, intent)) in (&vvillager, &vpos, &vintent).iter().with_id() {//world.query::<(&Villager, &mut Position, &mut Intent)>().iter() {
                 match intent.task {
                     Task::Fish => {
@@ -82,11 +81,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
         }
     }
 
-    for (e, p) in to_fish {
-        let world = &mut gs.world;
-        
-        let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-
+    for (e, p) in to_fish {        
         let n = get_neighbors(p);
         let adj_water: Vec<&Point> = n.iter().filter(|p| {
             let idx = map.point_idx(**p);
@@ -97,8 +92,7 @@ pub fn run_villager_ai_system(gs: &mut State) {
         for p in adj_water.iter() {
             let idx = map.point_idx(**p);
             for te in &map.tile_content[idx] {
-                let vfish = world.borrow::<View<Fish>>().unwrap();
-
+                let vfish = gs.world.borrow::<View<Fish>>().unwrap();
                 if let Ok(_) = vfish.get(*te) {
                     //found a target
                     add_effect(
@@ -117,6 +111,8 @@ fn update_decisions(gs: &mut State) {
 
     let world = &gs.world;
     let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
+
+    let mut vintent = gs.world.borrow::<ViewMut<Intent>>().unwrap();
 
     let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
 
@@ -141,7 +137,6 @@ fn update_decisions(gs: &mut State) {
     // }
 
     for (id, intent) in wants_intent {
-        let world = &mut gs.world;
-        let _r = world.add_component(id, intent);
+        vintent.add_component_unchecked(id, intent);
     }
 }

@@ -165,21 +165,13 @@ pub struct Inventory {
 impl Inventory {
     pub fn count_type(&self, world: &World, item_type: ItemType) -> i32 {
         let mut count = 0;
-        world.run(|mut items: View<Item>| {
+        world.run(|items: View<Item>| {
             for item in items.iter() {
                 if item.typ == item_type {
                     count += 1;
                 }
             }
         });
-
-        // for e in self.items.iter() {
-        //     if let Ok(item) = world.get::<Item>(*e) {
-        //         if item.typ == item_type {
-        //             count += 1;
-        //         }
-        //     }
-        // }
 
         return count;
     }

@@ -118,7 +118,7 @@ pub fn render_camera(gs: &State, ctx : &mut Rltk) {
 
 fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGBA, RGBA) {
     let mut glyph = rltk::to_cp437(' ');
-    let mut fg = Palette::MAIN_FG;
+    let fg;
     let mut bg = Palette::MAIN_BG;
 
     match map.tiles[idx] {

@@ -34,8 +34,8 @@ pub fn reveal_map(gs: &mut State){
     let map = &mut gs.world.borrow::<UniqueView<Map>>().unwrap();
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    if let Ok(vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
-        if let Ok(space) = vspace.get(player_id) {
+    if let Ok(mut vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
+        if let Ok(space) = (&mut vspace).get(player_id) {
             for i in 0..map.tiles.len() {
                 space.tiles.insert(i, (map.tiles[i], map.tile_content[i].clone()));
             }

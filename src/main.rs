@@ -184,7 +184,7 @@ impl State {
 
         let start_pos;
         {
-            let mut map = self.world.borrow::<UniqueView<Map>>().unwrap();
+            let mut map = self.world.borrow::<UniqueViewMut<Map>>().unwrap();
             *map = map_builder.get_map();
             start_pos = map_builder.get_starting_position().ps.first().unwrap().clone();
         }
@@ -208,7 +208,7 @@ impl State {
         // Mark viewshed as dirty
         // let player_vs = self.world.get_mut::<Viewshed>(*player_id);
         self.world.run(|mut vs: ViewMut<Viewshed>| {
-            if let Ok(mut vs) = vs.get(player_id) {
+            if let Ok(mut vs) = (&mut vs).get(player_id) {
                 vs.dirty = true; 
             }
         });
@@ -233,7 +233,7 @@ impl State {
         self.world.clear();
 
         // Create player
-        let player_id = self.world.run(|store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut self.world, (0, 0));
+        let player_id = self.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut self.world, (0, 0));
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(PlayerID(player_id));
 
@@ -255,9 +255,11 @@ impl GameState for State {
         ctx.set_active_console(0);
         ctx.cls();
 
-        let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
-        i.0 = ctx.frame_time_ms;
-        
+        {
+            let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
+            i.0 = ctx.frame_time_ms;
+        }
+
         self.world.run(system_particle::update_particles);
         // system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 
@@ -307,7 +309,7 @@ impl GameState for State {
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
-                let result = gui_menus::show_inventory(&mut self, ctx);
+                let result = gui_menus::show_inventory(self, ctx);
                 match result.0 {
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Cancel => { new_runstate = RunState::AwaitingInput }
@@ -354,7 +356,7 @@ impl GameState for State {
                 }
             }
             RunState::ShowTargeting{range, item} => {
-                let res = gui::ranged_target(&mut self, ctx, range);
+                let res = gui::ranged_target(self, ctx, range);
                 match res.0 {
                     gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
@@ -366,7 +368,7 @@ impl GameState for State {
                 }
             }
             RunState::MainMenu{..} => {
-                let result = gui_menus::main_menu(&mut self, ctx);
+                let result = gui_menus::main_menu(self, ctx);
                 match result {
                     gui_menus::MainMenuResult::NoSelection{selected} => {new_runstate = RunState::MainMenu{menu_selection: selected}}
                     gui_menus::MainMenuResult::Selection{selected} => {
@@ -472,7 +474,7 @@ fn main() -> rltk::BError {
         .with_simple_console(xscaled, yscaled, "terminal8x8.png") // map layer
         .build()?;
 
-    let mut gs = State {
+    let gs = State {
         world: World::new(),
         // resources: Resources::default(),
         mapgen_data: MapGenData{history: Vec::new(), timer: 0.0, index: 0},

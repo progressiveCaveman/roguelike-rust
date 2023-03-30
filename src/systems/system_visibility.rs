@@ -4,8 +4,8 @@ use shipyard::{View, ViewMut, UniqueView, IntoIter, IntoWithId, Get};
 use crate::map::{Map};
 use crate::components::{Position, Viewshed, SpatialKnowledge};
 
-pub fn run_visibility_system(map: UniqueView<Map>, vpos: View<Position>, vvs: ViewMut<Viewshed>, vspace: View<SpatialKnowledge>) {
-    for (id, (pos, vs)) in (&vpos, &vvs).iter().with_id() {
+pub fn run_visibility_system(map: UniqueView<Map>, vpos: View<Position>, mut vvs: ViewMut<Viewshed>, mut vspace: ViewMut<SpatialKnowledge>) {
+    for (id, (pos, vs)) in (&vpos, &mut vvs).iter().with_id() {
         // if vs.dirty {
             let pos = pos.ps.first().unwrap();
 
@@ -13,7 +13,7 @@ pub fn run_visibility_system(map: UniqueView<Map>, vpos: View<Position>, vvs: Vi
             vs.visible_tiles = rltk::field_of_view(Point::new(pos.x, pos.y), vs.range, &*map);
             vs.visible_tiles.retain(|p| p.x >= 0 && p.x < map.width && p.y >= 0 && p.y < map.height);
 
-            if let Ok(space) = vspace.get(id) {
+            if let Ok(space) = (&mut vspace).get(id) {
                 for vis in vs.visible_tiles.iter() {
                     let idx = map.xy_idx(vis.x, vis.y);
                     space.tiles.insert(idx, (map.tiles[idx], map.tile_content[idx].clone()));

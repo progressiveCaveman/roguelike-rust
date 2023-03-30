@@ -51,8 +51,8 @@ pub fn spawn_particles(mut particle_builder: UniqueViewMut<ParticleBuilder>, mut
     particle_builder.clear();
 }
 
-pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, vpart: ViewMut<Particle>, vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
-    for (id, (particle, lifetime)) in (&vpart, &vlifetime).iter().with_id() {//world.query::<(&mut Particle, &mut Lifetime)>().iter() {
+pub fn update_particles(store: AllStoragesViewMut, frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, vpos: ViewMut<Position>) {
+    for (id, (particle, lifetime)) in (&mut vpart, &mut vlifetime).iter().with_id() {
         lifetime.ms -= frametime.0;
 
         let vel = vvel.get(id);
