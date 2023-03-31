@@ -226,7 +226,7 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     // }
 }
 
-pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+pub fn ranged_target(gs: &State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;

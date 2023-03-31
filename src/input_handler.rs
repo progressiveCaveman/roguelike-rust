@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
-use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point, PPoint, PlayerID}, effects::{add_effect, EffectType, Targets}, map::Map};
+use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point, PPoint, PlayerID, AutoRun}, effects::{add_effect, EffectType, Targets}, map::Map};
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{AllStoragesViewMut, UniqueView, UniqueViewMut};
 
-pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
     let game_mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let mut autorun = gs.world.borrow::<UniqueViewMut<AutoRun>>().unwrap();
 
     let player_id = gs.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
     let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
@@ -45,7 +46,7 @@ pub fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     VirtualKeyCode::B => add_effect(Some(player_id), EffectType::Move {}, Targets::Tile { tile_idx: dir_targets[&1]}),
                     VirtualKeyCode::W => return RunState::PlayerTurn,
                     VirtualKeyCode::Escape => return RunState::SaveGame,
-                    VirtualKeyCode::Space => gs.autorun = !gs.autorun,
+                    VirtualKeyCode::Space => autorun.0 = !autorun.0,
                     _ => { return RunState::AwaitingInput }
                 }
             }

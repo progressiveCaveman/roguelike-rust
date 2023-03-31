@@ -110,11 +110,14 @@ pub struct Turn(pub i32);
 #[derive(Clone, Unique)]
 pub struct RNG(pub rltk::RandomNumberGenerator);
 
-#[derive(Clone, Debug, Unique)]
+#[derive(Clone, Debug, Unique, Copy)]
 pub struct PPoint(pub Point);
 
-#[derive(Clone, Debug, Unique)]
+#[derive(Clone, Debug, Unique, Copy)]
 pub struct FrameTime(pub f32);
+
+#[derive(Clone, Debug, Unique, Copy)]
+pub struct AutoRun(pub bool);
 
 pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
     let path = rltk::a_star_search(

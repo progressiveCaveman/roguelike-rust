@@ -5,7 +5,11 @@ use crate::utils::InvalidPoint;
 use crate::{entity_factory};
 use crate::components::{Position, Tree};
 
-pub fn run_dissasemble_system(mut all_storages: AllStoragesViewMut, vpos: View<Position>, vintent: View<Intent>, vtree: View<Tree>) {
+pub fn run_dissasemble_system(mut all_storages: AllStoragesViewMut) {
+    let vpos = all_storages.borrow::<View<Position>>().unwrap();
+    let vintent = all_storages.borrow::<View<Intent>>().unwrap();
+    let vtree = all_storages.borrow::<View<Tree>>().unwrap();
+
     for (_, (pos, intent)) in (&vpos, &vintent).iter().with_id() {
         if intent.task == Task::Destroy {
             let target = intent.target[0].get_point(&vpos);

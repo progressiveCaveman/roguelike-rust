@@ -39,7 +39,7 @@ use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_sy
 use utils::{PlayerID, Turn};
 
 use crate::components::{Player, InBackpack, Equipped};
-use crate::utils::{PPoint, RNG, FrameTime};
+use crate::utils::{PPoint, RNG, FrameTime, AutoRun};
 
 const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
@@ -58,7 +58,7 @@ pub enum GameMode{
     RL,
 }
 
-#[derive(Copy, Clone, PartialEq, Unique)]
+#[derive(Copy, Clone, PartialEq, Unique, Debug)]
 pub enum RunState {
     AwaitingInput,
     PreRun,
@@ -86,7 +86,6 @@ pub struct State {
     world: World,
     // resources: Resources,
     mapgen_data: MapGenData, 
-    autorun: bool,
     wait_frames: i32
 }
 
@@ -190,12 +189,7 @@ impl State {
         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
         let mut vpos = self.world.borrow::<ViewMut<Position>>().unwrap();
         let player_pos_comp = (&mut vpos).get(player_id).unwrap();
-        player_pos_comp.ps[0].x = start_pos.x;
-        player_pos_comp.ps[0].y = start_pos.y;
-
-        // update uniqueview ppos
-        let mut ppos = self.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
-        ppos.0 = player_pos_comp.ps[0];
+        player_pos_comp.ps[0] = player_position.0;
 
         // Mark viewshed as dirty
         // let player_vs = self.world.get_mut::<Viewshed>(*player_id);
@@ -237,13 +231,14 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.set_active_console(1);
-        // ctx.cls();
+        // write transparent bg
         let (x, y) = ctx.get_char_size();
         for ix in 0..x{
             for iy in 0..y{
                 ctx.set(ix, iy, RGBA::from_u8(0, 0, 0, 0), RGBA::from_u8(0, 0, 0, 0), 32)
             }
         }
+
         ctx.set_active_console(0);
         ctx.cls();
 
@@ -253,9 +248,11 @@ impl GameState for State {
         }
 
         self.world.run(system_particle::update_particles);
-        // system_particle::update_particles(&mut self.world, &mut self.resources, ctx);
 
-        let mut new_runstate: RunState = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+        let autorun = *self.world.borrow::<UniqueView<AutoRun>>().unwrap();
+
+        let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+        dbg!(new_runstate);
 
         match new_runstate {
             RunState::MainMenu{..} => {}
@@ -274,7 +271,7 @@ impl GameState for State {
             RunState::AwaitingInput => {
                 new_runstate = input_handler::handle_input(self, ctx);
 
-                if new_runstate == RunState::AwaitingInput && self.autorun {
+                if new_runstate == RunState::AwaitingInput && autorun.0 {
                     self.wait_frames += 1;
                     if self.wait_frames >= 10 {
                         self.wait_frames = 0;
@@ -443,7 +440,8 @@ impl GameState for State {
         }
 
         // self.resources.insert::<RunState>(new_runstate).unwrap();
-        self.world.add_unique(new_runstate);
+        // self.world.add_unique(new_runstate);
+        self.world.run(|mut rs: UniqueViewMut<RunState>| { *rs = new_runstate; });
 
         self.world.run(system_cleanup::run_cleanup_system);
         // system_cleanup::run_cleanup_system(&mut self.world, &mut self.resources);
@@ -470,7 +468,6 @@ fn main() -> rltk::BError {
         world: World::new(),
         // resources: Resources::default(),
         mapgen_data: MapGenData{history: Vec::new(), timer: 0.0, index: 0},
-        autorun: false,
         wait_frames: 0
     };
 
@@ -487,6 +484,7 @@ fn main() -> rltk::BError {
     gs.world.add_unique(gamelog::GameLog{messages: vec!["Welcome to the roguelike!".to_string()]});
     gs.world.add_unique(system_particle::ParticleBuilder::new());
     gs.world.add_unique(FrameTime(0.));
+    gs.world.add_unique(AutoRun(false));
 
     rltk::main_loop(context, gs)
 }

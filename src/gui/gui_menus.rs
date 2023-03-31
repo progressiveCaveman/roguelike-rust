@@ -9,7 +9,7 @@ use crate::{RunState, State};
 
 pub enum ItemActionSelection {Cancel, NoSelection, Used, Dropped, Unequipped}
 
-#[derive(PartialEq, Eq, Clone, Copy, TryFromPrimitive, IntoPrimitive)]
+#[derive(PartialEq, Eq, Clone, Copy, TryFromPrimitive, IntoPrimitive, Debug)]
 #[repr(i8)]
 pub enum MainMenuSelection {Roguelike, Simulator, LoadGame, Exit}
 
@@ -17,7 +17,7 @@ pub enum MainMenuResult {NoSelection {selected: MainMenuSelection}, Selection {s
 
 pub enum GameOverResult {NoSelection, QuitToMenu}
 
-pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
+pub fn main_menu(gs: &State, ctx: &mut Rltk) -> MainMenuResult {
     let runstate = gs.world.borrow::<UniqueView<RunState>>().unwrap();
 
     let get_fg = |sel, menu_item| {
@@ -69,7 +69,7 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
     }
 }
 
-pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
+pub fn show_inventory(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
     dbg!("Inventory display code is outdated");
@@ -149,7 +149,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     }
 }
 
-pub fn show_item_actions(world: &mut World, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
+pub fn show_item_actions(world: &World, item: EntityId, ctx: &mut Rltk) -> ItemActionSelection {
     let vpack = world.borrow::<View<InBackpack>>().unwrap();
     let vequippable = world.borrow::<View<Equippable>>().unwrap();
     let vequipped = world.borrow::<View<Equipped>>().unwrap();
