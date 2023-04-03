@@ -219,9 +219,9 @@ impl State {
         self.world.clear();
 
         // Create player
-        let player_factory = entity_factory::player((0, 0));
+        let player_id = self.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut self.world, (0, 0));
         self.world.add_unique(PPoint(Point::new(0, 0)));
-        self.world.add_unique(PlayerID(player_factory.execute_world(&self.world)));
+        self.world.add_unique(PlayerID(player_id));
 
         // Generate new map
         self.generate_map(1);
@@ -476,8 +476,7 @@ fn main() -> rltk::BError {
     gs.world.add_unique(Turn(0));
     gs.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
-    let player_factory = entity_factory::player((0, 0));
-    let player_id = gs.world.run(|mut store: AllStoragesViewMut|{ (player_factory.f)(&mut store) });
+    let player_id = gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut gs.world, (0, 0));
     gs.world.add_unique(PlayerID(player_id));
 
     gs.world.add_unique(GameMode::NotSelected);

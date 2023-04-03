@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use rltk::{RandomNumberGenerator, Point, DijkstraMap};
-use shipyard::{EntityId, AllStoragesViewMut, World};
+use shipyard::{EntityId, AllStoragesViewMut};
 use crate::components::{AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DealsDamage, EquipmentSlot, Equippable, Item, MeleeDefenseBonus, MeleePowerBonus, Monster, Name, Player, Position, ProvidesHealing, Ranged, Renderable, SerializeMe, Viewshed, Fire, Flammable, Locomotive, PlankHouse, ChiefHouse, FishCleaner, LumberMill, Spawner, Faction, SpatialKnowledge, Inventory, Villager, ItemType, Tree, DijkstraMapToMe, Fish, SpawnerType, LocomotionType};
 use crate::gui::Palette;
 use crate::{RenderOrder};
@@ -13,72 +13,34 @@ use crate::systems::system_fire::NEW_FIRE_TURNS;
 
 const MAX_MONSTERS: i32 = 4;
 
-/// EntityFactory contains a closure that will create an entity of this type. This is used to pass to the effects system and
-/// decouple systems from `AllStoragesViewMut`, which requires blocking access to all storages
-pub struct EntityFactory<F>
-where
-    F: Fn(&mut AllStoragesViewMut) -> EntityId,
-{
-    pub f: F,
-}
-
-impl<F> EntityFactory<F>
-where
-    F: Fn(&mut AllStoragesViewMut) -> EntityId,
-{
-    fn new(f: F) -> Self {
-        Self { f }
-    }
-
-    pub fn execute_world(&self, world: &World) -> EntityId {
-        // (self.f)(store)
-        world.run(|mut store: AllStoragesViewMut|{ (self.f)(&mut store) })
-    }
-
-    pub fn execute_store(&self, store: &mut AllStoragesViewMut) -> EntityId {
-        (self.f)(store)
-        // world.run(|mut store: AllStoragesViewMut|{ (self.f)(&mut store) })
-    }
-}
-
-// fn main() {
-//     let foo = Foo { foo: |a| a + 1 };
-//     (foo.foo)(42);
-    
-//     (Foo::new(|a| a + 1).foo)(42);
-// }
-
-// pub fn player(pos: (i32, i32)) -> impl Fn(&mut AllStoragesViewMut) -> EntityId {
-pub fn player(pos: (i32, i32)) -> EntityFactory<impl Fn(&mut AllStoragesViewMut) -> EntityId> {
-    EntityFactory { f: move |store: &mut AllStoragesViewMut|{
-        return store.add_entity((
-            SerializeMe {},
-            Position { ps: vec![Point{ x: pos.0, y: pos.1 }]},
-            Renderable {
-                glyph: rltk::to_cp437('@'),
-                fg: Palette::COLOR_PURPLE,
-                bg: Palette::MAIN_BG,
-                order: RenderOrder::Player,
-                ..Default::default()
-            },
-            Player {},
-            Locomotive { mtype: LocomotionType::Ground, speed: 1 },
-            Viewshed {
-                visible_tiles: Vec::new(),
-                range: 20,
-                dirty: true
-            },
-            Name {name: "Blabinou".to_string()},
-            CombatStats {max_hp: 30, hp: 30, defense: 2, power: 5, regen_rate: 1},
-            SpatialKnowledge {
-                tiles: HashMap::new(),
-            },
-            Inventory {
-                capacity: 20,
-                items: Vec::new(),
-            }
-        ))
-    }}
+pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
+    store.add_entity((
+        SerializeMe {},
+        Position { ps: vec![Point{ x: pos.0, y: pos.1 }]},
+        Renderable {
+            glyph: rltk::to_cp437('@'),
+            fg: Palette::COLOR_PURPLE,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::Player,
+            ..Default::default()
+        },
+        Player {},
+        Locomotive { mtype: LocomotionType::Ground, speed: 1 },
+        Viewshed {
+            visible_tiles: Vec::new(),
+            range: 20,
+            dirty: true
+        },
+        Name {name: "Blabinou".to_string()},
+        CombatStats {max_hp: 30, hp: 30, defense: 2, power: 5, regen_rate: 1},
+        SpatialKnowledge {
+            tiles: HashMap::new(),
+        },
+        Inventory {
+            capacity: 20,
+            items: Vec::new(),
+        }
+    ))
 }
 
 pub fn room_table(depth: i32) -> WeightedTable {
