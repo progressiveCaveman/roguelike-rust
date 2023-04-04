@@ -38,17 +38,25 @@ impl ParticleBuilder {
     }
 }
 
-pub fn spawn_particles(mut particle_builder: UniqueViewMut<ParticleBuilder>, mut store: AllStoragesViewMut) {
-    for p in particle_builder.requests.iter() {
-        let _id = store.add_entity((
-            Renderable {glyph: p.glyph, fg: p.fg, bg: p.bg, always_render: true, order: RenderOrder::Particle, ..Default::default()},
-            Position {ps: vec![Point{x: p.x, y: p.y}]},
-            Velocity {x: p.vel_x, y: p.vel_y},
-            Lifetime {ms: p.lifetime_ms},
-            Particle {float_x: p.x as f32, float_y: p.y as f32}
-        ));
+pub fn spawn_particles(mut store: AllStoragesViewMut) {
+    let mut to_add = vec![];
+    {
+        let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap(); 
+        for p in particle_builder.requests.iter() {
+            to_add.push((
+                Renderable {glyph: p.glyph, fg: p.fg, bg: p.bg, always_render: true, order: RenderOrder::Particle, ..Default::default()},
+                Position {ps: vec![Point{x: p.x, y: p.y}]},
+                Velocity {x: p.vel_x, y: p.vel_y},
+                Lifetime {ms: p.lifetime_ms},
+                Particle {float_x: p.x as f32, float_y: p.y as f32}
+            ));
+        }
+        particle_builder.clear();
     }
-    particle_builder.clear();
+
+    for c in to_add {
+        store.add_entity(c);
+    }
 }
 
 pub fn update_particles(frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, mut vpos: ViewMut<Position>) {

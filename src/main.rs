@@ -90,9 +90,7 @@ pub struct State {
 }
 
 impl State {
-    fn run_systems(&mut self) {
-        let runstate: RunState = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
-
+    fn run_systems(&mut self, runstate: RunState) {
         if runstate == RunState::PlayerTurn {
             self.world.run(system_fire::run_fire_system);
         }
@@ -249,8 +247,6 @@ impl GameState for State {
 
         self.world.run(system_particle::update_particles);
 
-        let autorun = *self.world.borrow::<UniqueView<AutoRun>>().unwrap();
-
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
         dbg!(new_runstate);
 
@@ -265,12 +261,14 @@ impl GameState for State {
 
         match new_runstate {
             RunState::PreRun => {
-                self.run_systems();
+                self.run_systems(new_runstate);
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
                 new_runstate = input_handler::handle_input(self, ctx);
 
+                let autorun = self.world.borrow::<UniqueView<AutoRun>>().unwrap().clone();
+                
                 if new_runstate == RunState::AwaitingInput && autorun.0 {
                     self.wait_frames += 1;
                     if self.wait_frames >= 10 {
@@ -280,7 +278,7 @@ impl GameState for State {
                 }
             }
             RunState::PlayerTurn => {
-                self.run_systems();
+                self.run_systems(new_runstate);
                 new_runstate = RunState::AiTurn;
             }
             RunState::AiTurn => {
@@ -294,7 +292,7 @@ impl GameState for State {
                     //     map.refresh_influence_maps(self, *turn);
                     // }
                 }
-                self.run_systems();
+                self.run_systems(new_runstate);
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {

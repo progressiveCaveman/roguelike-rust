@@ -32,7 +32,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
     let mut vinv = store.borrow::<ViewMut<Inventory>>().unwrap();
     let mut vinbackpack = store.borrow::<ViewMut<InBackpack>>().unwrap();
 
-    for (id, use_item) in store.borrow::<View<WantsToUseItem>>().unwrap().iter().with_id() { // &mut world.query::<&WantsToUseItem>().iter() {
+    for (id, use_item) in vwants.iter().with_id() {
         let mut used_item = true;
 
         // Find all targets
