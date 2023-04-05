@@ -21,7 +21,6 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
 
     let mut dir_targets: HashMap<i32, usize> = HashMap::new();
     dir_targets.insert(1, map.point_idx(dir_to_point(player_pos, 1, movemod)));
-    dir_targets.insert(1, map.point_idx(dir_to_point(player_pos, 1, movemod)));
     dir_targets.insert(2, map.point_idx(dir_to_point(player_pos, 2, movemod)));
     dir_targets.insert(3, map.point_idx(dir_to_point(player_pos, 3, movemod)));
     dir_targets.insert(4, map.point_idx(dir_to_point(player_pos, 4, movemod)));
@@ -53,8 +52,6 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
             RunState::AwaitingInput   
         },
         GameMode::RL => {
-            // let player_id: EntityId = *gs.resources.get::<EntityId>().unwrap();
-
             match ctx.key {
                 None => { return RunState::AwaitingInput }
                 Some(key) => match key {
@@ -66,12 +63,12 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                     VirtualKeyCode::U => add_effect(Some(player_id), EffectType::Move {}, Targets::Tile { tile_idx: dir_targets[&9]}),
                     VirtualKeyCode::N => add_effect(Some(player_id), EffectType::Move {}, Targets::Tile { tile_idx: dir_targets[&3]}),
                     VirtualKeyCode::B => add_effect(Some(player_id), EffectType::Move {}, Targets::Tile { tile_idx: dir_targets[&1]}),
-                    VirtualKeyCode::G => add_effect(Some(player_id), EffectType::PickUp {}, Targets::Tile { tile_idx: player_pos_idx}),//player::get_item(gs),
+                    VirtualKeyCode::G => add_effect(Some(player_id), EffectType::PickUp {}, Targets::Tile { tile_idx: player_pos_idx}),
                     VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}, Targets::Single { target: player_id }),
                     VirtualKeyCode::R => player::reveal_map(gs),
                     VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::tmp_fireball(&mut store)}) },
                     VirtualKeyCode::I => return RunState::ShowInventory,
-                    VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}, Targets::Single { target: player_id }),//return player::skip_turn(gs),
+                    VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}, Targets::Single { target: player_id }),
                     VirtualKeyCode::Escape => return RunState::SaveGame,
                     VirtualKeyCode::Period => {
                         if player::try_next_level(gs) { return RunState::NextLevel; }

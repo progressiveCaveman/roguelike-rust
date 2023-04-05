@@ -13,21 +13,9 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
     let mut vvs = gs.world.borrow::<ViewMut<Viewshed>>().unwrap();
     let mut vwantsattack = gs.world.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
-    // if let EffectType::Heal{amount} = effect.effect_type {
-    //     gs.world.run(|mut stats: ViewMut<CombatStats>| {
-    //         if let Ok(mut stats) = (&mut stats).get(target) {
-    //             stats.hp = i32::min(stats.hp + amount, stats.max_hp);
-    //         }
-    //     });
-    // }
-    let mut needs_wants_to_attack: Option<(EntityId, WantsToAttack)> = None;
-
     let entity = effect.creator.unwrap();
 
-    // if tp.x < 0 || tp.y < 0 || tp.x >= map.width || tp.y >= map.height { return; }
-
     if let Ok(pos) = (&mut vpos).get(entity) {
-        //todo check for locomotion component
         let tp = map.idx_point(tile_idx);
         let dp = Point{ 
             x: normalize(tp.x - pos.ps[0].x), 
@@ -44,10 +32,7 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
 
         if !is_camera {
             if let Some(target) = get_target(&gs.world, &map, entity, &pos, dp) {
-                needs_wants_to_attack = Some((entity, WantsToAttack {target}));
-
-                // gs.world.insert_one(entity, WantsToAttack {target});
-                // return;
+                vwantsattack.add_component_unchecked(entity, WantsToAttack {target});
             }
         }
 
@@ -72,19 +57,14 @@ pub fn try_move(gs: &mut State, effect: &EffectSpawner, tile_idx: usize) {
             match vplayer.get(entity) {
                 Err(_e) => {},
                 Ok(_player) => {
-                    let mut ppos = gs.world.borrow::<UniqueViewMut<PPoint>>().unwrap().0;
-                    ppos.x = pos.ps[0].x;
-                    ppos.y = pos.ps[0].y;
+                    let mut ppos = gs.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
+                    *ppos = PPoint(pos.ps[0]);
                 }
             }
 
             return;
         }
         // }
-    }
-
-    if let Some((e, c)) = needs_wants_to_attack {
-        vwantsattack.add_component_unchecked(e, c);
     }
 }
 

@@ -57,14 +57,14 @@ pub fn get_neighbors(point: Point) -> Vec<Point> {
 pub fn dir_to_point(pos: Point, dir: usize, dismod: i32) -> Point {
     match dir {
         1 => Point { x: pos.x - dismod, y: pos.y + dismod },
-        2 => Point { x: pos.x + 0, y: pos.y + dismod },
+        2 => Point { x: pos.x, y: pos.y + dismod },
         3 => Point { x: pos.x + dismod, y: pos.y + dismod },
-        4 => Point { x: pos.x - dismod, y: pos.y + 0 },
-        6 => Point { x: pos.x + dismod, y: pos.y + 0 },
+        4 => Point { x: pos.x - dismod, y: pos.y },
+        6 => Point { x: pos.x + dismod, y: pos.y },
         7 => Point { x: pos.x - dismod, y: pos.y - dismod },
-        8 => Point { x: pos.x + 0, y: pos.y - dismod },
+        8 => Point { x: pos.x, y: pos.y - dismod },
         9 => Point { x: pos.x + dismod, y: pos.y - dismod },
-        _ => Point { x: pos.x + 0, y: pos.y + 0 }
+        _ => Point { x: pos.x, y: pos.y }
     }
 }
 
@@ -130,5 +130,9 @@ pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
 }
 
 pub fn normalize(num: i32) -> i32 {
-    num / num.abs()
+    if num == 0 {
+        0
+    }else{
+        num / num.abs()
+    }
 }

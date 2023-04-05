@@ -27,7 +27,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, EntitiesViewMut, View};
+use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, EntitiesViewMut, View, EntitiesView};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -121,7 +121,7 @@ impl State {
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
         let mut ids_to_delete: Vec<EntityId> = Vec::new();
 
-        let entities = self.world.borrow::<EntitiesViewMut>().unwrap();
+        let entities = self.world.borrow::<EntitiesView>().unwrap();
         let player_id = self.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
         let vplayer = self.world.borrow::<View<Player>>().unwrap();
@@ -158,7 +158,7 @@ impl State {
         self.mapgen_data.history.clear();
 
         // get game mode
-        let gamemode = *self.world.borrow::<UniqueView<GameMode>>().unwrap();//self.resources.get::<GameMode>().unwrap();
+        let gamemode = *self.world.borrow::<UniqueView<GameMode>>().unwrap();
 
         // Generate map
         let mut map_builder = match gamemode {
@@ -182,17 +182,12 @@ impl State {
         map_builder.spawn_entities(&mut self.world);
 
         // Update player position
-        let mut player_position = self.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
-        *player_position = PPoint(Point::new(start_pos.x, start_pos.y));
-        let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-        let mut vpos = self.world.borrow::<ViewMut<Position>>().unwrap();
-        let player_pos_comp = (&mut vpos).get(player_id).unwrap();
-        player_pos_comp.ps[0] = player_position.0;
-
-        // Mark viewshed as dirty
-        // let player_vs = self.world.get_mut::<Viewshed>(*player_id);
-        self.world.run(|mut vs: ViewMut<Viewshed>| {
-            if let Ok(mut vs) = (&mut vs).get(player_id) {
+        self.world.run(|mut ppos: UniqueViewMut<PPoint>, player_id: UniqueView<PlayerID>, mut vpos: ViewMut<Position>, mut vvs: ViewMut<Viewshed>|{
+            *ppos = PPoint(Point::new(start_pos.x, start_pos.y));
+            let player_pos_comp = (&mut vpos).get(player_id.0).unwrap();
+            player_pos_comp.ps[0] = ppos.0;
+            
+            if let Ok(mut vs) = (&mut vvs).get(player_id.0) {
                 vs.dirty = true; 
             }
         });
@@ -217,7 +212,7 @@ impl State {
         self.world.clear();
 
         // Create player
-        let player_id = self.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut self.world, (0, 0));
+        let player_id = self.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(PlayerID(player_id));
 
@@ -248,7 +243,7 @@ impl GameState for State {
         self.world.run(system_particle::update_particles);
 
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
-        dbg!(new_runstate);
+        // dbg!(new_runstate);
 
         match new_runstate {
             RunState::MainMenu{..} => {}
