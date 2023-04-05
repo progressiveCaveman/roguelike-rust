@@ -1,16 +1,23 @@
 use rltk::Point;
-use shipyard::{EntityId, UniqueView, View, Get};
+use shipyard::{EntityId, UniqueView, View, Get, AllStoragesView};
 
 use crate::{components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}, utils::Turn};
 
 use super::decisions::{Action, Consideration, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
 
-pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: View<Position>, vitem: View<Item>, vtree: View<Tree>, vlm: View<LumberMill>, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
-// pub fn get_wood_gathering_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
+pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>{
+    let turn = store.borrow::<UniqueView<Turn>>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();
+    let vpos = store.borrow::<View<Position>>().unwrap();
+    let vitem = store.borrow::<View<Item>>().unwrap();
+    let vtree = store.borrow::<View<Tree>>().unwrap();
+    let vlm = store.borrow::<View<LumberMill>>().unwrap();
+    let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
+    let vinv = store.borrow::<View<Inventory>>().unwrap();
 
-    // let world = &gs.world;
-    // let res = &gs.resources;
-    // let turn = res.get::<i32>().unwrap();
+    let pos = if let Ok(pos) = vpos.get(id) { pos } else { return vec![]; };
+    let space = if let Ok(pos) = vspace.get(id) { pos } else { return vec![]; };
+    let inv = if let Ok(pos) = vinv.get(id) { pos } else { return vec![]; };
 
     let pos = pos.ps[0];
 
@@ -64,7 +71,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(tree)),
+                        map.distance(&vpos, Target::from(pos), Target::from(tree)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1.0 / 100.0, 
@@ -98,7 +105,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(tree)),
+                        map.distance(&vpos, Target::from(pos), Target::from(tree)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -137,7 +144,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(*log)),
+                        map.distance(&vpos, Target::from(pos), Target::from(*log)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -166,8 +173,10 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
     // if wood in inventory
     // for each LumberMill
     for lm in lumber_mills {
+        let lminv = if let Ok(inv) = vinv.get(lm) { inv } else { continue; };
+        let lminv_count = lminv.count_type(&vitem, ItemType::Log) as f32;
+
         if logs_in_inv > 0 {
-            let inv_count = 
 
             potential_actions.push(Action {
                 intent: Intent {
@@ -179,7 +188,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(lm)),
+                        map.distance(&vpos, Target::from(pos), Target::from(lm)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. - 1./20., 
@@ -190,7 +199,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                     ),
                     Consideration::new(
                         "logs in stockpile".to_string(), 
-                        Inputs::inventory_count(world, lm, ItemType::Log),
+                        lminv_count,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1. / 50.0, 
@@ -224,7 +233,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                 cons: vec!(
                     Consideration::new(
                         "Distance to lm".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(lm)),
+                        map.distance(&vpos, Target::from(pos), Target::from(lm)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -235,7 +244,7 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
                     ),
                     Consideration::new(
                         "logs in stockpile".to_string(), 
-                        Inputs::inventory_count(world, lm, ItemType::Log),
+                        lminv_count,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1. / 50.0, 
@@ -283,11 +292,19 @@ pub fn get_wood_gathering_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, 
     potential_actions
 }
 
-pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: View<Position>, vitem: View<Item>, vfish: View<Fish>, vfishery: View<FishCleaner>, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
-// pub fn get_fishing_actions(gs: &State, id: EntityId, pos: &Position, space: &SpatialKnowledge, inv: &Inventory) -> Vec<Action>{
-    // let world = &gs.world;
-    // let res = &gs.resources;
-    // let turn = res.get::<i32>().unwrap();
+pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>{
+    let turn = store.borrow::<UniqueView<Turn>>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();
+    let vpos = store.borrow::<View<Position>>().unwrap();
+    let vitem = store.borrow::<View<Item>>().unwrap();
+    let vfish = store.borrow::<View<Fish>>().unwrap();
+    let vfishery = store.borrow::<View<FishCleaner>>().unwrap();
+    let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
+    let vinv = store.borrow::<View<Inventory>>().unwrap();
+
+    let pos = if let Ok(pos) = vpos.get(id) { pos } else { return vec![]; };
+    let space = if let Ok(pos) = vspace.get(id) { pos } else { return vec![]; };
+    let inv = if let Ok(pos) = vinv.get(id) { pos } else { return vec![]; };
 
     let pos = pos.ps[0];
 
@@ -349,7 +366,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(wp)),
+                        map.distance(&vpos, Target::from(pos), Target::from(wp)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1.0 / 100.0, 
@@ -383,7 +400,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(wp)),
+                        map.distance(&vpos, Target::from(pos), Target::from(wp)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 1., 
@@ -412,6 +429,9 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
     // if fish in inventory
     // for each fish cleaner
     for f in fisheries {
+        let finv = if let Ok(inv) = vinv.get(f) { inv } else { continue; };
+        let finv_count = finv.count_type(&vitem, ItemType::Fish) as f32;
+
         if fish_in_inv > 0 {
             potential_actions.push(Action {
                 intent: Intent {
@@ -423,7 +443,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                 cons: vec!(
                     Consideration::new(
                         "Distance".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(f)),
+                        map.distance(&vpos, Target::from(pos), Target::from(f)),
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: 1. - 1./20., 
@@ -434,7 +454,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                     ),
                     Consideration::new(
                         "fish in stockpile".to_string(), 
-                        Inputs::inventory_count(world, f, ItemType::Fish),
+                        finv_count,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1. / 50.0, 
@@ -468,7 +488,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                 cons: vec!(
                     Consideration::new(
                         "Distance to fishery".to_string(), 
-                        map.distance(vpos, Target::from(pos), Target::from(f)),
+                        map.distance(&vpos, Target::from(pos), Target::from(f)),
                         ConsiderationParam { 
                             t: ResponseCurveType::LessThan, 
                             m: 2., 
@@ -479,7 +499,7 @@ pub fn get_fishing_actions(turn: UniqueView<Turn>, map: UniqueView<Map>, vpos: V
                     ),
                     Consideration::new(
                         "fish in stockpile".to_string(), 
-                        Inputs::inventory_count(world, f, ItemType::Fish),
+                        finv_count,
                         ConsiderationParam { 
                             t: ResponseCurveType::Linear, 
                             m: -1. / 50.0, 

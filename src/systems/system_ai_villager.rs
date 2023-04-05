@@ -1,16 +1,19 @@
 use rltk;
 use rltk::{Point, BaseMap};
-use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView, ViewMut, AddComponent};
+use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView, ViewMut, AddComponent, AllStoragesView};
+use crate::ai::labors;
 use crate::effects::{add_effect, EffectType, Targets};
 use crate::map::{Map, TileType};
 use crate::utils::{get_neighbors, get_path, Turn};
 use crate::{State};
-use crate::ai::decisions::{Target, Intent, Task};
+use crate::ai::decisions::{Target, Intent, Task, AI, Action};
 use crate::components::{Position, Villager, DijkstraMapToMe, Fish};
 
 pub fn run_villager_ai_system(gs: &mut State) {
     
-    update_decisions(gs);
+    gs.world.run(|store: AllStoragesView| {
+        update_decisions(store);
+    });
 
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
 
@@ -107,34 +110,41 @@ pub fn run_villager_ai_system(gs: &mut State) {
     }
 }
 
-fn update_decisions(gs: &mut State) {
-
-    let world = &gs.world;
-    let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
-
-    let mut vintent = gs.world.borrow::<ViewMut<Intent>>().unwrap();
+fn update_decisions(store: AllStoragesView) {
 
     let mut wants_intent: Vec<(EntityId, Intent)> = vec![];
+    let mut get_actions: Vec<EntityId> = vec![];
 
-    dbg!("commented code");
-    // for (id, (_v, pos, space, inv, intent)) in world.query::<(&Villager, &Position, &SpatialKnowledge, &Inventory, Option<&Intent>)>().iter() {
+    {
+        let turn = store.borrow::<UniqueView<Turn>>().unwrap();
 
-    //     // if we have a fresh intent, skip
-    //     if let Some(intent) = intent {
-    //         if intent.turn + 5 < *turn {
-    //             continue;
-    //         }
-    //     }
-        
-    //     let mut potential_actions:Vec<Action> = vec!();
+        let vvillager = store.borrow::<View<Villager>>().unwrap();
+        let vintent = store.borrow::<View<Intent>>().unwrap();
 
-    //     potential_actions.append(&mut get_wood_gathering_actions(gs, id, pos, space, inv));
-    //     potential_actions.append(&mut get_fishing_actions(gs, id, pos, space, inv));
+        for (id, _v) in (&vvillager).iter().with_id() {
+            // if we have a fresh intent, skip
+            if let Ok(intent) = vintent.get(id) {
+                if intent.turn.0 + 5 < turn.0 {
+                    continue;
+                }
+            }
 
-    //     let best = AI::choose_action(potential_actions);
-    //     // dbg!(best.clone());
-    //     wants_intent.push((id, best));
-    // }
+            get_actions.push(id);
+        }
+    }
+
+    for id in get_actions {
+        let mut potential_actions:Vec<Action> = vec!();
+
+        potential_actions.append(&mut labors::get_wood_gathering_actions(&store, id));
+        potential_actions.append(&mut labors::get_fishing_actions(&store, id));
+
+        let best = AI::choose_action(potential_actions);
+        // dbg!(best.clone());
+        wants_intent.push((id, best));
+    }
+
+    let mut vintent = store.borrow::<ViewMut<Intent>>().unwrap();
 
     for (id, intent) in wants_intent {
         vintent.add_component_unchecked(id, intent);

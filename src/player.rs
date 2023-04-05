@@ -12,20 +12,30 @@ pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Ent
     let world = &gs.world;
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    return if let Ok(space) = world.borrow::<ViewMut<SpatialKnowledge>>() { //world.get::<SpatialKnowledge>(player_id) {
-        space.get(player_id).unwrap().tiles.clone()
-    } else {
-        HashMap::new()
+    if let Ok(vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
+        if let Ok(space) = vspace.get(player_id) {
+            return space.tiles.clone()
+        }
     }
+
+    HashMap::new()
 }
 
 pub fn get_player_viewshed(gs: &State) -> Viewshed {
     let world = &gs.world;
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    let vs = world.borrow::<ViewMut<Viewshed>>().unwrap();
+    let vvs = world.borrow::<ViewMut<Viewshed>>().unwrap();
 
-    vs.get(player_id).unwrap().clone()
+    if let Ok(vs) = vvs.get(player_id) {
+        vs.clone()
+    }else {
+        Viewshed {
+            visible_tiles: Vec::new(),
+            range: 0,
+            dirty: true
+        }
+    }
 }
 
 pub fn reveal_map(gs: &State){

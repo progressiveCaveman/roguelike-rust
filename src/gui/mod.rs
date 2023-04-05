@@ -52,16 +52,18 @@ impl Palette {
 }
 
 pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
-
     let world = &gs.world;
-    // let res = &gs.resources;
 
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let vstats = world.borrow::<View<CombatStats>>().unwrap();
-    let player_stats = vstats.get(player_id).unwrap();//world.get::<CombatStats>(player_id).unwrap();
-    let hp_gui = format!("{} / {} HP", player_stats.hp, player_stats.max_hp);
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
+
+    let hp_gui = if let Ok(player_stats) = vstats.get(player_id) {
+        format!("{} / {} HP", player_stats.hp, player_stats.max_hp)
+    } else {
+        format!("")
+    };
 
     // horizontal line
     ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
@@ -180,7 +182,6 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
 
         ypos += 1;
     }
-
 
     // let mut tooltip: Vec<String> = Vec::new();
 

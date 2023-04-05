@@ -101,10 +101,10 @@ impl InvalidPoint for Point {
     }
 }
 
-#[derive(Debug, Clone, Unique)]
+#[derive(Debug, Clone, Unique, Copy)]
 pub struct PlayerID(pub EntityId);
 
-#[derive(Clone, Debug, Unique)]
+#[derive(Clone, Debug, Unique, Copy)]
 pub struct Turn(pub i32);
 
 #[derive(Clone, Unique)]

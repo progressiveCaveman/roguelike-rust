@@ -118,7 +118,7 @@ impl Map {
         !self.blocked[idx]
     }
 
-    pub fn distance(&self, vpos: View<Position>, f: Target, t: Target) -> f32 {        
+    pub fn distance(&self, vpos: &View<Position>, f: Target, t: Target) -> f32 {        
         let idx1 = match f {
             Target::LOCATION(l) => vec!(self.xy_idx(l.x, l.y)),
             Target::ENTITY(e) => {

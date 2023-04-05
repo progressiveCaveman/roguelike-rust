@@ -27,7 +27,7 @@ pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, EntitiesViewMut, View, EntitiesView};
+use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, View, EntitiesView};
 use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
 
 pub mod effects;
@@ -184,8 +184,9 @@ impl State {
         // Update player position
         self.world.run(|mut ppos: UniqueViewMut<PPoint>, player_id: UniqueView<PlayerID>, mut vpos: ViewMut<Position>, mut vvs: ViewMut<Viewshed>|{
             *ppos = PPoint(Point::new(start_pos.x, start_pos.y));
-            let player_pos_comp = (&mut vpos).get(player_id.0).unwrap();
-            player_pos_comp.ps[0] = ppos.0;
+            if let Ok(pos) = (&mut vpos).get(player_id.0) {
+                pos.ps[0] = ppos.0;
+            }
             
             if let Ok(mut vs) = (&mut vvs).get(player_id.0) {
                 vs.dirty = true; 
