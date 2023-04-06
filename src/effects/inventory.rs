@@ -20,7 +20,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
         }
 
         if let Err(_) = vpos.get(target) {
-            dbg!("Entity doesn't have a position");
+            // dbg!("Entity doesn't have a position");
             return;
         }
     
@@ -34,7 +34,8 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner, target: EntityId) {
                     for e2 in entities.iter() {
                         if e2 == e1 {
                             dup = true;
-                            println!("ERROR: Duplicate item in {} inventory", name.name);
+                            println!("ERROR: Duplicate item in {:?} inventory", &name.name);
+                            dbg!(42);
                             // return;
                         }
                     }
