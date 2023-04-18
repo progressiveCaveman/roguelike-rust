@@ -100,7 +100,7 @@ impl State {
             self.world.run(system_pathfinding::run_pathfinding_system);
             self.world.run(system_ai_spawner::run_spawner_system);
             self.world.run(system_ai_fish::run_fish_ai);
-            system_ai_villager::run_villager_ai_system(self);
+            self.world.run(system_ai_villager::run_villager_ai_system);
             self.world.run(system_ai_monster::run_monster_ai_system);
             // system_ai_monster::run_monster_ai_system(self);   
         }
