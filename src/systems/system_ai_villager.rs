@@ -2,7 +2,7 @@ use rltk;
 use rltk::{Point, BaseMap};
 use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, UniqueView, ViewMut, AddComponent, AllStoragesView};
 use crate::ai::labors;
-use crate::effects::{add_effect, EffectType, Targets};
+use crate::effects::{add_effect, EffectType};
 use crate::map::{Map, TileType};
 use crate::utils::{get_neighbors, get_path, Turn};
 use crate::ai::decisions::{Target, Intent, Task, AI, Action};
@@ -24,7 +24,7 @@ pub fn run_villager_ai_system(store: AllStoragesView) {
                     to_fish.push((id, pos.ps[0]));
                 },
                 Task::Explore => {
-                    add_effect(Some(id), EffectType::Explore {  }, Targets::Single { target: id })
+                    add_effect(Some(id), EffectType::Explore { })
                 },
                 Task::ExchangeInfo => todo!(),
                 Task::MoveTo => {
@@ -76,7 +76,7 @@ pub fn run_villager_ai_system(store: AllStoragesView) {
 
         if path.success && path.steps.len() > 1 {
             // movement::try_move_entity(e, point_diff(from, p), gs);
-            add_effect(Some(e), EffectType::Move {  }, Targets::Tile { tile_idx: path.steps[1] });
+            add_effect(Some(e), EffectType::Move { tile_idx: path.steps[1] });
         }
     }
 
@@ -96,8 +96,7 @@ pub fn run_villager_ai_system(store: AllStoragesView) {
                     //found a target
                     add_effect(
                         Some(e), 
-                        EffectType::PickUp {}, 
-                        Targets::Single { target: *te }
+                        EffectType::PickUp { entity: *te }, 
                     );
                     break;
                 }

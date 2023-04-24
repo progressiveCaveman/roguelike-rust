@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 use rltk::{self, Point, DijkstraMap};
-use shipyard::{EntityId, Component, World, View, IntoIter};
+use shipyard::{EntityId, Component, View, IntoIter};
 
 use crate::{RenderOrder, map::{TileType, Map}};
 

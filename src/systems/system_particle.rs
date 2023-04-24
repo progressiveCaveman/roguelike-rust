@@ -1,7 +1,7 @@
 use rltk::{FontCharType, Point, RGBA};
 use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView, UniqueViewMut};
 
-use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime, effects::{add_effect, EffectType, Targets}};
+use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime, effects::{add_effect, EffectType}};
 
 #[derive(Debug)]
 struct ParticleRequest {
@@ -88,6 +88,6 @@ pub fn remove_dead_particles(vlifetime: ViewMut<Lifetime>) {
     }
 
     for id in particles_to_remove {
-        add_effect(None, EffectType::Delete {  }, Targets::Single { target: id });
+        add_effect(None, EffectType::Delete { entity: id });
     }
 }

@@ -1,6 +1,6 @@
 use rltk;
 use shipyard::{EntityId, AllStoragesViewMut, ViewMut, UniqueViewMut, UniqueView, View, IntoIter, IntoWithId, Get, AddComponent, Remove};
-use crate::effects::{add_effect, EffectType, Targets};
+use crate::effects::{add_effect, EffectType};
 use crate::utils::{PPoint, self, PlayerID};
 use crate::gui::Palette;
 use crate::{systems::system_particle::ParticleBuilder};
@@ -65,7 +65,7 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
             }
 
             if path.success && path.steps.len() > 1 {
-                add_effect(Some(id), EffectType::Move {  }, Targets::Tile { tile_idx: path.steps[1] })
+                add_effect(Some(id), EffectType::Move { tile_idx: path.steps[1] })
             }
         }
     }

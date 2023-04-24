@@ -1,9 +1,10 @@
 use super::*;
 use crate::components::Confusion;
 
-pub fn inflict_confusion(gs: &mut State, confusion: &EffectSpawner, target: EntityId) {
-    let world = &mut gs.world;
-    if let EffectType::Confusion { turns } = confusion.effect_type {
-        world.add_component(target, Confusion{turns: turns});
+pub fn inflict_confusion(gs: &mut State, confusion: &EffectSpawner) {
+    if let EffectType::Confusion { turns, target } = &confusion.effect_type {
+        for entity in get_effected_entities(gs, &target) {
+            gs.world.add_component(entity, Confusion{ turns: *turns });
+        }
     }
 }

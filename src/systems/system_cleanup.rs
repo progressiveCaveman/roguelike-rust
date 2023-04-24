@@ -1,7 +1,7 @@
 use shipyard::{View, ViewMut, IntoIter, IntoWithId, Get, UniqueViewMut, Remove, AddComponent, EntityId};
 use crate::RunState;
 use crate::components::{CombatStats, Player, Name, Inventory, InBackpack, Equipped, Position};
-use crate::effects::{add_effect, EffectType, Targets};
+use crate::effects::{add_effect, EffectType};
 use crate::gamelog::GameLog;
 
 pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueViewMut<RunState>, mut vpos: ViewMut<Position>, vstats: ViewMut<CombatStats>, vinv: View<Inventory>, vplayer: View<Player>, vname: View<Name>, mut vpack: ViewMut<InBackpack>, mut vequip: ViewMut<Equipped>) {
@@ -21,7 +21,7 @@ pub fn run_cleanup_system(mut log: UniqueViewMut<GameLog>, mut runstate: UniqueV
                         }
                     }
 
-                    add_effect(None, EffectType::Delete {}, Targets::Single { target: id });
+                    add_effect(None, EffectType::Delete { entity: id });
                     
                     if let Ok(name) = name {
                         log.messages.push(format!("{} is dead", &name.name));

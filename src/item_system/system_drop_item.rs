@@ -1,6 +1,6 @@
 use shipyard::{EntityId, View, IntoIter, IntoWithId, Get, ViewMut, Remove, UniqueViewMut};
 use crate::components::{Name, WantsToDropItem, Player};
-use crate::effects::{add_effect, EffectType, Targets};
+use crate::effects::{add_effect, EffectType};
 use crate::gamelog::GameLog;
 
 pub fn run_drop_item_system(mut log: UniqueViewMut<GameLog>, vplayer: View<Player>, mut vwants: ViewMut<WantsToDropItem>, vname: View<Name>) {
@@ -20,8 +20,7 @@ pub fn run_drop_item_system(mut log: UniqueViewMut<GameLog>, vplayer: View<Playe
         vwants.remove(*id);
         add_effect(
             Some(*id), 
-            EffectType::Drop {}, 
-            Targets::Single { target: *item }
+            EffectType::Drop { entity: *item }, 
         );
     }
 }

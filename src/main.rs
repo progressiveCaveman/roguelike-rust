@@ -96,6 +96,8 @@ impl State {
         }
         self.world.run(system_visibility::run_visibility_system);
 
+        effects::run_effects_queue(self);
+
         if runstate == RunState::AiTurn { 
             self.world.run(system_pathfinding::run_pathfinding_system);
             self.world.run(system_ai_spawner::run_spawner_system);
@@ -104,6 +106,9 @@ impl State {
             self.world.run(system_ai_monster::run_monster_ai_system);
             // system_ai_monster::run_monster_ai_system(self);   
         }
+
+        effects::run_effects_queue(self);
+
         self.world.run(system_map_indexing::run_map_indexing_system);
 
         self.world.run(system_melee_combat::run_melee_combat_system);

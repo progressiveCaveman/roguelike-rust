@@ -14,8 +14,7 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
     for (id, (pos, _, _)) in (&vpos, &vstats, &vfire).iter().with_id() {
         add_effect(
             None,
-            EffectType::Damage{ amount: 1 },
-            Targets::Single{ target: id }
+            EffectType::Damage{ amount: 1, target: Targets::Single{ target: id } }
         );
 
         for pos in pos.ps.iter() {
@@ -51,8 +50,7 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
             for e in map.tile_content[idx].iter() {
                 add_effect(
                     None,
-                    EffectType::Fire { turns: NEW_FIRE_TURNS },
-                    Targets::Single{ target: *e }
+                    EffectType::Fire { turns: NEW_FIRE_TURNS, target: Targets::Single{ target: *e } },
                 );
             }
 

@@ -2,7 +2,7 @@ use rand::prelude::SliceRandom;
 use rand::thread_rng;
 use rltk::Point;
 use shipyard::{EntityId, View, IntoIter, IntoWithId, UniqueView};
-use crate::effects::{add_effect, EffectType, Targets};
+use crate::effects::{add_effect, EffectType};
 use crate::map::{TileType, Map};
 use crate::components::{Position, Fish};
 
@@ -43,7 +43,7 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
             };
 
             if canmove {
-                add_effect(Some(e), EffectType::Move {  }, Targets::Tile { tile_idx: map.point_idx(ps) });
+                add_effect(Some(e), EffectType::Move { tile_idx: map.point_idx(ps) });
                 // movement::try_move_entity(e, point_diff(pos, ps), gs);
                 break;
             }
@@ -51,7 +51,7 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
     }
 
     for e in to_remove.iter() {
-        add_effect(Some(*e), EffectType::Delete {  }, Targets::Single { target: *e });
+        add_effect(Some(*e), EffectType::Delete { entity: *e });
         // gs.world.delete_entity(*e);
         // dbg!("ERROR: Need to delete entity");
     }

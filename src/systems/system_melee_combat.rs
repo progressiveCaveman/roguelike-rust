@@ -41,8 +41,7 @@ pub fn run_melee_combat_system(store: AllStoragesView) {
                         log.messages.push(format!("{} hits {} for {} hp", &name.name, &target_name.name, damage));
                         add_effect(
                             Some(id), 
-                            EffectType::Damage{ amount: damage },
-                            Targets::Single{ target: wants_attack.target }
+                            EffectType::Damage{ amount: damage, target: Targets::Single{ target: wants_attack.target } }
                         );
                     }
 

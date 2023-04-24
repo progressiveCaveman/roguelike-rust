@@ -81,8 +81,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
             Ok(fire) => {
                 add_effect(
                     Some(id),
-                    EffectType::Fire { turns: fire.turns },
-                    Targets::Tiles { tiles: target_tiles }
+                    EffectType::Fire { turns: fire.turns, target: Targets::Tiles { tiles: target_tiles }}
                 );                            
                 used_item = true;
             }
@@ -101,8 +100,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                         Ok(_stats) => {
                             add_effect(
                                 Some(id), 
-                                EffectType::Heal { amount: healer.heal }, 
-                                Targets::Single { target: *target }
+                                EffectType::Heal { amount: healer.heal, target: Targets::Single { target: *target } }, 
                             );
                             if id == player_id.0 { // todo should this code be in /effects?
                                 let name = vname.get(use_item.item).unwrap();
@@ -131,8 +129,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                 for target in targets.iter() {
                     add_effect(
                         Some(id),
-                        EffectType::Damage{ amount: dd.damage },
-                        Targets::Single{ target: *target }
+                        EffectType::Damage{ amount: dd.damage, target: Targets::Single{ target: *target } },
                     );
                     if id == player_id.0 {
                         let monster_name = vname.get(*target).unwrap();
@@ -159,8 +156,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                 for target in targets.iter() {
                     add_effect(
                         Some(id), 
-                        EffectType::Confusion { turns: confusion.turns }, 
-                        Targets::Single { target: *target }
+                        EffectType::Confusion { turns: confusion.turns, target: Targets::Single { target: *target } }, 
                     );
                     if id == player_id.0 {
                         let monster_name = vname.get(*target).unwrap();
@@ -217,7 +213,10 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
             }
         }
 
-        add_effect(None, EffectType::Delete {}, Targets::Single { target: item });
+        add_effect(
+            None, 
+            EffectType::Delete { entity: item }, 
+        );
     }
 
     for id in to_remove_wants_use {
