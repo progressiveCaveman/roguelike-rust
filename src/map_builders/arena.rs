@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use rltk::{Point};
 use shipyard::{World, AllStoragesViewMut};
 
@@ -10,9 +8,7 @@ use super::{MapBuilder, Map, TileType, Position};
 pub struct AernaBuilder {
     map : Map,
     starting_position : Position,
-    depth: i32,
     history: Vec<Map>,
-    noise_areas : HashMap<i32, Vec<usize>>
 }
 
 impl MapBuilder for AernaBuilder {
@@ -48,9 +44,7 @@ impl AernaBuilder {
         AernaBuilder{
             map : Map::new(new_depth, TileType::Floor),
             starting_position : Position{ ps: vec![Point{x:0, y:0}] },
-            depth : new_depth,
             history: Vec::new(),
-            noise_areas : HashMap::new(),
         }
     }
 

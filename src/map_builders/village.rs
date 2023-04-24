@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use rltk::{RandomNumberGenerator, Point};
 use shipyard::{World, AllStoragesViewMut};
 
@@ -10,9 +8,7 @@ use super::{MapBuilder, Map, TileType, Position};
 pub struct VillageBuilder {
     map : Map,
     starting_position : Position,
-    depth: i32,
     history: Vec<Map>,
-    noise_areas : HashMap<i32, Vec<usize>>
 }
 
 impl MapBuilder for VillageBuilder {
@@ -72,9 +68,7 @@ impl VillageBuilder {
         VillageBuilder{
             map : Map::new(new_depth, TileType::Wall),
             starting_position : Position{ ps: vec![Point{x:0, y:0}] },
-            depth : new_depth,
             history: Vec::new(),
-            noise_areas : HashMap::new(),
         }
     }
 

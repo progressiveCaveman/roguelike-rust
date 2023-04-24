@@ -13,7 +13,6 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
     let mut vwantsattack = gs.world.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     let entity = effect.creator.unwrap();
-    dbg!(entity);
     let is_player = gs.world.run(|vplayer: View<Player>|{
         return vplayer.get(entity).is_ok();
     });

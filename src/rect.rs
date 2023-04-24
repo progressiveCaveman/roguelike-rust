@@ -21,9 +21,9 @@ impl Rect {
         ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
     }
 
-    pub fn equals(&self, other: Rect) -> bool {
-        self.x1 == other.x1 && self.x2 == other.x2 && self.y1 == other.y1 && self.y2 == other.y2
-    }
+    // pub fn equals(&self, other: Rect) -> bool {
+    //     self.x1 == other.x1 && self.x2 == other.x2 && self.y1 == other.y1 && self.y2 == other.y2
+    // }
 
     pub fn width(&self) -> i32 {
         self.x2 - self.x1

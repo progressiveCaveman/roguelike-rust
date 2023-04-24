@@ -72,9 +72,9 @@ pub fn point_plus(p1: Point, p2: Point) -> Point {
     Point { x: p2.x + p1.x, y: p2.y + p1.y }
 }
 
-pub fn point_diff(p1: Point, p2: Point) -> Point {
-    Point { x: p2.x - p1.x, y: p2.y - p1.y }
-}
+// pub fn point_diff(p1: Point, p2: Point) -> Point {
+//     Point { x: p2.x - p1.x, y: p2.y - p1.y }
+// }
 
 pub trait Scale {
     fn scaled(&mut self, amount: f32) -> RGBA;
