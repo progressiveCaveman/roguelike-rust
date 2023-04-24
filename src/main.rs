@@ -117,10 +117,10 @@ impl State {
         self.world.run(run_drop_item_system);
         self.world.run(run_unequip_item_system);
         self.world.run(run_item_use_system);
-        self.world.run(system_map_indexing::run_map_indexing_system);
+        self.world.run(system_particle::spawn_particles);
 
         effects::run_effects_queue(self);
-        self.world.run(system_particle::spawn_particles);
+        self.world.run(system_map_indexing::run_map_indexing_system);
     }
 
     fn entities_to_delete_on_level_change(&mut self) -> Vec<EntityId> {
@@ -246,8 +246,6 @@ impl GameState for State {
             i.0 = ctx.frame_time_ms;
         }
 
-        self.world.run(system_particle::update_particles);
-
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
         // dbg!(new_runstate);
 
@@ -259,6 +257,9 @@ impl GameState for State {
                 gui::draw_gui(self, ctx);
             }
         }
+
+        self.world.run(system_particle::update_particles);
+        effects::run_effects_queue(self);
 
         match new_runstate {
             RunState::PreRun => {

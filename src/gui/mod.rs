@@ -3,7 +3,7 @@ use shipyard::{UniqueView, View, Get};
 use crate::ai::decisions::Intent;
 use crate::gamelog::GameLog;
 use crate::player::get_player_map_knowledge;
-use crate::utils::{PlayerID, PPoint, Turn};
+use crate::utils::{PlayerID, PPoint, Turn, FrameTime};
 use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
 use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::map::Map;
@@ -112,6 +112,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
 pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
     let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    let frametime = gs.world.borrow::<UniqueView<FrameTime>>().unwrap().0;
 
     let (min_x, _max_x, min_y, _max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
@@ -134,9 +135,18 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
 
     let mut ypos = OFFSET_Y;
 
+    /* Debug stuff */
+
     // ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
 
     // ypos += 2;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("PPOS: {:?}", player_pos));
+
+    ypos += 1;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Frametime: {:?}", frametime));
+
+    /* Normal stuff */
+    ypos += 2;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
     ypos += 1;
