@@ -42,16 +42,16 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
         }
 
         if !is_camera && attack {
-            dbg!("testing attack");
+            // dbg!("testing attack");
             if let Some(target) = get_target(&gs.world, &map, entity, &pos, dp) {
-                dbg!("found target");
+                // dbg!("found target");
                 vwantsattack.add_component_unchecked(entity, WantsToAttack {target});
             }
         }
 
         // do movement
         if is_camera || canmove {    
-            dbg!("can move");            
+            // dbg!("can move");            
             if let Ok(mut vs) = (&mut vvs).get(entity) {
                 vs.dirty = true;
             }
@@ -186,14 +186,14 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
                 return false;
             }
 
-            dbg!(1);
+            // dbg!(1);
             // check for entities that block
             for potential_target in map.tile_content[dest_idx].iter() {
                 if *potential_target == entity {
                     continue;
                 }
     
-                dbg!(2);
+                // dbg!(2);
                 if vblocks.get(*potential_target).is_ok() {
                     return false;
                 }
@@ -214,7 +214,7 @@ pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp
 
     // check for combat stats on entity
     if let Err(_) = vstats.get(entity) {
-        dbg!("No stats found");
+        // dbg!("No stats found");
         return None;
     }
 
@@ -225,7 +225,8 @@ pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp
             if *potential_target == entity {
                 continue;
             }
-            dbg!("does enetiy have stats");
+
+            // dbg!("does enetiy have stats");
             match vstats.get(*potential_target) {
                 Ok(_cs) => {
                     return Some(*potential_target)

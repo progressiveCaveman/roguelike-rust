@@ -3,9 +3,6 @@
 Implement a proper time system. Entities acting at slightly different times could resolve potential issues with the effects system. Do systems need to be reworked to act on one entity at a time? 
 
 Add scent system
-Refactor all (world, res) to take state instead
-Remove referneces to res and instead ask state for objects
-Make an easy way to translate between Point and (i32, i32)
 Make use of i32 and usize more consistent?
 Autoexplore sometimes doesn't explore unrevealed wall tiles
 Figure out why a lot of entities slows things down so much
