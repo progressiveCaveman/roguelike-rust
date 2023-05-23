@@ -1,5 +1,9 @@
 # TODO:
 
+Build a window/menu system in a new project and then migrate everything else with engine isolated
+
+
+
 Implement a proper time system. Entities acting at slightly different times could resolve potential issues with the effects system. Do systems need to be reworked to act on one entity at a time? 
 
 Add scent system

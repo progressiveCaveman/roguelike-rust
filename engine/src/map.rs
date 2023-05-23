@@ -9,10 +9,6 @@ use crate::components::Position;
 use crate::gui::{OFFSET_X, OFFSET_Y};
 use crate::{SCALE};
 
-use crate::{MAPWIDTH, MAPHEIGHT};
-
-pub const MAPCOUNT: usize = MAPWIDTH * MAPHEIGHT;
-
 #[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum TileType {
     Wall, Floor, StairsDown, StairsUp, Grass, Wheat, Dirt, Water, WoodWall, WoodDoor, WoodFloor

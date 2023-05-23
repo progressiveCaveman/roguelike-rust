@@ -1,9 +1,8 @@
 use rltk::RandomNumberGenerator;
 use shipyard::{View, ViewMut, IntoIter, IntoWithId, Remove, UniqueViewMut, EntityId};
-use crate::map::TileType;
+use crate::map::{TileType, Map};
 use crate::components::{CombatStats, Fire, Position};
 use crate::effects::{EffectType, Targets, add_effect};
-use crate::Map;
 
 pub const NEW_FIRE_TURNS: i32 = 10;
 
