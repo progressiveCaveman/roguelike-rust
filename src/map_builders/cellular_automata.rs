@@ -47,9 +47,9 @@ impl MapBuilder for CellularAutomataBuilder {
 }
 
 impl CellularAutomataBuilder {
-    pub fn new(new_depth : i32) -> CellularAutomataBuilder {
+    pub fn new(new_depth : i32, size: (i32, i32)) -> CellularAutomataBuilder {
         CellularAutomataBuilder{
-            map : Map::new(new_depth, TileType::Wall),
+            map : Map::new(new_depth, TileType::Wall, size),
             starting_position : Position{ ps: vec![Point{x:0, y:0}] },
             depth : new_depth,
             history: Vec::new(),

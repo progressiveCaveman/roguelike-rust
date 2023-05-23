@@ -45,8 +45,8 @@ const SHOW_MAPGEN_ANIMATION: bool = true;
 const MAPGEN_FRAME_TIME: f32 = 25.0;
 
 const TILE_SIZE: usize = 10;
-const MAPWIDTH: usize = 150;
-const MAPHEIGHT: usize = 80;
+const MAPWIDTH: usize = 1000;
+const MAPHEIGHT: usize = 500;
 const WINDOWWIDTH: usize = 160;
 const WINDOWHEIGHT: usize = 80;
 const SCALE: f32 = 1.0;
@@ -167,9 +167,9 @@ impl State {
 
         // Generate map
         let mut map_builder = match gamemode {
-            GameMode::NotSelected => map_builders::random_builder(new_depth),
-            GameMode::Sim => map_builders::village_builder(new_depth),
-            GameMode::RL => map_builders::rl_builder(new_depth),
+            GameMode::NotSelected => map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
+            GameMode::Sim => map_builders::village_world_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
+            GameMode::RL => map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
         };
 
         map_builder.build_map();
@@ -287,12 +287,6 @@ impl GameState for State {
                 {
                     let mut turn = self.world.borrow::<UniqueViewMut<Turn>>().unwrap();
                     turn.0 += 1;
-
-                    // let map = &mut self.resources.get_mut::<Map>().unwrap();
-                    // let gamemode = *self.resources.get::<GameMode>().unwrap();
-                    // if gamemode == GameMode::Sim{
-                    //     map.refresh_influence_maps(self, *turn);
-                    // }
                 }
                 self.run_systems(new_runstate);
                 new_runstate = RunState::AwaitingInput;
@@ -439,12 +433,8 @@ impl GameState for State {
             }
         }
 
-        // self.resources.insert::<RunState>(new_runstate).unwrap();
-        // self.world.add_unique(new_runstate);
         self.world.run(|mut rs: UniqueViewMut<RunState>| { *rs = new_runstate; });
-
         self.world.run(system_cleanup::run_cleanup_system);
-        // system_cleanup::run_cleanup_system(&mut self.world, &mut self.resources);
     }
 }
 
@@ -471,17 +461,17 @@ fn main() -> rltk::BError {
         wait_frames: 0
     };
 
-    gs.world.add_unique(Map::new(1, TileType::Wall));
+    gs.world.add_unique(Map::new(1, TileType::Wall, (MAPWIDTH as i32, MAPHEIGHT as i32)));
     gs.world.add_unique(PPoint(Point::new(0, 0)));
     gs.world.add_unique(Turn(0));
     gs.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
-    let player_id = gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});//entity_factory::player(&mut gs.world, (0, 0));
+    let player_id = gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});
     gs.world.add_unique(PlayerID(player_id));
 
     gs.world.add_unique(GameMode::NotSelected);
     gs.world.add_unique(RunState::MainMenu{menu_selection: gui_menus::MainMenuSelection::Roguelike});
-    gs.world.add_unique(gamelog::GameLog{messages: vec!["Welcome to the roguelike!".to_string()]});
+    gs.world.add_unique(gamelog::GameLog{messages: vec![]});
     gs.world.add_unique(system_particle::ParticleBuilder::new());
     gs.world.add_unique(FrameTime(0.));
     gs.world.add_unique(AutoRun(false));

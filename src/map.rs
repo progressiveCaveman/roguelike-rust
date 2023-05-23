@@ -39,17 +39,18 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn new(new_depth: i32, tile_type: TileType) -> Map {
+    pub fn new(new_depth: i32, tile_type: TileType, size: (i32, i32)) -> Map {
+        let count = (size.0 * size.1) as usize;
         Map {
-            tiles: vec![tile_type; MAPCOUNT],
-            width: MAPWIDTH as i32,
-            height: MAPHEIGHT as i32,
-            blocked: vec![false; MAPCOUNT],
-            fire_turns: vec![0; MAPCOUNT],
-            tile_content: vec![Vec::new(); MAPCOUNT],
+            tiles: vec![tile_type; count],
+            width: size.0,
+            height: size.1,
+            blocked: vec![false; count],
+            fire_turns: vec![0; count],
+            tile_content: vec![Vec::new(); count],
             depth: new_depth,
-            dijkstra_map: vec![-1.0; MAPCOUNT],
-            // influence_maps:vec![vec![0.0; MAPCOUNT]; 2],// todo magic numbers
+            dijkstra_map: vec![-1.0; count],
+            // influence_maps:vec![vec![0.0; count]; 2],// todo magic numbers
         }
     }
 

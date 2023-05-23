@@ -40,9 +40,9 @@ impl MapBuilder for AernaBuilder {
 }
 
 impl AernaBuilder {
-    pub fn new(new_depth : i32) -> AernaBuilder {
+    pub fn new(new_depth : i32, size: (i32, i32)) -> AernaBuilder {
         AernaBuilder{
-            map : Map::new(new_depth, TileType::Floor),
+            map : Map::new(new_depth, TileType::Floor, size),
             starting_position : Position{ ps: vec![Point{x:0, y:0}] },
             history: Vec::new(),
         }
