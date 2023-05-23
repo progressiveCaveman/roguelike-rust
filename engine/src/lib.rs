@@ -40,8 +40,8 @@ pub const SHOW_MAPGEN_ANIMATION: bool = true;
 pub const MAPGEN_FRAME_TIME: f32 = 25.0;
 
 pub const TILE_SIZE: usize = 10;
-pub const MAPWIDTH: usize = 1000;
-pub const MAPHEIGHT: usize = 500;
+pub const MAPWIDTH: usize = 200;
+pub const MAPHEIGHT: usize = 80;
 pub const WINDOWWIDTH: usize = 160;
 pub const WINDOWHEIGHT: usize = 80;
 pub const SCALE: f32 = 1.0;
@@ -77,13 +77,17 @@ pub enum RenderOrder {
     Particle
 }
 
+pub trait Renderer: 'static {
+    fn render(&self, gs: &State, ctx : &mut Rltk);
+}
+
 pub struct State {
     pub world: World,
     // resources: Resources,
     pub mapgen_data: MapGenData, 
-    pub wait_frames: i32
+    pub wait_frames: i32,
+    pub renderer: Box<dyn Renderer>
 }
-
 
 impl State {
     fn run_systems(&mut self, runstate: RunState) {
@@ -164,7 +168,7 @@ impl State {
         // Generate map
         let mut map_builder = match gamemode {
             GameMode::NotSelected => map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
-            GameMode::Sim => map_builders::village_world_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
+            GameMode::Sim => map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
             GameMode::RL => map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
         };
 
@@ -242,17 +246,10 @@ impl GameState for State {
             i.0 = ctx.frame_time_ms;
         }
 
+        self.renderer.render(self, ctx);
+
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
         // dbg!(new_runstate);
-
-        match new_runstate {
-            RunState::MainMenu{..} => {}
-            RunState::GameOver => {}
-            _ => {
-                camera::render_camera(self, ctx);
-                gui::draw_gui(self, ctx);
-            }
-        }
 
         self.world.run(system_particle::update_particles);
         effects::run_effects_queue(self);

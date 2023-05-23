@@ -1,11 +1,34 @@
-use engine::gui::gui_menus;
+use engine::gui::{gui_menus, camera, self};
 use engine::systems::system_particle;
 use engine::utils::{Turn, PPoint, RNG, FrameTime, AutoRun, PlayerID};
-use engine::{MAPWIDTH, MAPHEIGHT, entity_factory, gamelog, GameMode, RunState};
+use engine::{MAPWIDTH, MAPHEIGHT, entity_factory, gamelog, GameMode, RunState, Renderer};
 use engine::{State, map_builders::MapGenData, WINDOWWIDTH, SCALE, WINDOWHEIGHT, TILE_SIZE};
 use engine::map::{TileType, Map};
-use rltk::{Point, RltkBuilder};
-use shipyard::{World, AllStoragesViewMut};
+use rltk::{Point, RltkBuilder, Rltk};
+use shipyard::{World, AllStoragesViewMut, UniqueViewMut};
+
+pub struct Game {
+}
+impl Game {
+    fn new() -> Box<dyn Renderer> {
+        Box::new(Game { })
+    }
+}
+
+impl Renderer for Game {
+    fn render(&self, gs: &State, ctx : &mut Rltk) {
+        let new_runstate = *gs.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+
+        match new_runstate {
+            RunState::MainMenu{..} => {}
+            RunState::GameOver => {}
+            _ => {
+                camera::render_camera(gs, ctx);
+                gui::draw_gui(gs, ctx);
+            }
+        }
+    }
+}
 
 fn main() -> rltk::BError {
     println!("=========================");
@@ -27,7 +50,8 @@ fn main() -> rltk::BError {
         world: World::new(),
         // resources: Resources::default(),
         mapgen_data: MapGenData{history: Vec::new(), timer: 0.0, index: 0},
-        wait_frames: 0
+        wait_frames: 0,
+        renderer: Game::new()
     };
 
     gs.world.add_unique(Map::new(1, TileType::Wall, (MAPWIDTH as i32, MAPHEIGHT as i32)));
