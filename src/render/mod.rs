@@ -2,7 +2,7 @@ use crate::gamelog::GameLog;
 use crate::{GameMode, WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
 use engine::components::{CombatStats, Fire, Inventory, Name, Position};
-use engine::gui::{OFFSET_Y, Palette, OFFSET_X};
+use engine::gui::{Palette, OFFSET_X, OFFSET_Y};
 use engine::map::Map;
 use engine::player::get_player_map_knowledge;
 use engine::utils::{FrameTime, PPoint, PlayerID, Turn};

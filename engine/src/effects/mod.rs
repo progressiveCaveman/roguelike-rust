@@ -19,7 +19,7 @@ pub use inventory::pick_up;
 
 mod movement;
 
-use shipyard::{EntityId, Get, UniqueView, View, AllStoragesViewMut};
+use shipyard::{AllStoragesViewMut, EntityId, Get, UniqueView, View};
 
 use crate::{components::Position, map::Map};
 
@@ -78,7 +78,9 @@ pub fn run_effects_queue(mut store: AllStoragesViewMut) {
                 EffectType::Move { .. } => movement::try_move_or_attack(&store, effect, false),
                 EffectType::Wait {} => movement::skip_turn(&store, effect),
                 EffectType::Delete { .. } => delete::delete(&mut store, effect),
-                EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(&store, effect, true),
+                EffectType::MoveOrAttack { .. } => {
+                    movement::try_move_or_attack(&store, effect, true)
+                }
             }
         } else {
             // this happens when the queue is empty

@@ -1,16 +1,16 @@
-use engine::components::{Ranged, WantsToDropItem, WantsToUseItem, WantsToUnequipItem};
+use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUseItem};
 use engine::gui::{self};
 use engine::systems::{system_cleanup, system_particle};
-use engine::utils::{PlayerID, Turn, FrameTime};
-use engine::{ gamelog, GameMode, effects, Engine};
+use engine::utils::{FrameTime, PlayerID, Turn};
+use engine::{effects, gamelog, Engine, GameMode};
 use engine::{map_builders::MapGenData, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
 use render::{camera, gui_menus};
-use rltk::{ Rltk, RltkBuilder, GameState, RGBA};
-use shipyard::{ UniqueViewMut, World, UniqueView, EntityId, ViewMut, Get};
+use rltk::{GameState, Rltk, RltkBuilder, RGBA};
+use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
 
+pub mod input_handler;
 pub mod menus;
 pub mod render;
-pub mod input_handler;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum RunState {
@@ -75,7 +75,7 @@ impl GameState for State {
 
         // self.engine_controller.update(&mut self.world, ctx);
 
-        let mut new_runstate = self.state;//*self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+        let mut new_runstate = self.state; //*self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
         let world = &mut self.world;
         let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
@@ -86,14 +86,22 @@ impl GameState for State {
 
         match new_runstate {
             RunState::PreRun => {
-                Engine::run_systems(world, new_runstate == RunState::PlayerTurn, new_runstate == RunState::AiTurn);
+                Engine::run_systems(
+                    world,
+                    new_runstate == RunState::PlayerTurn,
+                    new_runstate == RunState::AiTurn,
+                );
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
                 new_runstate = input_handler::handle_input(&world, ctx);
             }
             RunState::PlayerTurn => {
-                Engine::run_systems(world, new_runstate == RunState::PlayerTurn, new_runstate == RunState::AiTurn);
+                Engine::run_systems(
+                    world,
+                    new_runstate == RunState::PlayerTurn,
+                    new_runstate == RunState::AiTurn,
+                );
                 new_runstate = RunState::AiTurn;
             }
             RunState::AiTurn => {
@@ -101,7 +109,11 @@ impl GameState for State {
                     let mut turn = world.borrow::<UniqueViewMut<Turn>>().unwrap();
                     turn.0 += 1;
                 }
-                Engine::run_systems(world, new_runstate == RunState::PlayerTurn, new_runstate == RunState::AiTurn);
+                Engine::run_systems(
+                    world,
+                    new_runstate == RunState::PlayerTurn,
+                    new_runstate == RunState::AiTurn,
+                );
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
@@ -139,20 +151,17 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            world
-                                .add_component(*id, WantsToUseItem { item, target: None });
+                            world.add_component(*id, WantsToUseItem { item, target: None });
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
                         let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        world
-                            .add_component(player_id, WantsToDropItem { item });
+                        world.add_component(player_id, WantsToDropItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
                         let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        world
-                            .add_component(player_id, WantsToUnequipItem { item });
+                        world.add_component(player_id, WantsToUnequipItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Cancel => {

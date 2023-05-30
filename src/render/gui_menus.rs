@@ -1,7 +1,7 @@
-use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use crate::gui::{ItemMenuResult, Palette};
+use crate::RunState;
+use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use engine::utils::PlayerID;
-use crate::{RunState};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{EntityId, Get, IntoIter, IntoWithId, UniqueView, View, World};
@@ -51,7 +51,8 @@ pub fn main_menu(ctx: &mut Rltk, runstate: RunState) -> MainMenuResult {
 
     if let RunState::MainMenu {
         menu_selection: selection,
-    } = runstate {
+    } = runstate
+    {
         ctx.print_color_centered(
             25,
             get_fg(selection, MainMenuSelection::Roguelike),
@@ -199,15 +200,14 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
 
     // Items equipped
     // let mut query = world.query::<(&Equipped, &Name)>();
-    let equipped_count = world
-        .run(|vplayer: View<Player>, vequipped: View<Equipped>| {
-            let mut count = 0;
-            for (_, _) in (&vplayer, &vequipped).iter() {
-                count += 1;
-            }
-            count
-        }); //query.iter().filter(|item| item.1.0.owner == *player_id);
-            // let equipped_count = equipped_items.count();
+    let equipped_count = world.run(|vplayer: View<Player>, vequipped: View<Equipped>| {
+        let mut count = 0;
+        for (_, _) in (&vplayer, &vequipped).iter() {
+            count += 1;
+        }
+        count
+    }); //query.iter().filter(|item| item.1.0.owner == *player_id);
+        // let equipped_count = equipped_items.count();
 
     let mut y = 25 - (equipped_count / 2);
     ctx.draw_box(
@@ -222,50 +222,49 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let equipped: Vec<EntityId> = world
-        .run(|vewquipped: View<Equipped>, vname: View<Name>| {
-            let mut equipped: Vec<EntityId> = Vec::new();
-            for (j, (id, (_pack, name))) in (&vewquipped, &vname)
-                .iter()
-                .with_id()
-                .filter(|item| item.1 .0.owner == player_id)
-                .enumerate()
-            {
-                let offset = j + backpack_count;
-                ctx.set(
-                    47,
-                    y,
-                    Palette::MAIN_FG,
-                    Palette::MAIN_BG,
-                    rltk::to_cp437('('),
-                );
-                ctx.set(
-                    48,
-                    y,
-                    Palette::COLOR_PURPLE,
-                    Palette::MAIN_BG,
-                    97 + offset as rltk::FontCharType,
-                );
-                ctx.set(
-                    49,
-                    y,
-                    Palette::MAIN_FG,
-                    Palette::MAIN_BG,
-                    rltk::to_cp437(')'),
-                );
+    let equipped: Vec<EntityId> = world.run(|vewquipped: View<Equipped>, vname: View<Name>| {
+        let mut equipped: Vec<EntityId> = Vec::new();
+        for (j, (id, (_pack, name))) in (&vewquipped, &vname)
+            .iter()
+            .with_id()
+            .filter(|item| item.1 .0.owner == player_id)
+            .enumerate()
+        {
+            let offset = j + backpack_count;
+            ctx.set(
+                47,
+                y,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                rltk::to_cp437('('),
+            );
+            ctx.set(
+                48,
+                y,
+                Palette::COLOR_PURPLE,
+                Palette::MAIN_BG,
+                97 + offset as rltk::FontCharType,
+            );
+            ctx.set(
+                49,
+                y,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                rltk::to_cp437(')'),
+            );
 
-                ctx.print_color(
-                    51,
-                    y,
-                    Palette::MAIN_FG,
-                    Palette::MAIN_BG,
-                    &name.name.to_string(),
-                );
-                equipped.push(id);
-                y += 1;
-            }
-            equipped
-        });
+            ctx.print_color(
+                51,
+                y,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                &name.name.to_string(),
+            );
+            equipped.push(id);
+            y += 1;
+        }
+        equipped
+    });
 
     match ctx.key {
         None => (ItemMenuResult::NoResponse, None),

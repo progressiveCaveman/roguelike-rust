@@ -1,9 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-use components::{
-    Equipped, InBackpack, Player, Position, Viewshed, IsCamera,
-};
+use components::{Equipped, InBackpack, IsCamera, Player, Position, Viewshed};
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use map::{Map, TileType};
@@ -32,9 +30,9 @@ use shipyard::{
     ViewMut, World,
 };
 use systems::{
-    system_ai_fish, system_ai_monster, system_ai_spawner, system_ai_villager,
-    system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_particle,
-    system_pathfinding, system_visibility,
+    system_ai_fish, system_ai_monster, system_ai_spawner, system_ai_villager, system_dissasemble,
+    system_fire, system_map_indexing, system_melee_combat, system_particle, system_pathfinding,
+    system_visibility,
 };
 use utils::{FrameTime, PPoint, PlayerID, Turn, RNG};
 
@@ -56,8 +54,6 @@ pub enum GameMode {
     Sim,
     RL,
 }
-
-
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum RenderOrder {
@@ -230,13 +226,13 @@ impl Engine {
 
             match mode {
                 GameMode::Sim => {
-                    if player_is_alive{
+                    if player_is_alive {
                         store.add_component(player_id, IsCamera {});
                     }
-                },
+                }
                 _ => {
                     store.delete_component::<IsCamera>(player_id);
-                },
+                }
             }
 
             let mut gamemode = store.borrow::<UniqueViewMut<GameMode>>().unwrap();
@@ -257,11 +253,11 @@ impl Engine {
         world.add_unique(PPoint(Point::new(0, 0)));
         world.add_unique(Turn(0));
         world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
-    
-        let player_id = world
-            .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
+
+        let player_id =
+            world.run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
         world.add_unique(PlayerID(player_id));
-    
+
         world.add_unique(GameMode::NotSelected);
         world.add_unique(gamelog::GameLog { messages: vec![] });
         world.add_unique(system_particle::ParticleBuilder::new());
@@ -269,5 +265,5 @@ impl Engine {
 
         // Generate new map
         Self::generate_map(world, 1);
-    } 
+    }
 }
