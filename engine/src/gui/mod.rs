@@ -1,9 +1,9 @@
 use crate::components::Viewshed;
 use crate::map::Map;
 use crate::utils::{PPoint, PlayerID};
-use crate::{State, MAPHEIGHT, MAPWIDTH, SCALE};
+use crate::{MAPHEIGHT, MAPWIDTH, SCALE};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB, RGBA};
-use shipyard::{Get, UniqueView, View};
+use shipyard::{Get, UniqueView, View, World};
 
 pub mod gui_menus;
 pub use gui_menus::*;
@@ -137,10 +137,10 @@ impl Palette {
     ];
 }
 
-pub fn ranged_target(gs: &State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
-    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+    let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
     ctx.print_color(
         5,
         12,
@@ -152,7 +152,7 @@ pub fn ranged_target(gs: &State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult,
     let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
 
     let mut valid_cells: Vec<Point> = Vec::new();
-    let vvs = gs.world.borrow::<View<Viewshed>>().unwrap();
+    let vvs = world.borrow::<View<Viewshed>>().unwrap();
     match vvs.get(player_id) {
         Err(_e) => return (ItemMenuResult::Cancel, None),
         Ok(player_vs) => {

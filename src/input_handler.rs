@@ -1,24 +1,23 @@
 use std::collections::HashMap;
 
-use crate::{
+use engine::{
     components::Item,
     effects::{add_effect, EffectType},
     entity_factory,
     map::Map,
     player,
-    utils::{dir_to_point, AutoRun, PPoint, PlayerID},
-    GameMode, RunState, State,
+    utils::{dir_to_point, PPoint, PlayerID},
+    GameMode, RunState,
 };
 use rltk::{Rltk, VirtualKeyCode};
-use shipyard::{AllStoragesViewMut, Get, UniqueView, UniqueViewMut, View};
+use shipyard::{AllStoragesViewMut, Get, UniqueView, UniqueViewMut, View, World};
 
-pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
-    let game_mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let mut autorun = gs.world.borrow::<UniqueViewMut<AutoRun>>().unwrap();
+pub fn handle_input(world: &World, ctx: &Rltk) -> RunState {
+    let game_mode = world.borrow::<UniqueView<GameMode>>().unwrap();
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
 
-    let player_id = gs.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+    let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
     let player_pos_idx = map.point_idx(player_pos);
 
     // hold shift to move by 10 squares at a time
@@ -93,7 +92,6 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                     ),
                     VirtualKeyCode::W => return RunState::PlayerTurn,
                     VirtualKeyCode::Escape => return RunState::EscPressed,
-                    VirtualKeyCode::Space => autorun.0 = !autorun.0,
                     _ => return RunState::AwaitingInput,
                 },
             }
@@ -152,7 +150,7 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                         },
                     ),
                     VirtualKeyCode::G => {
-                        gs.world.run(|vitem: View<Item>| {
+                        world.run(|vitem: View<Item>| {
                             for e in map.tile_content[player_pos_idx].iter() {
                                 if let Ok(_) = vitem.get(*e) {
                                     add_effect(Some(player_id), EffectType::PickUp { entity: *e });
@@ -161,11 +159,11 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                         });
                     } //add_effect(Some(player_id), EffectType::PickUp { entity: EntityId::default() }, Targets::Tile { tile_idx: player_pos_idx}),
                     VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}),
-                    VirtualKeyCode::R => player::reveal_map(gs),
+                    VirtualKeyCode::R => player::reveal_map(world),
                     VirtualKeyCode::F => {
                         return RunState::ShowTargeting {
                             range: 6,
-                            item: gs.world.run(|mut store: AllStoragesViewMut| {
+                            item: world.run(|mut store: AllStoragesViewMut| {
                                 entity_factory::tmp_fireball(&mut store)
                             }),
                         }
@@ -174,7 +172,7 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                     VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}),
                     VirtualKeyCode::Escape => return RunState::EscPressed,
                     VirtualKeyCode::Period => {
-                        if player::try_next_level(gs) {
+                        if player::try_next_level(world) {
                             return RunState::NextLevel;
                         }
                     }

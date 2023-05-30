@@ -172,9 +172,6 @@ pub struct PPoint(pub Point);
 #[derive(Clone, Debug, Unique, Copy)]
 pub struct FrameTime(pub f32);
 
-#[derive(Clone, Debug, Unique, Copy)]
-pub struct AutoRun(pub bool);
-
 pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath {
     let path = rltk::a_star_search(map.point_idx(from) as i32, map.point_idx(tp) as i32, map);
 

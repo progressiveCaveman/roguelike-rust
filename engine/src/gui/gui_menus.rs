@@ -1,7 +1,7 @@
 use crate::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use crate::gui::{ItemMenuResult, Palette};
 use crate::utils::PlayerID;
-use crate::{RunState, State};
+use crate::{RunState};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{EntityId, Get, IntoIter, IntoWithId, UniqueView, View, World};
@@ -33,8 +33,8 @@ pub enum GameOverResult {
     QuitToMenu,
 }
 
-pub fn main_menu(gs: &State, ctx: &mut Rltk) -> MainMenuResult {
-    let runstate = gs.world.borrow::<UniqueView<RunState>>().unwrap();
+pub fn main_menu(world: &World, ctx: &mut Rltk) -> MainMenuResult {
+    let runstate = world.borrow::<UniqueView<RunState>>().unwrap();
 
     let get_fg = |sel, menu_item| {
         if sel == menu_item {
@@ -135,14 +135,14 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
     }
 }
 
-pub fn show_inventory(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
-    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
     dbg!("Inventory display code is outdated");
     // Items in backpack
     // let mut query = //world.query::<(&InBackpack, &Name)>();
-    let vinv = gs.world.borrow::<View<Inventory>>().unwrap();
-    let inventory = vinv.get(player_id).unwrap(); //gs.world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
+    let vinv = world.borrow::<View<Inventory>>().unwrap();
+    let inventory = vinv.get(player_id).unwrap(); //world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
     let backpack_count = inventory.items.len();
     let mut y = 25 - (backpack_count / 2);
     ctx.draw_box(
@@ -157,7 +157,7 @@ pub fn show_inventory(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Ent
     let title = "Inventory";
     ctx.print_color(13, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let useable: Vec<EntityId> = gs.world.run(|vpack: View<InBackpack>, vname: View<Name>| {
+    let useable: Vec<EntityId> = world.run(|vpack: View<InBackpack>, vname: View<Name>| {
         let mut useable: Vec<EntityId> = Vec::new();
         for (j, (id, (_pack, name))) in (&vpack, &vname)
             .iter()
@@ -202,8 +202,7 @@ pub fn show_inventory(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Ent
 
     // Items equipped
     // let mut query = world.query::<(&Equipped, &Name)>();
-    let equipped_count = gs
-        .world
+    let equipped_count = world
         .run(|vplayer: View<Player>, vequipped: View<Equipped>| {
             let mut count = 0;
             for (_, _) in (&vplayer, &vequipped).iter() {
@@ -226,8 +225,7 @@ pub fn show_inventory(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Ent
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
 
-    let equipped: Vec<EntityId> = gs
-        .world
+    let equipped: Vec<EntityId> = world
         .run(|vewquipped: View<Equipped>, vname: View<Name>| {
             let mut equipped: Vec<EntityId> = Vec::new();
             for (j, (id, (_pack, name))) in (&vewquipped, &vname)
