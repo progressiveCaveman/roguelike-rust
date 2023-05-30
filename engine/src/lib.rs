@@ -92,6 +92,7 @@ pub enum RenderOrder {
 }
 
 pub trait EngineController: 'static {
+    fn start(&self, world: &mut World);
     fn render(&self, gs: &State, ctx: &mut Rltk);
     fn update(&self, world: &mut World, ctx: &mut Rltk);
 }
@@ -312,7 +313,7 @@ impl GameState for State {
         if self.first_run {
             self.first_run = false;
 
-            GameTools::reset_engine(&mut self.world);
+            self.engine_controller.start(&mut self.world);
         }
 
         ctx.set_active_console(1);

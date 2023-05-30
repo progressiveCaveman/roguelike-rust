@@ -213,6 +213,10 @@ impl EngineController for Game {
         });
         world.run(system_cleanup::run_cleanup_system);
     }
+
+    fn start(&self, world: &mut World) {
+        GameTools::reset_engine(world);
+    }
 }
 
 fn main() -> rltk::BError {
