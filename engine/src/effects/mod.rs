@@ -81,7 +81,7 @@ pub fn run_effects_queue(mut store: AllStoragesViewMut) {
                 EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(&store, effect, true),
             }
         } else {
-            dbg!("breaking loop");
+            // this happens when the queue is empty
             break;
         }
     }

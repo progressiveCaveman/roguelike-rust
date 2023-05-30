@@ -4,15 +4,15 @@ use crate::components::{
     AreaOfEffect, BlocksTile, ChiefHouse, CombatStats, Confusion, Consumable, DealsDamage,
     DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, Fish, FishCleaner, Flammable,
     Inventory, Item, ItemType, LocomotionType, Locomotive, LumberMill, MeleeDefenseBonus,
-    MeleePowerBonus, Monster, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
-    Renderable, SerializeMe, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Villager,
+    MeleePowerBonus, Monster, Name, PlankHouse, Position, ProvidesHealing, Ranged,
+    Renderable, SerializeMe, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Villager, Player,
 };
 use crate::gui::Palette;
 use crate::map::{Map, TileType};
 use crate::rect::Rect;
 use crate::systems::system_fire::NEW_FIRE_TURNS;
 use crate::weighted_table::WeightedTable;
-use crate::RenderOrder;
+use crate::{RenderOrder};
 use crate::MAPWIDTH;
 use rltk::{DijkstraMap, Point, RandomNumberGenerator};
 use shipyard::{AllStoragesViewMut, EntityId};

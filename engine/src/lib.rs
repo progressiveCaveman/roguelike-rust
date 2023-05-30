@@ -3,11 +3,11 @@ extern crate lazy_static;
 
 use components::{
     Equipped, InBackpack, Player, Position, Ranged, Viewshed, WantsToDropItem, WantsToUnequipItem,
-    WantsToUseItem,
+    WantsToUseItem, IsCamera,
 };
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
-use map::Map;
+use map::{Map, TileType};
 use rltk::RGBA;
 use rltk::{GameState, Point, Rltk};
 
@@ -41,7 +41,7 @@ use systems::{
     system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_particle,
     system_pathfinding, system_visibility,
 };
-use utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn};
+use utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn, RNG};
 
 pub mod effects;
 
@@ -79,7 +79,7 @@ pub enum RunState {
     MainMenu {
         menu_selection: gui_menus::MainMenuSelection,
     },
-    SaveGame,
+    EscPressed,
     NextLevel,
     GameOver,
     MapGenAnimation,
@@ -103,6 +103,7 @@ pub struct State {
     pub mapgen_data: MapGenData,
     pub wait_frames: i32,
     pub engine_controller: Box<dyn EngineController>,
+    pub first_run: bool,
 }
 
 impl State {
@@ -251,24 +252,73 @@ impl State {
             .push("You descend in the staircase".to_string());
     }
 
-    fn game_over_cleanup(&mut self) {
+    fn set_game_mode(&mut self, mode: GameMode) {
+        self.world.run(|mut store: AllStoragesViewMut| {
+            let player_id: EntityId = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
+            let player_is_alive = {
+                let entities = store.borrow::<EntitiesView>().unwrap();
+                entities.is_alive(player_id)
+            };
+
+            dbg!(player_is_alive);
+
+            match mode {
+                GameMode::Sim => {
+                    if player_is_alive{
+                        store.add_component(player_id, IsCamera {});
+                    }
+                },
+                _ => {
+                    store.delete_component::<IsCamera>(player_id);
+                },
+            }
+
+            let mut gamemode = store.borrow::<UniqueViewMut<GameMode>>().unwrap();
+            *gamemode = mode;
+        });
+    }
+
+    pub fn reset_engine(&mut self) {
         // Delete everything
         self.world.clear();
 
-        // Create player
-        let player_id = self
-            .world
-            .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
+        // Re-add defaults for all uniques
+        self.world.add_unique(Map::new(
+            1,
+            TileType::Wall,
+            (MAPWIDTH as i32, MAPHEIGHT as i32),
+        ));
         self.world.add_unique(PPoint(Point::new(0, 0)));
+        self.world.add_unique(Turn(0));
+        self.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
+    
+        let player_id = self.world
+            .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
         self.world.add_unique(PlayerID(player_id));
+    
+        self.world.add_unique(GameMode::NotSelected);
+        self.world.add_unique(RunState::MainMenu {
+            menu_selection: gui_menus::MainMenuSelection::Roguelike,
+        });
+        self.world.add_unique(gamelog::GameLog { messages: vec![] });
+        self.world.add_unique(system_particle::ParticleBuilder::new());
+        self.world.add_unique(FrameTime(0.));
+        self.world.add_unique(AutoRun(false));
+
 
         // Generate new map
         self.generate_map(1);
-    }
+    } 
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
+        if self.first_run {
+            self.first_run = false;
+
+            self.reset_engine();
+        }
+
         ctx.set_active_console(1);
         // write transparent bg
         let (x, y) = ctx.get_char_size();
@@ -297,6 +347,7 @@ impl GameState for State {
         self.engine_controller.render(self, ctx);
 
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+        let player_id = self.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
         // dbg!(new_runstate);
 
         self.world.run(system_particle::update_particles);
@@ -351,8 +402,6 @@ impl GameState for State {
                     gui_menus::ItemActionSelection::Used => {
                         let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
-                            let player_id =
-                                self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                             let vranged = self.world.borrow::<ViewMut<Ranged>>().unwrap();
                             match vranged.get(item) {
                                 Ok(is_item_ranged) => {
@@ -418,48 +467,25 @@ impl GameState for State {
                     }
                     gui_menus::MainMenuResult::Selection { selected } => match selected {
                         gui_menus::MainMenuSelection::Roguelike => {
-                            {
-                                let mut gamemode =
-                                    self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
-                                *gamemode = GameMode::RL;
-                            }
+                            self.set_game_mode(GameMode::RL);
                             self.generate_map(1);
 
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Simulator => {
-                            {
-                                let mut gamemode =
-                                    self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
-                                *gamemode = GameMode::Sim;
-                            }
+                            self.set_game_mode(GameMode::Sim);
                             self.generate_map(1);
 
                             new_runstate = RunState::MapGenAnimation
                         }
-                        gui_menus::MainMenuSelection::LoadGame => new_runstate = RunState::PreRun,
                         gui_menus::MainMenuSelection::Exit => ::std::process::exit(0),
                     },
                 }
             }
-            RunState::SaveGame => {
-                /*
-                let data = serde_json::to_string(&*self.resources.get::<Map>().unwrap()).unwrap();
-                println!("{}", data);
-
-                let c: Context;
-                let mut writer = Vec::with_capacity(128);
-                let s = serde_json::Serializer::new(writer);
-                hecs::serialize::row::serialize(&self.world, &mut c, s);
-
-                for (id, _s) in self.world.query_mut::<&SerializeMe>() {
-                    println!("{:?}", id);
-                }
-                */
-                println!("Saving game... TODO");
-                self.game_over_cleanup();
+            RunState::EscPressed => {
+                self.reset_engine();
                 new_runstate = RunState::MainMenu {
-                    menu_selection: gui_menus::MainMenuSelection::LoadGame,
+                    menu_selection: gui_menus::MainMenuSelection::Roguelike,
                 };
             }
             RunState::NextLevel => {
@@ -471,7 +497,7 @@ impl GameState for State {
                 match result {
                     gui_menus::GameOverResult::NoSelection => {}
                     gui_menus::GameOverResult::QuitToMenu => {
-                        self.game_over_cleanup();
+                        self.reset_engine();
                         new_runstate = RunState::MainMenu {
                             menu_selection: gui_menus::MainMenuSelection::Roguelike,
                         };

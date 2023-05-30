@@ -1,16 +1,13 @@
-use engine::gui::gui_menus;
-use engine::map::{Map, TileType};
-use engine::systems::system_particle;
-use engine::utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn, RNG};
-use engine::{entity_factory, gamelog, EngineController, GameMode, RunState, MAPHEIGHT, MAPWIDTH};
+use engine::{ gamelog, EngineController, GameMode, RunState};
 use engine::{map_builders::MapGenData, State, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
 use render::camera;
-use rltk::{Point, Rltk, RltkBuilder};
-use shipyard::{AllStoragesViewMut, UniqueViewMut, World};
+use rltk::{ Rltk, RltkBuilder};
+use shipyard::{ UniqueViewMut, World};
 
 pub mod render;
 
 pub struct Game {}
+
 impl Game {
     fn new() -> Box<dyn EngineController> {
         Box::new(Game {})
@@ -32,7 +29,7 @@ impl EngineController for Game {
     }
 
     fn update(&self, gs: &State) {
-        dbg!("update");
+        // dbg!("update");
     }
 }
 
@@ -63,30 +60,8 @@ fn main() -> rltk::BError {
         },
         wait_frames: 0,
         engine_controller: Game::new(),
+        first_run: true,
     };
-
-    gs.world.add_unique(Map::new(
-        1,
-        TileType::Wall,
-        (MAPWIDTH as i32, MAPHEIGHT as i32),
-    ));
-    gs.world.add_unique(PPoint(Point::new(0, 0)));
-    gs.world.add_unique(Turn(0));
-    gs.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
-
-    let player_id = gs
-        .world
-        .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
-    gs.world.add_unique(PlayerID(player_id));
-
-    gs.world.add_unique(GameMode::NotSelected);
-    gs.world.add_unique(RunState::MainMenu {
-        menu_selection: gui_menus::MainMenuSelection::Roguelike,
-    });
-    gs.world.add_unique(gamelog::GameLog { messages: vec![] });
-    gs.world.add_unique(system_particle::ParticleBuilder::new());
-    gs.world.add_unique(FrameTime(0.));
-    gs.world.add_unique(AutoRun(false));
 
     rltk::main_loop(context, gs)
 }

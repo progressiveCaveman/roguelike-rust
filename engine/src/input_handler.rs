@@ -92,7 +92,7 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                         },
                     ),
                     VirtualKeyCode::W => return RunState::PlayerTurn,
-                    VirtualKeyCode::Escape => return RunState::SaveGame,
+                    VirtualKeyCode::Escape => return RunState::EscPressed,
                     VirtualKeyCode::Space => autorun.0 = !autorun.0,
                     _ => return RunState::AwaitingInput,
                 },
@@ -172,7 +172,7 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                     }
                     VirtualKeyCode::I => return RunState::ShowInventory,
                     VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}),
-                    VirtualKeyCode::Escape => return RunState::SaveGame,
+                    VirtualKeyCode::Escape => return RunState::EscPressed,
                     VirtualKeyCode::Period => {
                         if player::try_next_level(gs) {
                             return RunState::NextLevel;

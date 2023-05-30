@@ -20,7 +20,6 @@ pub enum ItemActionSelection {
 pub enum MainMenuSelection {
     Roguelike,
     Simulator,
-    LoadGame,
     Exit,
 }
 
@@ -70,12 +69,6 @@ pub fn main_menu(gs: &State, ctx: &mut Rltk) -> MainMenuResult {
         );
         ctx.print_color_centered(
             35,
-            get_fg(selection, MainMenuSelection::LoadGame),
-            Palette::MAIN_BG,
-            "Load game",
-        );
-        ctx.print_color_centered(
-            40,
             get_fg(selection, MainMenuSelection::Exit),
             Palette::MAIN_BG,
             "Exit",
@@ -98,14 +91,14 @@ pub fn main_menu(gs: &State, ctx: &mut Rltk) -> MainMenuResult {
                         let sel: i8 = selection.into();
                         // TODO: use len of menu selections instead of hard coded 3
                         let new_sel =
-                            MainMenuSelection::try_from((sel - 1i8).rem_euclid(4)).unwrap();
+                            MainMenuSelection::try_from((sel - 1i8).rem_euclid(3)).unwrap();
                         return MainMenuResult::NoSelection { selected: new_sel };
                     }
                     VirtualKeyCode::Down => {
                         let sel: i8 = selection.into();
                         // TODO: use len of menu selections instead of hard coded 3
                         let new_sel =
-                            MainMenuSelection::try_from((sel + 1i8).rem_euclid(4)).unwrap();
+                            MainMenuSelection::try_from((sel + 1i8).rem_euclid(3)).unwrap();
                         return MainMenuResult::NoSelection { selected: new_sel };
                     }
                     VirtualKeyCode::Return => {

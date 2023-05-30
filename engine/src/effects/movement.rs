@@ -1,20 +1,18 @@
 use rltk::{DijkstraMap, Point};
-use shipyard::{AddComponent, Get, UniqueView, UniqueViewMut, View, ViewMut};
+use shipyard::{AddComponent, Get, UniqueViewMut, View, ViewMut};
 
 use super::*;
 use crate::{
     components::{
         BlocksTile, CombatStats, Fire, LocomotionType, Locomotive, Player, Position,
-        SpatialKnowledge, Viewshed, WantsToAttack,
+        SpatialKnowledge, Viewshed, WantsToAttack, IsCamera,
     },
     map::{Map, TileType},
     utils::{dijkstra_backtrace, normalize, point_plus, PPoint},
-    GameMode,
 };
 
 pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, attack: bool) {
     let mut map = store.borrow::<UniqueViewMut<Map>>().unwrap();
-    let mode = store.borrow::<UniqueView<GameMode>>().unwrap();
 
     let mut vpos = store.borrow::<ViewMut<Position>>().unwrap();
     let mut vvs = store.borrow::<ViewMut<Viewshed>>().unwrap();
@@ -23,6 +21,10 @@ pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, at
     let entity = effect.creator.unwrap();
     let is_player = store.run(|vplayer: View<Player>| {
         return vplayer.get(entity).is_ok();
+    });
+
+    let is_camera = store.run(|vcamera: View<IsCamera> | {
+        return vcamera.get(entity).is_ok();
     });
 
     let tile_idx = if let EffectType::Move { tile_idx } = effect.effect_type {
@@ -41,13 +43,6 @@ pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, at
         };
 
         let canmove = can_move(&store, &map, entity, &pos, dp);
-
-        // In Sim mode, player is basically just a camera object
-        let mut is_camera = false;
-        if is_player && *mode == GameMode::Sim {
-            is_camera = true;
-            dbg!("is camera");
-        }
 
         if !is_camera && attack {
             // dbg!("testing attack");

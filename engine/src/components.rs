@@ -195,6 +195,9 @@ pub struct DijkstraMapToMe {
     pub map: DijkstraMap,
 }
 
+#[derive(Component)]
+pub struct IsCamera {}
+
 /// Entity intents
 
 #[derive(Component, Clone, Copy)]
