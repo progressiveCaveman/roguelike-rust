@@ -1,14 +1,16 @@
 use engine::components::{Ranged, WantsToDropItem, WantsToUseItem, WantsToUnequipItem};
 use engine::gui::{gui_menus, self};
 use engine::systems::{system_cleanup, system_particle};
-use engine::utils::{PlayerID, Turn};
+use engine::utils::{PlayerID, Turn, FrameTime};
 use engine::{ gamelog, EngineController, GameMode, RunState, effects, GameTools};
-use engine::{map_builders::MapGenData, State, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
+use engine::{map_builders::MapGenData, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
 use render::camera;
-use rltk::{ Rltk, RltkBuilder};
+use rltk::{ Rltk, RltkBuilder, GameState, RGBA};
 use shipyard::{ UniqueViewMut, World, UniqueView, EntityId, ViewMut, Get};
 
+pub mod menus;
 pub mod render;
+pub mod input_handler;
 
 pub struct Game {}
 
@@ -19,17 +21,21 @@ impl Game {
 }
 
 impl EngineController for Game {
-    fn render(&self, gs: &State, ctx: &mut Rltk) {
-        let new_runstate = *gs.world.borrow::<UniqueViewMut<RunState>>().unwrap();
+    // fn render(&self, gs: &State, ctx: &mut Rltk) {
+    //     let new_runstate = *gs.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
-        match new_runstate {
-            RunState::MainMenu { .. } => {}
-            RunState::GameOver => {}
-            _ => {
-                camera::render_camera(gs, ctx);
-                render::draw_gui(gs, ctx);
-            }
-        }
+    //     match new_runstate {
+    //         RunState::MainMenu { .. } => {}
+    //         RunState::GameOver => {}
+    //         _ => {
+    //             camera::render_camera(gs, ctx);
+    //             render::draw_gui(gs, ctx);
+    //         }
+    //     }
+    // }
+
+    fn start(&self, world: &mut World) {
+        GameTools::reset_engine(world);
     }
 
     fn update(&self, world: &mut World, ctx: &mut Rltk) {
@@ -212,10 +218,52 @@ impl EngineController for Game {
             *rs = new_runstate;
         });
         world.run(system_cleanup::run_cleanup_system);
-    }
 
-    fn start(&self, world: &mut World) {
-        GameTools::reset_engine(world);
+        //now render
+        camera::render_camera(world, ctx);
+        render::draw_gui(world, ctx);
+    }
+}
+
+pub struct State {
+    pub world: World,
+    pub mapgen_data: MapGenData,
+    pub engine_controller: Box<dyn EngineController>,
+    pub first_run: bool,
+}
+
+impl GameState for State {
+    fn tick(&mut self, ctx: &mut Rltk) {
+        if self.first_run {
+            self.first_run = false;
+
+            self.engine_controller.start(&mut self.world);
+        }
+
+        ctx.set_active_console(1);
+        // write transparent bg
+        let (x, y) = ctx.get_char_size();
+        for ix in 0..x {
+            for iy in 0..y {
+                ctx.set(
+                    ix,
+                    iy,
+                    RGBA::from_u8(0, 0, 0, 0),
+                    RGBA::from_u8(0, 0, 0, 0),
+                    32,
+                )
+            }
+        }
+
+        ctx.set_active_console(0);
+        ctx.cls();
+
+        {
+            let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
+            i.0 = ctx.frame_time_ms;
+        }
+
+        self.engine_controller.update(&mut self.world, ctx);
     }
 }
 

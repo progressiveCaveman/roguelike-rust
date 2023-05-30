@@ -6,11 +6,9 @@ use crate::components::{SpatialKnowledge, Viewshed};
 use crate::gamelog::GameLog;
 use crate::map::{Map, TileType};
 use crate::utils::{PPoint, PlayerID};
-use crate::State;
 
-pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<EntityId>)> {
-    let world = &gs.world;
-    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+pub fn get_player_map_knowledge(world: &World) -> HashMap<usize, (TileType, Vec<EntityId>)> {
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
     if let Ok(vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
         if let Ok(space) = vspace.get(player_id) {
@@ -21,9 +19,8 @@ pub fn get_player_map_knowledge(gs: &State) -> HashMap<usize, (TileType, Vec<Ent
     HashMap::new()
 }
 
-pub fn get_player_viewshed(gs: &State) -> Viewshed {
-    let world = &gs.world;
-    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+pub fn get_player_viewshed(world: &World) -> Viewshed {
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
     let vvs = world.borrow::<ViewMut<Viewshed>>().unwrap();
 

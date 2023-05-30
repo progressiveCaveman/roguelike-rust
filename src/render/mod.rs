@@ -1,5 +1,5 @@
 use crate::gamelog::GameLog;
-use crate::{GameMode, State, WINDOWHEIGHT, WINDOWWIDTH};
+use crate::{GameMode, WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
 use engine::components::{CombatStats, Fire, Inventory, Name, Position};
 use engine::gui::{OFFSET_Y, Palette, OFFSET_X};
@@ -8,18 +8,18 @@ use engine::player::get_player_map_knowledge;
 use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
 use engine::{MAPHEIGHT, MAPWIDTH, SCALE};
 use rltk::{Point, Rltk};
-use shipyard::{Get, UniqueView, View};
+use shipyard::{Get, UniqueView, View, World};
 
 pub mod camera;
 pub use camera::*;
 
-pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
-    let world = &gs.world;
+pub fn draw_gui(world: &World, ctx: &mut Rltk) {
+    let world = &world;
 
-    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let vstats = world.borrow::<View<CombatStats>>().unwrap();
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let turn = world.borrow::<UniqueView<Turn>>().unwrap();
 
     let hp_gui = if let Ok(player_stats) = vstats.get(player_id) {
         format!("{} / {} HP", player_stats.hp, player_stats.max_hp)
@@ -67,7 +67,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     }
 
     // message log
-    let log = gs.world.borrow::<UniqueView<GameLog>>().unwrap();
+    let log = world.borrow::<UniqueView<GameLog>>().unwrap();
     let mut y = 1;
     for m in log.messages.iter().rev() {
         if y < 9 {
@@ -76,7 +76,7 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
         y += 1;
     }
 
-    draw_tooltips(gs, ctx);
+    draw_tooltips(world, ctx);
 
     ctx.set_active_console(1);
 
@@ -89,14 +89,14 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     ctx.set_active_console(0);
 }
 
-pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
-    let world = &gs.world;
-    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
-    let frametime = gs.world.borrow::<UniqueView<FrameTime>>().unwrap().0;
+pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
+    let world = &world;
+    let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    let frametime = world.borrow::<UniqueView<FrameTime>>().unwrap().0;
 
     let (min_x, _max_x, min_y, _max_y) = get_map_coords_for_screen(player_pos, ctx);
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let gamemode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let gamemode = world.borrow::<UniqueView<GameMode>>().unwrap();
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
@@ -111,7 +111,7 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     }
 
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) {
+    if *gamemode != GameMode::Sim && !get_player_map_knowledge(world).contains_key(&idx) {
         return;
     }
 

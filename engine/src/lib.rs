@@ -7,8 +7,7 @@ use components::{
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use map::{Map, TileType};
-use rltk::RGBA;
-use rltk::{GameState, Point, Rltk};
+use rltk::{Point, Rltk};
 
 mod item_system;
 
@@ -27,7 +26,6 @@ pub mod utils;
 pub mod weighted_table;
 
 pub mod map_builders;
-use map_builders::MapGenData;
 
 pub mod systems;
 use shipyard::{
@@ -93,15 +91,7 @@ pub enum RenderOrder {
 
 pub trait EngineController: 'static {
     fn start(&self, world: &mut World);
-    fn render(&self, gs: &State, ctx: &mut Rltk);
     fn update(&self, world: &mut World, ctx: &mut Rltk);
-}
-
-pub struct State {
-    pub world: World,
-    pub mapgen_data: MapGenData,
-    pub engine_controller: Box<dyn EngineController>,
-    pub first_run: bool,
 }
 
 pub struct GameTools {}
@@ -306,41 +296,4 @@ impl GameTools {
         // Generate new map
         Self::generate_map(world, 1);
     } 
-}
-
-impl GameState for State {
-    fn tick(&mut self, ctx: &mut Rltk) {
-        if self.first_run {
-            self.first_run = false;
-
-            self.engine_controller.start(&mut self.world);
-        }
-
-        ctx.set_active_console(1);
-        // write transparent bg
-        let (x, y) = ctx.get_char_size();
-        for ix in 0..x {
-            for iy in 0..y {
-                ctx.set(
-                    ix,
-                    iy,
-                    RGBA::from_u8(0, 0, 0, 0),
-                    RGBA::from_u8(0, 0, 0, 0),
-                    32,
-                )
-            }
-        }
-
-        ctx.set_active_console(0);
-        ctx.cls();
-
-        {
-            let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
-            i.0 = ctx.frame_time_ms;
-        }
-
-        self.engine_controller.update(&mut self.world, ctx);
-
-        self.engine_controller.render(self, ctx);
-    }
 }

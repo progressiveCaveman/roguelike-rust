@@ -4,18 +4,18 @@ use engine::{
     map::TileType,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
-    GameMode, State, SCALE,
+    GameMode, SCALE,
 };
 
 use super::{Map, Position, OFFSET_X, OFFSET_Y};
 use rltk::{Point, Rltk, RGB, RGBA};
-use shipyard::{Get, IntoIter, IntoWithId, UniqueView, View};
+use shipyard::{Get, IntoIter, IntoWithId, UniqueView, View, World};
 
 const SHOW_BOUNDARIES: bool = true;
 const RENDER_DJIKSTRA: bool = false;
 
-pub fn render_camera(gs: &State, ctx: &mut Rltk) {
-    let world = &gs.world;
+pub fn render_camera(world: &World, ctx: &mut Rltk) {
+    let world = &world;
     // let res = &gs.resources;
 
     ctx.set_active_console(1);
@@ -25,11 +25,11 @@ pub fn render_camera(gs: &State, ctx: &mut Rltk) {
     let yoff: f32 = (OFFSET_Y as f32 / scale).ceil();
     let size = ctx.get_char_size();
 
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
-    let gamemode = *gs.world.borrow::<UniqueView<GameMode>>().unwrap();
-    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
-    let player_knowledge = get_player_map_knowledge(gs);
-    let player_vs = get_player_viewshed(gs);
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let gamemode = *world.borrow::<UniqueView<GameMode>>().unwrap();
+    let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    let player_knowledge = get_player_map_knowledge(world);
+    let player_vs = get_player_viewshed(world);
 
     let (min_x, max_x, min_y, max_y) = super::get_map_coords_for_screen(player_pos, ctx);
 
