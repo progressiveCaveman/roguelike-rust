@@ -14,7 +14,6 @@ mod item_system;
 pub mod ai;
 
 pub mod gui;
-use gui::gui_menus;
 
 pub mod components;
 pub mod entity_factory;
@@ -58,28 +57,7 @@ pub enum GameMode {
     RL,
 }
 
-#[derive(Copy, Clone, PartialEq, Unique, Debug)]
-pub enum RunState {
-    AwaitingInput,
-    PreRun,
-    PlayerTurn,
-    AiTurn,
-    ShowInventory,
-    ShowItemActions {
-        item: EntityId,
-    },
-    ShowTargeting {
-        range: i32,
-        item: EntityId,
-    },
-    MainMenu {
-        menu_selection: gui_menus::MainMenuSelection,
-    },
-    EscPressed,
-    NextLevel,
-    GameOver,
-    MapGenAnimation,
-}
+
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum RenderOrder {
@@ -88,23 +66,22 @@ pub enum RenderOrder {
     Player,
     Particle,
 }
-
 pub trait EngineController: 'static {
     fn start(&self, world: &mut World);
     fn update(&self, world: &mut World, ctx: &mut Rltk);
 }
 
-pub struct GameTools {}
-impl GameTools {
-    pub fn run_systems(world: &mut World, runstate: RunState) {
-        if runstate == RunState::PlayerTurn {
+pub struct Engine {}
+impl Engine {
+    pub fn run_systems(world: &mut World, player_turn: bool, ai_turn: bool) {
+        if player_turn {
             world.run(system_fire::run_fire_system);
         }
         world.run(system_visibility::run_visibility_system);
 
         world.run(effects::run_effects_queue);
 
-        if runstate == RunState::AiTurn {
+        if ai_turn {
             world.run(system_pathfinding::run_pathfinding_system);
             world.run(system_ai_spawner::run_spawner_system);
             world.run(system_ai_fish::run_fish_ai);
@@ -286,9 +263,6 @@ impl GameTools {
         world.add_unique(PlayerID(player_id));
     
         world.add_unique(GameMode::NotSelected);
-        world.add_unique(RunState::MainMenu {
-            menu_selection: gui_menus::MainMenuSelection::Roguelike,
-        });
         world.add_unique(gamelog::GameLog { messages: vec![] });
         world.add_unique(system_particle::ParticleBuilder::new());
         world.add_unique(FrameTime(0.));

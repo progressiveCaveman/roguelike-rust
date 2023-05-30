@@ -1,14 +1,12 @@
 use crate::components::{CombatStats, Equipped, InBackpack, Inventory, Name, Player, Position};
 use crate::effects::{add_effect, EffectType};
 use crate::gamelog::GameLog;
-use crate::RunState;
 use shipyard::{
     AddComponent, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut,
 };
 
 pub fn run_cleanup_system(
     mut log: UniqueViewMut<GameLog>,
-    mut runstate: UniqueViewMut<RunState>,
     mut vpos: ViewMut<Position>,
     vstats: ViewMut<CombatStats>,
     vinv: View<Inventory>,
@@ -46,7 +44,8 @@ pub fn run_cleanup_system(
                     }
                 }
                 Ok(_p) => {
-                    *runstate = RunState::GameOver;
+                    todo!("Game over");
+                    // *runstate = RunState::GameOver;
                 }
             }
         }

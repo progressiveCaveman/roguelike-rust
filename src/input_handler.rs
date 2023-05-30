@@ -7,10 +7,12 @@ use engine::{
     map::Map,
     player,
     utils::{dir_to_point, PPoint, PlayerID},
-    GameMode, RunState,
+    GameMode,
 };
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{AllStoragesViewMut, Get, UniqueView, UniqueViewMut, View, World};
+
+use crate::RunState;
 
 pub fn handle_input(world: &World, ctx: &Rltk) -> RunState {
     let game_mode = world.borrow::<UniqueView<GameMode>>().unwrap();

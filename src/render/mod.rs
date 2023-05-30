@@ -13,6 +13,8 @@ use shipyard::{Get, UniqueView, View, World};
 pub mod camera;
 pub use camera::*;
 
+pub mod gui_menus;
+
 pub fn draw_gui(world: &World, ctx: &mut Rltk) {
     let world = &world;
 

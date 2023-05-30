@@ -1,6 +1,6 @@
-use crate::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
+use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use crate::gui::{ItemMenuResult, Palette};
-use crate::utils::PlayerID;
+use engine::utils::PlayerID;
 use crate::{RunState};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};
@@ -33,9 +33,7 @@ pub enum GameOverResult {
     QuitToMenu,
 }
 
-pub fn main_menu(world: &World, ctx: &mut Rltk) -> MainMenuResult {
-    let runstate = world.borrow::<UniqueView<RunState>>().unwrap();
-
+pub fn main_menu(ctx: &mut Rltk, runstate: RunState) -> MainMenuResult {
     let get_fg = |sel, menu_item| {
         if sel == menu_item {
             return Palette::COLOR_RED;
@@ -53,8 +51,7 @@ pub fn main_menu(world: &World, ctx: &mut Rltk) -> MainMenuResult {
 
     if let RunState::MainMenu {
         menu_selection: selection,
-    } = *runstate
-    {
+    } = runstate {
         ctx.print_color_centered(
             25,
             get_fg(selection, MainMenuSelection::Roguelike),

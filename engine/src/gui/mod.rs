@@ -5,9 +5,6 @@ use crate::{MAPHEIGHT, MAPWIDTH, SCALE};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB, RGBA};
 use shipyard::{Get, UniqueView, View, World};
 
-pub mod gui_menus;
-pub use gui_menus::*;
-
 /*
 Render strategy:
 Background color shows material
