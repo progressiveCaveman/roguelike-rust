@@ -16,7 +16,6 @@ mod item_system;
 pub mod ai;
 
 pub mod gui;
-use gui::camera;
 use gui::gui_menus;
 
 pub mod components;
@@ -94,16 +93,15 @@ pub enum RenderOrder {
     Particle,
 }
 
-pub trait Renderer: 'static {
+pub trait EngineController: 'static {
     fn render(&self, gs: &State, ctx: &mut Rltk);
 }
 
 pub struct State {
     pub world: World,
-    // resources: Resources,
     pub mapgen_data: MapGenData,
     pub wait_frames: i32,
-    pub renderer: Box<dyn Renderer>,
+    pub renderer: Box<dyn EngineController>,
 }
 
 impl State {
@@ -484,7 +482,8 @@ impl GameState for State {
                     ctx.cls();
                     // todo bring back mapgen rendering
                     // map::draw_map(&self.mapgen_data.history[self.mapgen_data.index], ctx);
-                    camera::render_camera(self, ctx);
+                    self.renderer.render(self, ctx);
+
 
                     self.mapgen_data.timer += ctx.frame_time_ms;
                     if self.mapgen_data.timer > MAPGEN_FRAME_TIME {

@@ -1,0 +1,444 @@
+use crate::gamelog::GameLog;
+use crate::{GameMode, State, WINDOWHEIGHT, WINDOWWIDTH};
+use engine::{SCALE, MAPWIDTH, MAPHEIGHT};
+use engine::ai::decisions::Intent;
+use engine::components::{CombatStats, Fire, Name, Position, Inventory};
+use engine::map::Map;
+use engine::player::get_player_map_knowledge;
+use engine::utils::{PlayerID, Turn, PPoint, FrameTime};
+use rltk::{Point, Rltk, RGBA};
+use shipyard::{Get, UniqueView, View};
+
+pub mod camera;
+pub use camera::*;
+
+/*
+Render strategy:
+Background color shows material
+Glyph shows entity
+glyph color is set by entity in general
+Background color is modified by tile status such as gas, light, or fire
+Glyph color is modified by some statuses?
+ */
+
+// https://dwarffortresswiki.org/index.php/Character_table
+
+pub const OFFSET_X: usize = 31;
+pub const OFFSET_Y: usize = 11;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum ItemMenuResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
+
+pub struct Palette;
+impl Palette {
+    pub const MAIN_BG: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.,
+        b: 0.,
+        a: 0.,
+    };
+    pub const MAIN_FG: rltk::RGBA = RGBA {
+        r: 0.5,
+        g: 0.5,
+        b: 0.5,
+        a: 1.,
+    };
+    pub const COLOR_PURPLE: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.,
+        b: 1.,
+        a: 1.,
+    };
+    pub const COLOR_RED: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_GREEN: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.7,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_GREEN_DARK: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.2,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_3: rltk::RGBA = RGBA {
+        r: 0.7,
+        g: 0.2,
+        b: 0.2,
+        a: 1.,
+    };
+    pub const COLOR_4: rltk::RGBA = RGBA {
+        r: 0.7,
+        g: 0.7,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_AMBER: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.74,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_WOOD: RGBA = RGBA {
+        r: 0.45,
+        g: 0.38,
+        b: 0.26,
+        a: 1.,
+    };
+    pub const COLOR_DIRT: RGBA = RGBA {
+        r: 0.6,
+        g: 0.46,
+        b: 0.32,
+        a: 1.,
+    };
+    pub const COLOR_WATER: RGBA = RGBA {
+        r: 0.0,
+        g: 0.0,
+        b: 0.82,
+        a: 1.,
+    };
+    pub const COLOR_FIRE: RGBA = RGBA {
+        r: 0.88,
+        g: 0.34,
+        b: 0.13,
+        a: 1.,
+    };
+    pub const COLOR_CEDAR: RGBA = RGBA {
+        r: 0.39,
+        g: 0.22,
+        b: 0.17,
+        a: 1.,
+    };
+    pub const COLOR_CLEAR: RGBA = RGBA {
+        r: 0.,
+        g: 0.,
+        b: 0.,
+        a: 0.,
+    };
+    pub const FACTION_COLORS: [RGBA; 2] = [
+        RGBA {
+            r: 1.0,
+            g: 0.,
+            b: 0.,
+            a: 1.,
+        },
+        RGBA {
+            r: 0.0,
+            g: 0.0,
+            b: 1.0,
+            a: 1.,
+        },
+    ];
+}
+
+pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
+    let world = &gs.world;
+
+    let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+    let vstats = world.borrow::<View<CombatStats>>().unwrap();
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let turn = gs.world.borrow::<UniqueView<Turn>>().unwrap();
+
+    let hp_gui = if let Ok(player_stats) = vstats.get(player_id) {
+        format!("{} / {} HP", player_stats.hp, player_stats.max_hp)
+    } else {
+        format!("")
+    };
+
+    // horizontal line
+    ctx.print_color(
+        0,
+        OFFSET_Y - 1,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        "─".repeat(WINDOWWIDTH),
+    );
+
+    // player stats
+    ctx.print_color(1, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
+    ctx.print_color(
+        1,
+        2,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        &format!("Turn: {:?}", *turn),
+    );
+    ctx.print_color(
+        1,
+        9,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("Depth: {}", map.depth),
+    );
+
+    // On fire display
+    let vfire = world.borrow::<View<Fire>>().unwrap();
+    match vfire.get(player_id) {
+        Ok(_) => {
+            ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE");
+        }
+        Err(_) => {}
+    }
+
+    for y in 0..WINDOWHEIGHT {
+        ctx.print_color(OFFSET_X - 1, y, Palette::MAIN_FG, Palette::MAIN_BG, "│");
+    }
+
+    // message log
+    let log = gs.world.borrow::<UniqueView<GameLog>>().unwrap();
+    let mut y = 1;
+    for m in log.messages.iter().rev() {
+        if y < 9 {
+            ctx.print_color(OFFSET_X + 1, y, Palette::MAIN_FG, Palette::MAIN_BG, m);
+        }
+        y += 1;
+    }
+
+    draw_tooltips(gs, ctx);
+
+    ctx.set_active_console(1);
+
+    // draw mouse pos
+    let mouse_pos = ctx.mouse_pos();
+    if mouse_pos != (0, 0) {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_3);
+    }
+
+    ctx.set_active_console(0);
+}
+
+pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
+    let world = &gs.world;
+    let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    let frametime = gs.world.borrow::<UniqueView<FrameTime>>().unwrap().0;
+
+    let (min_x, _max_x, min_y, _max_y) = get_map_coords_for_screen(player_pos, ctx);
+    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let gamemode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
+    map_mouse_pos.0 += min_x;
+    map_mouse_pos.1 += min_y;
+    if map_mouse_pos.0 >= map.width
+        || map_mouse_pos.1 >= map.height
+        || map_mouse_pos.0 < 0
+        || map_mouse_pos.1 < 0
+    {
+        return;
+    }
+
+    let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
+    if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) {
+        return;
+    }
+
+    let vname = world.borrow::<View<Name>>().unwrap();
+    let vpos = world.borrow::<View<Position>>().unwrap();
+    let vstats = world.borrow::<View<CombatStats>>().unwrap();
+    let vinv = world.borrow::<View<Inventory>>().unwrap();
+    let vintent = world.borrow::<View<Intent>>().unwrap();
+
+    let mut ypos = OFFSET_Y;
+
+    /* Debug stuff */
+
+    // ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
+
+    // ypos += 2;
+    ctx.print_color(
+        1,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("PPOS: {:?}", player_pos),
+    );
+
+    ypos += 1;
+    ctx.print_color(
+        1,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("Frametime: {:?}", frametime),
+    );
+
+    /* Normal stuff */
+    ypos += 2;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
+
+    ypos += 1;
+    ctx.print_color(
+        2,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("{:?}", map.tiles[idx]),
+    );
+
+    ypos += 2;
+    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Entities:");
+
+    for e in map.tile_content[idx].iter() {
+        if let Ok(name) = vname.get(*e) {
+            ypos += 1;
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("{:?} {}", e, name.name),
+            );
+        }
+
+        if let Ok(pos) = vpos.get(*e) {
+            ypos += 1;
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("{:?}", pos.ps[0]),
+            );
+        }
+
+        if let Ok(stats) = vstats.get(*e) {
+            ypos += 1;
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("HP: {}/{}", stats.hp, stats.max_hp),
+            );
+        }
+
+        if let Ok(intent) = vintent.get(*e) {
+            ypos += 1;
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("Intent: {}", intent.name),
+            );
+        }
+
+        if let Ok(inv) = vinv.get(*e) {
+            if inv.items.len() > 0 {
+                ypos += 1;
+                ctx.print_color(
+                    2,
+                    ypos,
+                    Palette::MAIN_FG,
+                    Palette::MAIN_BG,
+                    format!("Inventory:"),
+                );
+
+                for item in inv.items.iter() {
+                    if let Ok(name) = vname.get(*item) {
+                        ypos += 1;
+                        ctx.print_color(
+                            3,
+                            ypos,
+                            Palette::MAIN_FG,
+                            Palette::MAIN_BG,
+                            format!("{:?}, {}", item, name.name),
+                        );
+                    }
+                }
+            }
+        }
+
+        ypos += 1;
+    }
+
+    // let mut tooltip: Vec<String> = Vec::new();
+
+    // for e in map.tile_content[idx].iter() {
+    //     if let Ok(name) = world.get::<Name>(*e) {
+    //         tooltip.push(name.name.to_string());
+    //     }
+    // }
+
+    // // for (_id, (name, pos)) in world.query::<(&Name, &Position)>().iter() {
+    // //     for pos in pos.ps.iter() {
+    // //         if pos.x == map_mouse_pos.0 && pos.y == map_mouse_pos.1 {
+    // //             tooltip.push(name.name.to_string());
+    // //         }
+    // //     }
+    // // }
+
+    // if !tooltip.is_empty() {
+    //     let mut width: i32 = 0;
+    //     for s in tooltip.iter() {
+    //         if width < s.len() as i32 { width = s.len() as i32; }
+    //     }
+    //     width += 3;
+
+    //     let mut sign = 1;
+    //     let mut arrow_pos = Point::new(mouse_pos.0 + 1, mouse_pos.1);
+    //     let mut left_x = mouse_pos.0 + 4;
+    //     let mut y = mouse_pos.1;
+    //     if mouse_pos.0 > map.width / 2 {
+    //         sign = -1;
+    //         arrow_pos = Point::new(mouse_pos.0 - 2, mouse_pos.1);
+    //         left_x = mouse_pos.0 - width;
+    //     }
+
+    //     if sign == -1 {ctx.fill_region(rltk::Rect{x1: left_x, x2: left_x - 3 + width, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
+    //     else {ctx.fill_region(rltk::Rect{x1: left_x - 1, x2: left_x + width - 4, y1: y, y2: y + tooltip.len() as i32 - 1}, rltk::to_cp437(' '), Palette::MAIN_FG, Palette::COLOR_3);}
+
+    //     for s in tooltip.iter() {
+    //         ctx.print_color(left_x, y, Palette::MAIN_FG, Palette::COLOR_3, s);
+    //         y += 1;
+    //     }
+    //     ctx.print_color(arrow_pos.x, arrow_pos.y, Palette::MAIN_FG, Palette::COLOR_3, "->");
+    // }
+}
+
+pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32, i32) {
+    let (mut x_chars, mut y_chars) = ctx.get_char_size();
+    x_chars -= (OFFSET_X as f32 / SCALE).ceil() as u32;
+    y_chars -= (OFFSET_Y as f32 / SCALE).ceil() as u32;
+
+    let center_x = (x_chars as f32 / 2.0) as i32;
+    let center_y = (y_chars as f32 / 2.0) as i32;
+
+    let mut min_x = focus.x - center_x;
+    let mut max_x = focus.x + center_x;
+    let mut min_y = focus.y - center_y;
+    let mut max_y = focus.y + center_y;
+
+    let w = MAPWIDTH as i32;
+    let h = MAPHEIGHT as i32;
+
+    // Now check for borders, don't scroll past map edge
+    if min_x < 0 {
+        max_x -= min_x;
+        min_x = 0;
+    } else if max_x > w {
+        min_x -= max_x - w;
+        max_x = w - 1;
+    }
+
+    if min_y < 0 {
+        max_y += 0 - min_y;
+        min_y = 0;
+    } else if max_y > h {
+        min_y -= max_y - h;
+        max_y = h - 1;
+    }
+
+    (min_x, max_x, min_y, max_y)
+}

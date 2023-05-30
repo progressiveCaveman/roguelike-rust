@@ -1,10 +1,10 @@
-use crate::{
+use engine::{
     components::{Player, Renderable},
     gui::Palette,
     map::TileType,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
-    GameMode, State, MAPHEIGHT, MAPWIDTH, SCALE,
+    GameMode, State, SCALE,
 };
 
 use super::{Map, Position, OFFSET_X, OFFSET_Y};
@@ -13,42 +13,6 @@ use shipyard::{Get, IntoIter, IntoWithId, UniqueView, View};
 
 const SHOW_BOUNDARIES: bool = true;
 const RENDER_DJIKSTRA: bool = false;
-
-pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32, i32) {
-    let (mut x_chars, mut y_chars) = ctx.get_char_size();
-    x_chars -= (OFFSET_X as f32 / SCALE).ceil() as u32;
-    y_chars -= (OFFSET_Y as f32 / SCALE).ceil() as u32;
-
-    let center_x = (x_chars as f32 / 2.0) as i32;
-    let center_y = (y_chars as f32 / 2.0) as i32;
-
-    let mut min_x = focus.x - center_x;
-    let mut max_x = focus.x + center_x;
-    let mut min_y = focus.y - center_y;
-    let mut max_y = focus.y + center_y;
-
-    let w = MAPWIDTH as i32;
-    let h = MAPHEIGHT as i32;
-
-    // Now check for borders, don't scroll past map edge
-    if min_x < 0 {
-        max_x -= min_x;
-        min_x = 0;
-    } else if max_x > w {
-        min_x -= max_x - w;
-        max_x = w - 1;
-    }
-
-    if min_y < 0 {
-        max_y += 0 - min_y;
-        min_y = 0;
-    } else if max_y > h {
-        min_y -= max_y - h;
-        max_y = h - 1;
-    }
-
-    (min_x, max_x, min_y, max_y)
-}
 
 pub fn render_camera(gs: &State, ctx: &mut Rltk) {
     let world = &gs.world;
@@ -67,7 +31,7 @@ pub fn render_camera(gs: &State, ctx: &mut Rltk) {
     let player_knowledge = get_player_map_knowledge(gs);
     let player_vs = get_player_viewshed(gs);
 
-    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
+    let (min_x, max_x, min_y, max_y) = super::get_map_coords_for_screen(player_pos, ctx);
 
     let map_width = map.width;
     let map_height = map.height;

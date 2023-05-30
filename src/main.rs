@@ -1,20 +1,23 @@
-use engine::gui::{self, camera, gui_menus};
+use engine::gui::gui_menus;
 use engine::map::{Map, TileType};
 use engine::systems::system_particle;
 use engine::utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn, RNG};
-use engine::{entity_factory, gamelog, GameMode, Renderer, RunState, MAPHEIGHT, MAPWIDTH};
+use engine::{entity_factory, gamelog, GameMode, EngineController, RunState, MAPHEIGHT, MAPWIDTH};
 use engine::{map_builders::MapGenData, State, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
+use render::camera;
 use rltk::{Point, Rltk, RltkBuilder};
 use shipyard::{AllStoragesViewMut, UniqueViewMut, World};
 
+pub mod render;
+
 pub struct Game {}
 impl Game {
-    fn new() -> Box<dyn Renderer> {
+    fn new() -> Box<dyn EngineController> {
         Box::new(Game {})
     }
 }
 
-impl Renderer for Game {
+impl EngineController for Game {
     fn render(&self, gs: &State, ctx: &mut Rltk) {
         let new_runstate = *gs.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
@@ -23,7 +26,7 @@ impl Renderer for Game {
             RunState::GameOver => {}
             _ => {
                 camera::render_camera(gs, ctx);
-                gui::draw_gui(gs, ctx);
+                render::draw_gui(gs, ctx);
             }
         }
     }
