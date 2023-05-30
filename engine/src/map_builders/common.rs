@@ -1,6 +1,6 @@
 use super::{Map, Rect, TileType};
-use std::cmp;
 use rltk::RandomNumberGenerator;
+use std::cmp;
 
 pub fn rect_in_bounds(map: &mut Map, room: &Rect) -> bool {
     map.in_bounds(room.x1, room.y1) && map.in_bounds(room.x2, room.y2)
@@ -8,25 +8,25 @@ pub fn rect_in_bounds(map: &mut Map, room: &Rect) -> bool {
 
 pub fn apply_room_to_map(map: &mut Map, room: &Rect, tile_type: TileType, filled: bool) {
     if !rect_in_bounds(map, room) {
-        return
+        return;
     }
 
-    for y in room.y1 .. room.y2 {
-        for x in room.x1 .. room.x2 {
-            if filled || x == room.x1 || x == room.x2 - 1 || y == room.y1 || y == room.y2 - 1{
+    for y in room.y1..room.y2 {
+        for x in room.x1..room.x2 {
+            if filled || x == room.x1 || x == room.x2 - 1 || y == room.y1 || y == room.y2 - 1 {
                 map.set_tile(x, y, tile_type);
             }
         }
     }
 }
 
-pub fn apply_vertical_corridor(map: &mut Map, x:i32, y1: i32, y2:i32) {
+pub fn apply_vertical_corridor(map: &mut Map, x: i32, y1: i32, y2: i32) {
     for y in cmp::min(y1, y2)..=cmp::max(y1, y2) {
         map.set_tile(x, y, TileType::Floor);
     }
 }
 
-pub fn apply_horizontal_corridor(map: &mut Map, x1: i32, x2:i32, y: i32) {
+pub fn apply_horizontal_corridor(map: &mut Map, x1: i32, x2: i32, y: i32) {
     for x in cmp::min(x1, x2)..=cmp::max(x1, x2) {
         map.set_tile(x, y, TileType::Floor);
     }
@@ -52,12 +52,12 @@ pub fn apply_drunkards_corrider(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i3
     while x != x2 || y != y2 {
         if x == x2 {
             y += ydir;
-        }else if y == y2 {
+        } else if y == y2 {
             x += xdir;
         } else {
             if rng.range(0, 2) == 0 {
                 x += xdir;
-            }else{
+            } else {
                 y += ydir;
             }
         }

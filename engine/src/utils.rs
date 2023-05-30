@@ -1,10 +1,15 @@
-use rltk::{DijkstraMap, BaseMap, Point, RGBA, NavigationPath};
+use rltk::{BaseMap, DijkstraMap, NavigationPath, Point, RGBA};
 use shipyard::{EntityId, Unique};
 
 use crate::map::Map;
 
 /// returns the point adjacent to origin that will lead to target
-pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, mut target: usize) -> usize{
+pub fn dijkstra_backtrace(
+    dijkstra: DijkstraMap,
+    map: &mut Map,
+    origin: usize,
+    mut target: usize,
+) -> usize {
     // dbg!("dijkstra_backtrace");
     for _ in 0..1000 {
         // dbg!("How many times does this run?");
@@ -16,7 +21,7 @@ pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, m
                 return target;
             }
 
-            if dijkstra.map[i.0] < dijkstra.map[target]{
+            if dijkstra.map[i.0] < dijkstra.map[target] {
                 target = i.0;
             }
         }
@@ -27,14 +32,38 @@ pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, m
 
 pub fn get_neighbors(point: Point) -> Vec<Point> {
     vec![
-        Point { x: point.x - 1, y: point.y - 1 },
-        Point { x: point.x - 1, y: point.y },
-        Point { x: point.x - 1, y: point.y + 1 },
-        Point { x: point.x, y: point.y - 1 },
-        Point { x: point.x, y: point.y + 1 },
-        Point { x: point.x + 1, y: point.y - 1 },
-        Point { x: point.x + 1, y: point.y },
-        Point { x: point.x + 1, y: point.y + 1},
+        Point {
+            x: point.x - 1,
+            y: point.y - 1,
+        },
+        Point {
+            x: point.x - 1,
+            y: point.y,
+        },
+        Point {
+            x: point.x - 1,
+            y: point.y + 1,
+        },
+        Point {
+            x: point.x,
+            y: point.y - 1,
+        },
+        Point {
+            x: point.x,
+            y: point.y + 1,
+        },
+        Point {
+            x: point.x + 1,
+            y: point.y - 1,
+        },
+        Point {
+            x: point.x + 1,
+            y: point.y,
+        },
+        Point {
+            x: point.x + 1,
+            y: point.y + 1,
+        },
     ]
 }
 
@@ -56,20 +85,47 @@ pub fn get_neighbors(point: Point) -> Vec<Point> {
 // translates dir according to roguelike numpad convention - 1 is SW, 9 is NE
 pub fn dir_to_point(pos: Point, dir: usize, dismod: i32) -> Point {
     match dir {
-        1 => Point { x: pos.x - dismod, y: pos.y + dismod },
-        2 => Point { x: pos.x, y: pos.y + dismod },
-        3 => Point { x: pos.x + dismod, y: pos.y + dismod },
-        4 => Point { x: pos.x - dismod, y: pos.y },
-        6 => Point { x: pos.x + dismod, y: pos.y },
-        7 => Point { x: pos.x - dismod, y: pos.y - dismod },
-        8 => Point { x: pos.x, y: pos.y - dismod },
-        9 => Point { x: pos.x + dismod, y: pos.y - dismod },
-        _ => Point { x: pos.x, y: pos.y }
+        1 => Point {
+            x: pos.x - dismod,
+            y: pos.y + dismod,
+        },
+        2 => Point {
+            x: pos.x,
+            y: pos.y + dismod,
+        },
+        3 => Point {
+            x: pos.x + dismod,
+            y: pos.y + dismod,
+        },
+        4 => Point {
+            x: pos.x - dismod,
+            y: pos.y,
+        },
+        6 => Point {
+            x: pos.x + dismod,
+            y: pos.y,
+        },
+        7 => Point {
+            x: pos.x - dismod,
+            y: pos.y - dismod,
+        },
+        8 => Point {
+            x: pos.x,
+            y: pos.y - dismod,
+        },
+        9 => Point {
+            x: pos.x + dismod,
+            y: pos.y - dismod,
+        },
+        _ => Point { x: pos.x, y: pos.y },
     }
 }
 
 pub fn point_plus(p1: Point, p2: Point) -> Point {
-    Point { x: p2.x + p1.x, y: p2.y + p1.y }
+    Point {
+        x: p2.x + p1.x,
+        y: p2.y + p1.y,
+    }
 }
 
 // pub fn point_diff(p1: Point, p2: Point) -> Point {
@@ -119,12 +175,8 @@ pub struct FrameTime(pub f32);
 #[derive(Clone, Debug, Unique, Copy)]
 pub struct AutoRun(pub bool);
 
-pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
-    let path = rltk::a_star_search(
-        map.point_idx(from) as i32,
-        map.point_idx(tp) as i32,
-        map
-    );
+pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath {
+    let path = rltk::a_star_search(map.point_idx(from) as i32, map.point_idx(tp) as i32, map);
 
     return path;
 }
@@ -132,7 +184,7 @@ pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath{
 pub fn normalize(num: i32) -> i32 {
     if num == 0 {
         0
-    }else{
+    } else {
         num / num.abs()
     }
 }

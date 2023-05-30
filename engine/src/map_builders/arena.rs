@@ -1,13 +1,13 @@
-use rltk::{Point};
-use shipyard::{World, AllStoragesViewMut};
+use rltk::Point;
+use shipyard::{AllStoragesViewMut, World};
 
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory, components::SpawnerType};
+use crate::{components::SpawnerType, entity_factory, SHOW_MAPGEN_ANIMATION};
 
-use super::{MapBuilder, Map, TileType, Position};
+use super::{Map, MapBuilder, Position, TileType};
 
 pub struct AernaBuilder {
-    map : Map,
-    starting_position : Position,
+    map: Map,
+    starting_position: Position,
     history: Vec<Map>,
 }
 
@@ -19,13 +19,24 @@ impl MapBuilder for AernaBuilder {
     fn get_starting_position(&mut self) -> Position {
         self.starting_position.clone()
     }
-    fn build_map(&mut self)  {
+    fn build_map(&mut self) {
         self.build()
     }
 
     fn spawn_entities(&mut self, world: &mut World) {
-        world.run(|mut store: AllStoragesViewMut|{entity_factory::spawner(&mut store, 4, self.map.height / 2, 0, SpawnerType::Orc, 10)});
-        world.run(|mut store: AllStoragesViewMut|{entity_factory::spawner(&mut store, self.map.width - 5, self.map.height / 2, 1, SpawnerType::Orc, 10)});
+        world.run(|mut store: AllStoragesViewMut| {
+            entity_factory::spawner(&mut store, 4, self.map.height / 2, 0, SpawnerType::Orc, 10)
+        });
+        world.run(|mut store: AllStoragesViewMut| {
+            entity_factory::spawner(
+                &mut store,
+                self.map.width - 5,
+                self.map.height / 2,
+                1,
+                SpawnerType::Orc,
+                10,
+            )
+        });
     }
 
     fn get_map_history(&self) -> Vec<Map> {
@@ -40,10 +51,12 @@ impl MapBuilder for AernaBuilder {
 }
 
 impl AernaBuilder {
-    pub fn new(new_depth : i32, size: (i32, i32)) -> AernaBuilder {
-        AernaBuilder{
-            map : Map::new(new_depth, TileType::Floor, size),
-            starting_position : Position{ ps: vec![Point{x:0, y:0}] },
+    pub fn new(new_depth: i32, size: (i32, i32)) -> AernaBuilder {
+        AernaBuilder {
+            map: Map::new(new_depth, TileType::Floor, size),
+            starting_position: Position {
+                ps: vec![Point { x: 0, y: 0 }],
+            },
             history: Vec::new(),
         }
     }
@@ -81,21 +94,25 @@ impl AernaBuilder {
         //         }
         //     }
         // }
-    
+
         // First we completely randomize the map, setting 55% of it to be floor.
         // for y in 1..self.map.height/2 {
         //     for x in 1..self.map.width-1 {
         //         let roll = rng.roll_dice(1, 100);
         //         let idx = self.map.xy_idx(x, y);
-        //         if roll > 55 { self.map.tiles[idx] = TileType::Floor } 
+        //         if roll > 55 { self.map.tiles[idx] = TileType::Floor }
         //         // else { self.map.tiles[idx] = TileType::Wall }
         //     }
         // }
         // self.take_snapshot();
 
-        self.starting_position = Position{ ps: vec![Point{x: self.map.width/2, y: self.map.height/2}] };
+        self.starting_position = Position {
+            ps: vec![Point {
+                x: self.map.width / 2,
+                y: self.map.height / 2,
+            }],
+        };
 
         return;
     }
-
 }

@@ -1,18 +1,18 @@
+use crate::components::{Fish, Position};
+use crate::effects::{add_effect, EffectType};
+use crate::map::{Map, TileType};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 use rltk::Point;
-use shipyard::{EntityId, View, IntoIter, IntoWithId, UniqueView};
-use crate::effects::{add_effect, EffectType};
-use crate::map::{TileType, Map};
-use crate::components::{Position, Fish};
+use shipyard::{EntityId, IntoIter, IntoWithId, UniqueView, View};
 
 // currently fish only move east
-pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>) {    
+pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>) {
     let mut to_try_move: Vec<(EntityId, Point)> = vec![];
     let mut to_remove: Vec<EntityId> = vec![];
 
     for (id, (pos, _)) in (&vpos, &vfish).iter().with_id() {
-        if pos.ps.len() == 1{
+        if pos.ps.len() == 1 {
             // if at edge of map, remove fish
 
             let pos = pos.ps[0];
@@ -29,9 +29,18 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
 
     for (e, pos) in to_try_move {
         let mut potential_spaces = vec![
-            Point {x: pos.x + 1, y: pos.y},
-            Point {x: pos.x + 1, y: pos.y + 1},
-            Point {x: pos.x + 1, y: pos.y - 1},
+            Point {
+                x: pos.x + 1,
+                y: pos.y,
+            },
+            Point {
+                x: pos.x + 1,
+                y: pos.y + 1,
+            },
+            Point {
+                x: pos.x + 1,
+                y: pos.y - 1,
+            },
         ];
 
         potential_spaces.shuffle(&mut thread_rng());
@@ -43,7 +52,12 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>
             };
 
             if canmove {
-                add_effect(Some(e), EffectType::Move { tile_idx: map.point_idx(ps) });
+                add_effect(
+                    Some(e),
+                    EffectType::Move {
+                        tile_idx: map.point_idx(ps),
+                    },
+                );
                 // movement::try_move_entity(e, point_diff(pos, ps), gs);
                 break;
             }

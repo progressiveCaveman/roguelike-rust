@@ -1,16 +1,19 @@
 use std::collections::HashMap;
 
-use serde::{Serialize, Deserialize};
-use rltk::{self, Point, DijkstraMap};
-use shipyard::{EntityId, Component, View, IntoIter};
+use rltk::{self, DijkstraMap, Point};
+use serde::{Deserialize, Serialize};
+use shipyard::{Component, EntityId, IntoIter, View};
 
-use crate::{RenderOrder, map::{TileType, Map}};
+use crate::{
+    map::{Map, TileType},
+    RenderOrder,
+};
 
 /// Basic UI components
 
 #[derive(Component, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
-    pub ps: Vec<Point>
+    pub ps: Vec<Point>,
 }
 
 impl Position {
@@ -34,18 +37,28 @@ pub struct Renderable {
     pub bg: rltk::RGBA,
     pub render: bool,
     pub always_render: bool,
-    pub order: RenderOrder
+    pub order: RenderOrder,
 }
 
 impl Default for Renderable {
     fn default() -> Self {
         Renderable {
             glyph: rltk::to_cp437(' '),
-            fg: rltk::RGBA{r: 1., g: 1., b: 1., a: 1.},
-            bg: rltk::RGBA{r: 0., g: 0., b: 0., a: 1.},
+            fg: rltk::RGBA {
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                a: 1.,
+            },
+            bg: rltk::RGBA {
+                r: 0.,
+                g: 0.,
+                b: 0.,
+                a: 1.,
+            },
             render: true,
             always_render: false,
-            order: RenderOrder::Player
+            order: RenderOrder::Player,
         }
     }
 }
@@ -54,14 +67,14 @@ impl Default for Renderable {
 pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
-    pub dirty: bool
+    pub dirty: bool,
 }
 
 impl Viewshed {
     pub fn is_visible(&self, idx: Point) -> bool {
         for p in self.visible_tiles.iter() {
             if p.x == idx.x && p.y == idx.y {
-                return true
+                return true;
             }
         }
 
@@ -71,7 +84,7 @@ impl Viewshed {
 
 #[derive(Component, Clone, Debug, PartialEq)]
 pub struct Name {
-    pub name: String
+    pub name: String,
 }
 
 /// Entity properties
@@ -90,7 +103,7 @@ pub struct Fish {}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Faction {
-    pub faction: i32
+    pub faction: i32,
 }
 
 /// Structures
@@ -98,31 +111,28 @@ pub struct Faction {
 #[derive(Component, Clone, Debug, PartialEq)]
 pub struct PlankHouse {
     pub housing_cap: i32,
-    pub villagers: Vec<EntityId>
+    pub villagers: Vec<EntityId>,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct ChiefHouse {
-}
+pub struct ChiefHouse {}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct LumberMill {
-}
+pub struct LumberMill {}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct FishCleaner {
-}
+pub struct FishCleaner {}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum SpawnerType {
     Orc,
-    Fish
+    Fish,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Spawner {
     pub typ: SpawnerType,
-    pub rate: i32
+    pub rate: i32,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
@@ -135,13 +145,13 @@ pub struct Tree {}
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum LocomotionType {
     Ground,
-    Water
+    Water,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Locomotive {
     pub mtype: LocomotionType,
-    pub speed: usize
+    pub speed: usize,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
@@ -159,7 +169,7 @@ pub struct CombatStats {
 #[derive(Component, Clone, Debug, PartialEq)]
 pub struct Inventory {
     pub capacity: i32,
-    pub items: Vec<EntityId>
+    pub items: Vec<EntityId>,
 }
 
 impl Inventory {
@@ -182,57 +192,60 @@ pub struct SpatialKnowledge {
 
 #[derive(Component)]
 pub struct DijkstraMapToMe {
-    pub map: DijkstraMap
+    pub map: DijkstraMap,
 }
 
 /// Entity intents
 
 #[derive(Component, Clone, Copy)]
 pub struct WantsToAttack {
-    pub target: EntityId
+    pub target: EntityId,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct WantsToPickupItem {
     pub collected_by: EntityId,
-    pub item: EntityId
+    pub item: EntityId,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct WantsToDropItem {
-    pub item: EntityId
+    pub item: EntityId,
 }
 
 #[derive(Component)]
 pub struct WantsToUnequipItem {
-    pub item: EntityId
+    pub item: EntityId,
 }
 
 #[derive(Component)]
 pub struct WantsToUseItem {
     pub item: EntityId,
-    pub target: Option<rltk::Point>
+    pub target: Option<rltk::Point>,
 }
 
 /// Inventory components
 
 #[derive(Component, PartialEq, Copy, Clone)]
-pub enum EquipmentSlot { RightHand, LeftHand }
+pub enum EquipmentSlot {
+    RightHand,
+    LeftHand,
+}
 
 #[derive(Component, Copy, Clone)]
 pub struct Equippable {
-    pub slot: EquipmentSlot
+    pub slot: EquipmentSlot,
 }
 
 #[derive(Component)]
 pub struct Equipped {
     pub owner: EntityId,
-    pub slot: EquipmentSlot
+    pub slot: EquipmentSlot,
 }
 
 #[derive(Component)]
 pub struct InBackpack {
-    pub owner: EntityId
+    pub owner: EntityId,
 }
 
 /// Item properties
@@ -243,13 +256,13 @@ pub enum ItemType {
     Shield,
     Weapon,
     Potion,
-    Scroll, 
-    Fish
+    Scroll,
+    Fish,
 }
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Item {
-    pub typ: ItemType
+    pub typ: ItemType,
 }
 
 #[derive(Component)]
@@ -257,44 +270,44 @@ pub struct Consumable {}
 
 #[derive(Component)]
 pub struct MeleePowerBonus {
-    pub power: i32
+    pub power: i32,
 }
 
 #[derive(Component)]
 pub struct MeleeDefenseBonus {
-    pub defense: i32
+    pub defense: i32,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct ProvidesHealing {
-    pub heal: i32
+    pub heal: i32,
 }
 
 #[derive(Component)]
 pub struct Ranged {
-    pub range: i32
+    pub range: i32,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct DealsDamage {
-    pub damage: i32
+    pub damage: i32,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct Confusion {
-    pub turns: i32
+    pub turns: i32,
 }
 
 #[derive(Component)]
 pub struct AreaOfEffect {
-    pub radius: i32
+    pub radius: i32,
 }
 
 /// Fire components
 
 #[derive(Component, Clone, Copy)]
 pub struct Fire {
-    pub turns: i32
+    pub turns: i32,
 }
 
 #[derive(Component, Clone, Copy)]
@@ -307,7 +320,7 @@ pub struct SerializeMe {}
 
 #[derive(Component)]
 pub struct Lifetime {
-    pub ms: f32
+    pub ms: f32,
 }
 
 /// Particle components
@@ -315,11 +328,11 @@ pub struct Lifetime {
 #[derive(Component)]
 pub struct Velocity {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 #[derive(Component)]
 pub struct Particle {
     pub float_x: f32,
-    pub float_y: f32
+    pub float_y: f32,
 }

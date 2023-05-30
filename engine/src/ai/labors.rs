@@ -1,11 +1,19 @@
 use rltk::Point;
-use shipyard::{EntityId, UniqueView, View, Get, AllStoragesView};
+use shipyard::{AllStoragesView, EntityId, Get, UniqueView, View};
 
-use crate::{components::{Position, SpatialKnowledge, Inventory, ItemType, Item, Tree, LumberMill, Fish, FishCleaner}, map::{TileType, Map}, utils::Turn};
+use crate::{
+    components::{
+        Fish, FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree,
+    },
+    map::{Map, TileType},
+    utils::Turn,
+};
 
-use super::decisions::{Action, Consideration, ConsiderationParam, Target, ResponseCurveType, Task, Intent};
+use super::decisions::{
+    Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task,
+};
 
-pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>{
+pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -15,9 +23,21 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
     let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
     let vinv = store.borrow::<View<Inventory>>().unwrap();
 
-    let pos = if let Ok(pos) = vpos.get(id) { pos } else { return vec![]; };
-    let space = if let Ok(pos) = vspace.get(id) { pos } else { return vec![]; };
-    let inv = if let Ok(pos) = vinv.get(id) { pos } else { return vec![]; };
+    let pos = if let Ok(pos) = vpos.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
+    let space = if let Ok(pos) = vspace.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
+    let inv = if let Ok(pos) = vinv.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
 
     let pos = pos.ps[0];
 
@@ -49,49 +69,50 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
                 }
             }
             if let Ok(_) = vlm.get(*e) {
-                if !lumber_mills.contains(e) { //multitile
+                if !lumber_mills.contains(e) {
+                    //multitile
                     lumber_mills.push(*e);
                 }
             }
         }
     }
 
-    let mut potential_actions:Vec<Action> = vec!();
+    let mut potential_actions: Vec<Action> = vec![];
 
     // for each tree found
-    for tree in trees{
+    for tree in trees {
         if has_inventory_space {
             potential_actions.push(Action {
                 intent: Intent {
                     name: "go to tree".to_string(),
                     task: Task::MoveTo,
-                    target: vec!(Target::from(tree)),
+                    target: vec![Target::from(tree)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(tree)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1.0 / 100.0, 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1.0 / 100.0,
+                            k: 1.0,
+                            c: 1.0,
+                            b: 1.0,
+                        },
                     ),
                     // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
+                    //     "wood in stockpile".to_string(),
                     //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
+                    //     ConsiderationParam {
+                    //         t: todo!(),
+                    //         m: 0.0,
+                    //         k: 0.0,
+                    //         c: 0.0,
+                    //         b: 0.0
                     //     }
                     // )
-                ),
+                ],
                 priority: 1.0,
             });
 
@@ -99,33 +120,33 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
                 intent: Intent {
                     name: "chop tree".to_string(),
                     task: Task::Destroy,
-                    target: vec!(Target::from(tree)),
+                    target: vec![Target::from(tree)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(tree)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::LessThan, 
-                            m: 2., 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::LessThan,
+                            m: 2.,
+                            k: 1.0,
+                            c: 1.0,
+                            b: 1.0,
+                        },
                     ),
                     // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
+                    //     "wood in stockpile".to_string(),
                     //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
+                    //     ConsiderationParam {
+                    //         t: todo!(),
+                    //         m: 0.0,
+                    //         k: 0.0,
+                    //         c: 0.0,
+                    //         b: 0.0
                     //     }
                     // )
-                ),
+                ],
                 priority: 2.0,
             });
         }
@@ -138,33 +159,33 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
                 intent: Intent {
                     name: "pick up wood".to_string(),
                     task: Task::PickUpItem,
-                    target: vec!(Target::from(*log)),
+                    target: vec![Target::from(*log)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(*log)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::LessThan, 
-                            m: 2., 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::LessThan,
+                            m: 2.,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 1.0,
+                        },
                     ),
                     // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
+                    //     "wood in stockpile".to_string(),
                     //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
+                    //     ConsiderationParam {
+                    //         t: todo!(),
+                    //         m: 0.0,
+                    //         k: 0.0,
+                    //         c: 0.0,
+                    //         b: 0.0
                     //     }
                     // )
-                ),
+                ],
                 priority: 1.0,
             });
         }
@@ -173,53 +194,56 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
     // if wood in inventory
     // for each LumberMill
     for lm in lumber_mills {
-        let lminv = if let Ok(inv) = vinv.get(lm) { inv } else { continue; };
+        let lminv = if let Ok(inv) = vinv.get(lm) {
+            inv
+        } else {
+            continue;
+        };
         let lminv_count = lminv.count_type(&vitem, ItemType::Log) as f32;
 
         if logs_in_inv > 0 {
-
             potential_actions.push(Action {
                 intent: Intent {
                     name: "move to lumber mill".to_string(),
                     task: Task::MoveTo,
-                    target: vec!(Target::from(lm)),
+                    target: vec![Target::from(lm)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(lm)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. - 1./20., 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 0.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. - 1. / 20.,
+                            k: 1.0,
+                            c: 1.0,
+                            b: 0.0,
+                        },
                     ),
                     Consideration::new(
-                        "logs in stockpile".to_string(), 
+                        "logs in stockpile".to_string(),
                         lminv_count,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1. / 50.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1. / 50.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 1.0,
+                        },
                     ),
                     Consideration::new(
-                        "logs in iventory".to_string(), 
+                        "logs in iventory".to_string(),
                         logs_in_inv as f32,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. / 5.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 0.0 
-                        }
-                    )
-                ),
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. / 5.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 0.0,
+                        },
+                    ),
+                ],
                 priority: 1.0,
             });
 
@@ -227,47 +251,46 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
                 intent: Intent {
                     name: "deposit logs at lumber mill".to_string(),
                     task: Task::DepositItemToInventory,
-                    target: vec!(Target::from(inventory_log), Target::from(lm)),
+                    target: vec![Target::from(inventory_log), Target::from(lm)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance to lm".to_string(), 
+                        "Distance to lm".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(lm)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::LessThan, 
-                            m: 2., 
-                            k: 2.0, 
-                            c: 1.0, 
-                            b: 0.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::LessThan,
+                            m: 2.,
+                            k: 2.0,
+                            c: 1.0,
+                            b: 0.0,
+                        },
                     ),
                     Consideration::new(
-                        "logs in stockpile".to_string(), 
+                        "logs in stockpile".to_string(),
                         lminv_count,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1. / 50.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1. / 50.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 1.0,
+                        },
                     ),
                     Consideration::new(
-                        "logs in iventory".to_string(), 
+                        "logs in iventory".to_string(),
                         logs_in_inv as f32,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. / 5.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 0.0 
-                        }
-                    )
-                ),
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. / 5.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 0.0,
+                        },
+                    ),
+                ],
                 priority: 2.0,
             });
-
         }
     }
 
@@ -276,23 +299,21 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
         intent: Intent {
             name: "explore".to_string(),
             task: Task::Explore,
-            target: vec!(),
+            target: vec![],
             turn: *turn,
         },
-        cons: vec!(
-            Consideration::new(
-                "baseline".to_string(), 
-                1.0,
-                ConsiderationParam::new_const(0.3)
-            ),
-        ),
+        cons: vec![Consideration::new(
+            "baseline".to_string(),
+            1.0,
+            ConsiderationParam::new_const(0.3),
+        )],
         priority: 1.0,
     });
 
     potential_actions
 }
 
-pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>{
+pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -302,9 +323,21 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
     let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
     let vinv = store.borrow::<View<Inventory>>().unwrap();
 
-    let pos = if let Ok(pos) = vpos.get(id) { pos } else { return vec![]; };
-    let space = if let Ok(pos) = vspace.get(id) { pos } else { return vec![]; };
-    let inv = if let Ok(pos) = vinv.get(id) { pos } else { return vec![]; };
+    let pos = if let Ok(pos) = vpos.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
+    let space = if let Ok(pos) = vspace.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
+    let inv = if let Ok(pos) = vinv.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
 
     let pos = pos.ps[0];
 
@@ -344,49 +377,50 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
             //     }
             // }
             if let Ok(_) = vfishery.get(*e) {
-                if !fisheries.contains(e) { //multitile
+                if !fisheries.contains(e) {
+                    //multitile
                     fisheries.push(*e);
                 }
             }
         }
     }
 
-    let mut potential_actions:Vec<Action> = vec!();
+    let mut potential_actions: Vec<Action> = vec![];
 
     // for each water tile found
-    for wp in water{ 
+    for wp in water {
         if has_inventory_space {
             potential_actions.push(Action {
                 intent: Intent {
                     name: "go to water".to_string(),
                     task: Task::MoveTo,
-                    target: vec!(Target::from(wp)),
+                    target: vec![Target::from(wp)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(wp)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1.0 / 100.0, 
-                            k: 1.0, 
-                            c: 2.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1.0 / 100.0,
+                            k: 1.0,
+                            c: 2.0,
+                            b: 1.0,
+                        },
                     ),
                     // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
+                    //     "wood in stockpile".to_string(),
                     //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
+                    //     ConsiderationParam {
+                    //         t: todo!(),
+                    //         m: 0.0,
+                    //         k: 0.0,
+                    //         c: 0.0,
+                    //         b: 0.0
                     //     }
                     // )
-                ),
+                ],
                 priority: 1.0,
             });
 
@@ -394,33 +428,33 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
                 intent: Intent {
                     name: "fish at water".to_string(),
                     task: Task::Fish,
-                    target: vec!(Target::from(wp)),
+                    target: vec![Target::from(wp)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(wp)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::LessThan, 
-                            m: 1., 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::LessThan,
+                            m: 1.,
+                            k: 1.0,
+                            c: 1.0,
+                            b: 1.0,
+                        },
                     ),
                     // Consideration::new(
-                    //     "wood in stockpile".to_string(), 
+                    //     "wood in stockpile".to_string(),
                     //     Inputs::item_stockpile_count(world, stock, item_type),
-                    //     ConsiderationParam { 
-                    //         t: todo!(), 
-                    //         m: 0.0, 
-                    //         k: 0.0, 
-                    //         c: 0.0, 
-                    //         b: 0.0 
+                    //     ConsiderationParam {
+                    //         t: todo!(),
+                    //         m: 0.0,
+                    //         k: 0.0,
+                    //         c: 0.0,
+                    //         b: 0.0
                     //     }
                     // )
-                ),
+                ],
                 priority: 2.0,
             });
         }
@@ -429,7 +463,11 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
     // if fish in inventory
     // for each fish cleaner
     for f in fisheries {
-        let finv = if let Ok(inv) = vinv.get(f) { inv } else { continue; };
+        let finv = if let Ok(inv) = vinv.get(f) {
+            inv
+        } else {
+            continue;
+        };
         let finv_count = finv.count_type(&vitem, ItemType::Fish) as f32;
 
         if fish_in_inv > 0 {
@@ -437,44 +475,44 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
                 intent: Intent {
                     name: "move to fishery".to_string(),
                     task: Task::MoveTo,
-                    target: vec!(Target::from(f)),
+                    target: vec![Target::from(f)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance".to_string(), 
+                        "Distance".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(f)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. - 1./20., 
-                            k: 1.0, 
-                            c: 1.0, 
-                            b: 0.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. - 1. / 20.,
+                            k: 1.0,
+                            c: 1.0,
+                            b: 0.0,
+                        },
                     ),
                     Consideration::new(
-                        "fish in stockpile".to_string(), 
+                        "fish in stockpile".to_string(),
                         finv_count,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1. / 50.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1. / 50.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 1.0,
+                        },
                     ),
                     Consideration::new(
-                        "fish in iventory".to_string(), 
+                        "fish in iventory".to_string(),
                         fish_in_inv as f32,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. / 5.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 0.0 
-                        }
-                    )
-                ),
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. / 5.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 0.0,
+                        },
+                    ),
+                ],
                 priority: 1.0,
             });
 
@@ -482,47 +520,46 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
                 intent: Intent {
                     name: "deposit fish at fishery".to_string(),
                     task: Task::DepositItemToInventory,
-                    target: vec!(Target::from(inventory_fish), Target::from(f)),
+                    target: vec![Target::from(inventory_fish), Target::from(f)],
                     turn: *turn,
                 },
-                cons: vec!(
+                cons: vec![
                     Consideration::new(
-                        "Distance to fishery".to_string(), 
+                        "Distance to fishery".to_string(),
                         map.distance(&vpos, Target::from(pos), Target::from(f)),
-                        ConsiderationParam { 
-                            t: ResponseCurveType::LessThan, 
-                            m: 2., 
-                            k: 2.0, 
-                            c: 1.0, 
-                            b: 0.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::LessThan,
+                            m: 2.,
+                            k: 2.0,
+                            c: 1.0,
+                            b: 0.0,
+                        },
                     ),
                     Consideration::new(
-                        "fish in stockpile".to_string(), 
+                        "fish in stockpile".to_string(),
                         finv_count,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: -1. / 50.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 1.0 
-                        }
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: -1. / 50.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 1.0,
+                        },
                     ),
                     Consideration::new(
-                        "fish in iventory".to_string(), 
+                        "fish in iventory".to_string(),
                         fish_in_inv as f32,
-                        ConsiderationParam { 
-                            t: ResponseCurveType::Linear, 
-                            m: 1. / 5.0, 
-                            k: 1.0, 
-                            c: 0.0, 
-                            b: 0.0 
-                        }
-                    )
-                ),
+                        ConsiderationParam {
+                            t: ResponseCurveType::Linear,
+                            m: 1. / 5.0,
+                            k: 1.0,
+                            c: 0.0,
+                            b: 0.0,
+                        },
+                    ),
+                ],
                 priority: 2.0,
             });
-
         }
     }
 

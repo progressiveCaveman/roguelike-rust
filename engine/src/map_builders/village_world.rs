@@ -1,13 +1,13 @@
-use rltk::{RandomNumberGenerator, Point};
-use shipyard::{World, AllStoragesViewMut};
+use rltk::{Point, RandomNumberGenerator};
+use shipyard::{AllStoragesViewMut, World};
 
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
+use crate::{entity_factory, SHOW_MAPGEN_ANIMATION};
 
-use super::{MapBuilder, Map, TileType, Position};
+use super::{Map, MapBuilder, Position, TileType};
 
 pub struct VillageWorldBuilder {
-    map : Map,
-    starting_position : Position,
+    map: Map,
+    starting_position: Position,
     history: Vec<Map>,
 }
 
@@ -19,7 +19,7 @@ impl MapBuilder for VillageWorldBuilder {
     fn get_starting_position(&mut self) -> Position {
         self.starting_position.clone()
     }
-    fn build_map(&mut self)  {
+    fn build_map(&mut self) {
         self.build()
     }
 
@@ -32,23 +32,25 @@ impl MapBuilder for VillageWorldBuilder {
             let x = rng.roll_dice(1, self.map.width - 1);
             let y = rng.roll_dice(1, self.map.height - 1);
             let idx = self.map.xy_idx(x, y);
-            if !self.map.is_wall(x, y) && self.map.tiles[idx] != TileType::Water && !used_idx.contains(&idx) {
+            if !self.map.is_wall(x, y)
+                && self.map.tiles[idx] != TileType::Water
+                && !used_idx.contains(&idx)
+            {
                 used_idx.push(idx);
-                world.run(|mut store: AllStoragesViewMut|{
+                world.run(|mut store: AllStoragesViewMut| {
                     entity_factory::villager(&mut store, x, y);
                 });
-            }  
+            }
         }
-
 
         // world.run(|mut store: AllStoragesViewMut|{
 
         //     for y in 1..self.map.height/2 {
         //         for x in 1..self.map.width-1 {
         //             let roll = rng.roll_dice(1, 100);
-        //             if roll < 35 { 
+        //             if roll < 35 {
         //                 entity_factory::tree(&mut store, x, y);
-        //             } 
+        //             }
         //         }
         //     }
 
@@ -80,18 +82,20 @@ impl MapBuilder for VillageWorldBuilder {
 }
 
 impl VillageWorldBuilder {
-    pub fn new(new_depth : i32, size: (i32, i32)) -> VillageWorldBuilder {
-        VillageWorldBuilder{
-            map : Map::new(new_depth, TileType::Wall, size),
-            starting_position : Position{ ps: vec![Point{x:0, y:0}] },
+    pub fn new(new_depth: i32, size: (i32, i32)) -> VillageWorldBuilder {
+        VillageWorldBuilder {
+            map: Map::new(new_depth, TileType::Wall, size),
+            starting_position: Position {
+                ps: vec![Point { x: 0, y: 0 }],
+            },
             history: Vec::new(),
         }
     }
 
     fn build(&mut self) {
-        // Set the map to grass 
-        for y in 1..self.map.height-1 {
-            for x in 1..self.map.width-1 {
+        // Set the map to grass
+        for y in 1..self.map.height - 1 {
+            for x in 1..self.map.width - 1 {
                 let idx = self.map.xy_idx(x, y);
                 self.map.tiles[idx] = TileType::Grass;
             }
@@ -106,7 +110,8 @@ impl VillageWorldBuilder {
 
         let mut x = 0;
         let mut y = 0;
-        while x <= self.map.width - villsize.0 { // todo test with width multiple of villwidth
+        while x <= self.map.width - villsize.0 {
+            // todo test with width multiple of villwidth
             while y <= self.map.height - villsize.1 {
                 let mut villbuilder = super::village_builder(0, villsize);
                 villbuilder.build_map();
@@ -115,7 +120,10 @@ impl VillageWorldBuilder {
 
                 for i in 0..map.tiles.len() {
                     let pos = map.idx_point(i);
-                    let targetpos = Point { x: x + pos.x, y: y + pos.y };
+                    let targetpos = Point {
+                        x: x + pos.x,
+                        y: y + pos.y,
+                    };
                     let targetposidx = self.map.point_idx(targetpos);
                     self.map.tiles[targetposidx] = map.tiles[i];
                 }
@@ -127,7 +135,6 @@ impl VillageWorldBuilder {
 
             x += villsize.0;
         }
-
 
         // // Set the map to grass with a river
         // for y in 1..self.map.height-1 {
@@ -141,10 +148,14 @@ impl VillageWorldBuilder {
         //         }
         //     }
         // }
-    
+
         self.take_snapshot();
 
-        self.starting_position = Position{ ps: vec![Point{x: self.map.width/2, y: self.map.height/2}] };
+        self.starting_position = Position {
+            ps: vec![Point {
+                x: self.map.width / 2,
+                y: self.map.height / 2,
+            }],
+        };
     }
-
 }

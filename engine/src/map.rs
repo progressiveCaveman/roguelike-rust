@@ -1,17 +1,27 @@
-use serde;
-use serde::{Serialize, Deserialize};
 use rltk::{self};
 use rltk::{Algorithm2D, BaseMap, Point};
-use shipyard::{EntityId, Unique, View, Get};
+use serde;
+use serde::{Deserialize, Serialize};
+use shipyard::{EntityId, Get, Unique, View};
 
 use crate::ai::decisions::Target;
 use crate::components::Position;
 use crate::gui::{OFFSET_X, OFFSET_Y};
-use crate::{SCALE};
+use crate::SCALE;
 
 #[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum TileType {
-    Wall, Floor, StairsDown, StairsUp, Grass, Wheat, Dirt, Water, WoodWall, WoodDoor, WoodFloor
+    Wall,
+    Floor,
+    StairsDown,
+    StairsUp,
+    Grass,
+    Wheat,
+    Dirt,
+    Water,
+    WoodWall,
+    WoodDoor,
+    WoodFloor,
 }
 
 #[derive(Default, Serialize, Deserialize, Clone, Unique)]
@@ -25,11 +35,10 @@ pub struct Map {
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
-    pub tile_content : Vec<Vec<EntityId>>,
+    pub tile_content: Vec<Vec<EntityId>>,
 
     // vec of numbers for debug. If it's not set, shouldn't affect anything
     pub dijkstra_map: Vec<f32>,
-
     // TODO Maybe this doesn't belong here, a system would be better practice (but uglier)
     // pub influence_maps: Vec<Vec<f32>>,
 }
@@ -62,13 +71,16 @@ impl Map {
     pub fn point_idx(&self, point: Point) -> usize {
         (point.y as usize * self.width as usize) + point.x as usize
     }
-    
+
     pub fn idx_xy(&self, idx: usize) -> (i32, i32) {
         (idx as i32 % self.width, idx as i32 / self.width)
     }
-    
+
     pub fn idx_point(&self, idx: usize) -> Point {
-        Point {x: idx as i32 % self.width, y: idx as i32 / self.width}
+        Point {
+            x: idx as i32 % self.width,
+            y: idx as i32 / self.width,
+        }
     }
 
     pub fn in_bounds(&self, x: i32, y: i32) -> bool {
@@ -77,15 +89,23 @@ impl Map {
 
     pub fn is_wall(&self, x: i32, y: i32) -> bool {
         let idx = self.xy_idx(x, y);
-        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+        self.tiles[idx] == TileType::Wall
+            || self.tiles[idx] == TileType::WoodWall
+            || self.tiles[idx] == TileType::WoodDoor
     }
 
     pub fn is_flammable(&self, idx: usize) -> bool {
-        self.tiles[idx] == TileType::Grass || self.tiles[idx] == TileType::Wheat || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+        self.tiles[idx] == TileType::Grass
+            || self.tiles[idx] == TileType::Wheat
+            || self.tiles[idx] == TileType::WoodWall
+            || self.tiles[idx] == TileType::WoodDoor
     }
 
     pub fn blocks_movement(&self, idx: usize) -> bool {
-        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::Water || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor
+        self.tiles[idx] == TileType::Wall
+            || self.tiles[idx] == TileType::Water
+            || self.tiles[idx] == TileType::WoodWall
+            || self.tiles[idx] == TileType::WoodDoor
     }
 
     pub fn set_blocked(&mut self) {
@@ -93,7 +113,7 @@ impl Map {
             self.blocked[i] = self.blocks_movement(i);
         }
     }
-    
+
     pub fn clear_tile_content(&mut self) {
         for content in self.tile_content.iter_mut() {
             content.clear();
@@ -102,40 +122,48 @@ impl Map {
 
     // this only works if ctx.set_active_console is set correctly
     pub fn transform_mouse_pos(&self, mouse_pos: (i32, i32)) -> (i32, i32) {
-        (mouse_pos.0 - (OFFSET_X as f32 / SCALE).ceil() as i32, mouse_pos.1 - (OFFSET_Y as f32 / SCALE).ceil() as i32)
+        (
+            mouse_pos.0 - (OFFSET_X as f32 / SCALE).ceil() as i32,
+            mouse_pos.1 - (OFFSET_Y as f32 / SCALE).ceil() as i32,
+        )
     }
 
     pub fn mouse_in_bounds(&self, mouse_pos: (i32, i32)) -> bool {
-        mouse_pos.0 >= 0  && mouse_pos.0 <= self.width && mouse_pos.1 >= 0 && mouse_pos.1 <= self.height
+        mouse_pos.0 >= 0
+            && mouse_pos.0 <= self.width
+            && mouse_pos.1 >= 0
+            && mouse_pos.1 <= self.height
     }
 
-    fn is_exit_valid(&self, x:i32, y:i32) -> bool {
-        if x < 1 || x >= self.width || y < 1 || y >= self.height { return false; }
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x >= self.width || y < 1 || y >= self.height {
+            return false;
+        }
         let idx = self.xy_idx(x, y);
         !self.blocked[idx]
     }
 
-    pub fn distance(&self, vpos: &View<Position>, f: Target, t: Target) -> f32 {        
+    pub fn distance(&self, vpos: &View<Position>, f: Target, t: Target) -> f32 {
         let idx1 = match f {
-            Target::LOCATION(l) => vec!(self.xy_idx(l.x, l.y)),
+            Target::LOCATION(l) => vec![self.xy_idx(l.x, l.y)],
             Target::ENTITY(e) => {
-                if let Ok(p) = vpos.get(e){
+                if let Ok(p) = vpos.get(e) {
                     p.idxes(self)
-                }else{
-                    vec!(0)
+                } else {
+                    vec![0]
                 }
-            },
+            }
         };
 
         let idx2 = match t {
-            Target::LOCATION(l) => vec!(self.xy_idx(l.x, l.y)),
+            Target::LOCATION(l) => vec![self.xy_idx(l.x, l.y)],
             Target::ENTITY(e) => {
-                if let Ok(p) = vpos.get(e){
+                if let Ok(p) = vpos.get(e) {
                     p.idxes(self)
-                }else{
-                    vec!(0)
+                } else {
+                    vec![0]
                 }
-            },
+            }
         };
 
         let mut min = f32::MAX;
@@ -178,13 +206,13 @@ impl Map {
     //                 }
     //             }
     //         }
-            
+
     //         self.repopulate_influence_map(f1, 0.9, 0);
     //         self.repopulate_influence_map(f2, 0.9, 1);
     //     }
     // }
 
-    // pub fn repopulate_influence_map(&mut self, pois: Vec<(Point, f32)>, spread: f32, imap_index: usize) {        
+    // pub fn repopulate_influence_map(&mut self, pois: Vec<(Point, f32)>, spread: f32, imap_index: usize) {
     //     for i in 0..self.influence_maps[imap_index].len() {
     //         self.influence_maps[imap_index][i] = 0.0;
     //     }
@@ -207,7 +235,7 @@ impl Map {
 
     //         let mut max_inf: f32 = 0.0;
 
-    //         // reduce each tile 
+    //         // reduce each tile
     //         for (i, el) in self.influence_maps[imap_index].iter().enumerate() {
     //             max_inf = f32::max(max_inf, *el);
     //             let neighbors = self.get_available_exits(i);
@@ -243,7 +271,10 @@ impl Algorithm2D for Map {
 
 impl BaseMap for Map {
     fn is_opaque(&self, idx: usize) -> bool {
-        self.tiles[idx] == TileType::Wall || self.tiles[idx] == TileType::Wheat || self.tiles[idx] == TileType::WoodWall || self.tiles[idx] == TileType::WoodDoor // TODO make fire block too?
+        self.tiles[idx] == TileType::Wall
+            || self.tiles[idx] == TileType::Wheat
+            || self.tiles[idx] == TileType::WoodWall
+            || self.tiles[idx] == TileType::WoodDoor // TODO make fire block too?
     }
 
     fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
@@ -258,15 +289,31 @@ impl BaseMap for Map {
         let (x, y) = self.idx_xy(idx);
         let w = self.width as usize;
 
-        if self.is_exit_valid(x - 1, y) { exits.push((idx - 1, 1.0)) };
-        if self.is_exit_valid(x + 1, y) { exits.push((idx + 1, 1.0)) };
-        if self.is_exit_valid(x, y - 1) { exits.push((idx - w, 1.0)) };
-        if self.is_exit_valid(x, y + 1) { exits.push((idx + w, 1.0)) };
+        if self.is_exit_valid(x - 1, y) {
+            exits.push((idx - 1, 1.0))
+        };
+        if self.is_exit_valid(x + 1, y) {
+            exits.push((idx + 1, 1.0))
+        };
+        if self.is_exit_valid(x, y - 1) {
+            exits.push((idx - w, 1.0))
+        };
+        if self.is_exit_valid(x, y + 1) {
+            exits.push((idx + w, 1.0))
+        };
 
-        if self.is_exit_valid(x - 1, y - 1) { exits.push((idx - w - 1, 1.45)) };
-        if self.is_exit_valid(x + 1, y - 1) { exits.push((idx - w + 1, 1.45)) };
-        if self.is_exit_valid(x - 1, y + 1) { exits.push((idx + w - 1, 1.45)) };
-        if self.is_exit_valid(x + 1, y + 1) { exits.push((idx + w + 1, 1.45)) };
+        if self.is_exit_valid(x - 1, y - 1) {
+            exits.push((idx - w - 1, 1.45))
+        };
+        if self.is_exit_valid(x + 1, y - 1) {
+            exits.push((idx - w + 1, 1.45))
+        };
+        if self.is_exit_valid(x - 1, y + 1) {
+            exits.push((idx + w - 1, 1.45))
+        };
+        if self.is_exit_valid(x + 1, y + 1) {
+            exits.push((idx + w + 1, 1.45))
+        };
 
         exits
     }

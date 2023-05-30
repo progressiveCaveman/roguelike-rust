@@ -1,19 +1,27 @@
-use rltk::RandomNumberGenerator;
-use shipyard::{View, ViewMut, IntoIter, IntoWithId, Remove, UniqueViewMut, EntityId};
-use crate::map::{TileType, Map};
 use crate::components::{CombatStats, Fire, Position};
-use crate::effects::{EffectType, Targets, add_effect};
+use crate::effects::{add_effect, EffectType, Targets};
+use crate::map::{Map, TileType};
+use rltk::RandomNumberGenerator;
+use shipyard::{EntityId, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut};
 
 pub const NEW_FIRE_TURNS: i32 = 10;
 
-pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats: ViewMut<CombatStats>, mut vfire: ViewMut<Fire>) {
+pub fn run_fire_system(
+    mut map: UniqueViewMut<Map>,
+    vpos: View<Position>,
+    vstats: ViewMut<CombatStats>,
+    mut vfire: ViewMut<Fire>,
+) {
     let mut rng = RandomNumberGenerator::new();
-    
+
     // damage all entities on fire. If they are standing somewhere flammable, ignite it
     for (id, (pos, _, _)) in (&vpos, &vstats, &vfire).iter().with_id() {
         add_effect(
             None,
-            EffectType::Damage{ amount: 1, target: Targets::Single{ target: id } }
+            EffectType::Damage {
+                amount: 1,
+                target: Targets::Single { target: id },
+            },
         );
 
         for pos in pos.ps.iter() {
@@ -34,10 +42,12 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
             // vfire.remove(id);
         }
     });
-    for e in to_remove.iter() { vfire.remove(*e); }
+    for e in to_remove.iter() {
+        vfire.remove(*e);
+    }
 
     // reduce fire turns on tiles
-    for idx in 0..(map.width*map.height) as usize {
+    for idx in 0..(map.width * map.height) as usize {
         if map.fire_turns[idx] > 0 {
             map.fire_turns[idx] -= 1;
 
@@ -49,7 +59,10 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
             for e in map.tile_content[idx].iter() {
                 add_effect(
                     None,
-                    EffectType::Fire { turns: NEW_FIRE_TURNS, target: Targets::Single{ target: *e } },
+                    EffectType::Fire {
+                        turns: NEW_FIRE_TURNS,
+                        target: Targets::Single { target: *e },
+                    },
                 );
             }
 
@@ -57,10 +70,13 @@ pub fn run_fire_system(mut map: UniqueViewMut<Map>, vpos: View<Position>, vstats
             let (x, y) = map.idx_xy(idx);
             for dx in -1..=1 {
                 for dy in -1..=1 {
-                    let (nx, ny) = (x+dx, y+dy);
+                    let (nx, ny) = (x + dx, y + dy);
                     if map.in_bounds(nx, ny) {
                         let idx = map.xy_idx(nx, ny);
-                        if map.fire_turns[idx] == 0 && map.is_flammable(idx) && rng.range(0, 10) == 0 {
+                        if map.fire_turns[idx] == 0
+                            && map.is_flammable(idx)
+                            && rng.range(0, 10) == 0
+                        {
                             map.fire_turns[idx] = NEW_FIRE_TURNS;
                         }
                     }

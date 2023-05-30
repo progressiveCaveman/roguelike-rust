@@ -1,12 +1,12 @@
-use rltk::{Rltk, Point, VirtualKeyCode, RGB, RGBA};
-use shipyard::{UniqueView, View, Get};
 use crate::ai::decisions::Intent;
+use crate::components::{CombatStats, Fire, Inventory, Name, Position, Viewshed};
 use crate::gamelog::GameLog;
-use crate::player::get_player_map_knowledge;
-use crate::utils::{PlayerID, PPoint, Turn, FrameTime};
-use crate::{WINDOWWIDTH, GameMode, State, WINDOWHEIGHT};
-use crate::components::{CombatStats, Name, Position, Viewshed, Fire, Inventory};
 use crate::map::Map;
+use crate::player::get_player_map_knowledge;
+use crate::utils::{FrameTime, PPoint, PlayerID, Turn};
+use crate::{GameMode, State, WINDOWHEIGHT, WINDOWWIDTH};
+use rltk::{Point, Rltk, VirtualKeyCode, RGB, RGBA};
+use shipyard::{Get, UniqueView, View};
 
 pub mod camera;
 pub use camera::*;
@@ -17,7 +17,7 @@ pub use gui_menus::*;
 /*
 Render strategy:
 Background color shows material
-Glyph shows entity 
+Glyph shows entity
 glyph color is set by entity in general
 Background color is modified by tile status such as gas, light, or fire
 Glyph color is modified by some statuses?
@@ -29,26 +29,118 @@ pub const OFFSET_X: usize = 31;
 pub const OFFSET_Y: usize = 11;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum ItemMenuResult {Cancel, NoResponse, Selected}
+pub enum ItemMenuResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
 
 pub struct Palette;
 impl Palette {
-    pub const MAIN_BG: rltk::RGBA = RGBA{r: 0., g: 0., b: 0., a: 0.};
-    pub const MAIN_FG: rltk::RGBA = RGBA{r: 0.5, g: 0.5, b: 0.5, a: 1.};
-    pub const COLOR_PURPLE: rltk::RGBA = RGBA{r: 1., g: 0., b: 1., a: 1.};
-    pub const COLOR_RED: rltk::RGBA = RGBA{r: 1., g: 0., b: 0., a: 1.};
-    pub const COLOR_GREEN: rltk::RGBA = RGBA{r: 0., g:0.7, b:0., a: 1.};
-    pub const COLOR_GREEN_DARK: rltk::RGBA = RGBA{r: 0., g: 0.2, b: 0., a: 1.};
-    pub const COLOR_3: rltk::RGBA = RGBA{r: 0.7, g: 0.2, b: 0.2, a: 1.};
-    pub const COLOR_4: rltk::RGBA = RGBA{r: 0.7, g:0.7, b:0., a: 1.};
-    pub const COLOR_AMBER: rltk::RGBA = RGBA{r: 1., g:0.74, b:0., a: 1.};
-    pub const COLOR_WOOD: RGBA = RGBA{r: 0.45, g:0.38, b:0.26, a: 1.};
-    pub const COLOR_DIRT: RGBA = RGBA{r: 0.6, g:0.46, b:0.32, a: 1.};
-    pub const COLOR_WATER: RGBA = RGBA{r: 0.0, g:0.0, b:0.82, a: 1.};
-    pub const COLOR_FIRE: RGBA = RGBA{r: 0.88, g:0.34, b:0.13, a: 1.};
-    pub const COLOR_CEDAR: RGBA = RGBA{r: 0.39, g:0.22, b:0.17, a: 1.};
-    pub const COLOR_CLEAR: RGBA = RGBA{r: 0., g:0., b:0., a: 0.};
-    pub const FACTION_COLORS: [RGBA; 2] = [RGBA{r: 1.0, g:0., b:0., a: 1.}, RGBA{r: 0.0, g:0.0, b:1.0, a: 1.}];
+    pub const MAIN_BG: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.,
+        b: 0.,
+        a: 0.,
+    };
+    pub const MAIN_FG: rltk::RGBA = RGBA {
+        r: 0.5,
+        g: 0.5,
+        b: 0.5,
+        a: 1.,
+    };
+    pub const COLOR_PURPLE: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.,
+        b: 1.,
+        a: 1.,
+    };
+    pub const COLOR_RED: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_GREEN: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.7,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_GREEN_DARK: rltk::RGBA = RGBA {
+        r: 0.,
+        g: 0.2,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_3: rltk::RGBA = RGBA {
+        r: 0.7,
+        g: 0.2,
+        b: 0.2,
+        a: 1.,
+    };
+    pub const COLOR_4: rltk::RGBA = RGBA {
+        r: 0.7,
+        g: 0.7,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_AMBER: rltk::RGBA = RGBA {
+        r: 1.,
+        g: 0.74,
+        b: 0.,
+        a: 1.,
+    };
+    pub const COLOR_WOOD: RGBA = RGBA {
+        r: 0.45,
+        g: 0.38,
+        b: 0.26,
+        a: 1.,
+    };
+    pub const COLOR_DIRT: RGBA = RGBA {
+        r: 0.6,
+        g: 0.46,
+        b: 0.32,
+        a: 1.,
+    };
+    pub const COLOR_WATER: RGBA = RGBA {
+        r: 0.0,
+        g: 0.0,
+        b: 0.82,
+        a: 1.,
+    };
+    pub const COLOR_FIRE: RGBA = RGBA {
+        r: 0.88,
+        g: 0.34,
+        b: 0.13,
+        a: 1.,
+    };
+    pub const COLOR_CEDAR: RGBA = RGBA {
+        r: 0.39,
+        g: 0.22,
+        b: 0.17,
+        a: 1.,
+    };
+    pub const COLOR_CLEAR: RGBA = RGBA {
+        r: 0.,
+        g: 0.,
+        b: 0.,
+        a: 0.,
+    };
+    pub const FACTION_COLORS: [RGBA; 2] = [
+        RGBA {
+            r: 1.0,
+            g: 0.,
+            b: 0.,
+            a: 1.,
+        },
+        RGBA {
+            r: 0.0,
+            g: 0.0,
+            b: 1.0,
+            a: 1.,
+        },
+    ];
 }
 
 pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
@@ -66,21 +158,38 @@ pub fn draw_gui(gs: &State, ctx: &mut Rltk) {
     };
 
     // horizontal line
-    ctx.print_color(0, OFFSET_Y - 1, Palette::MAIN_FG, Palette::MAIN_BG, "─".repeat(WINDOWWIDTH));
+    ctx.print_color(
+        0,
+        OFFSET_Y - 1,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        "─".repeat(WINDOWWIDTH),
+    );
 
     // player stats
     ctx.print_color(1, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
-    ctx.print_color(1, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {:?}", *turn));
-    ctx.print_color(1, 9, Palette::MAIN_FG, Palette::MAIN_BG, format!("Depth: {}", map.depth));
-
+    ctx.print_color(
+        1,
+        2,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        &format!("Turn: {:?}", *turn),
+    );
+    ctx.print_color(
+        1,
+        9,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("Depth: {}", map.depth),
+    );
 
     // On fire display
     let vfire = world.borrow::<View<Fire>>().unwrap();
     match vfire.get(player_id) {
         Ok(_) => {
-            ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE"); 
-        },
-        Err(_) => {},
+            ctx.print_color(1, 3, Palette::MAIN_FG, Palette::COLOR_FIRE, "FIRE");
+        }
+        Err(_) => {}
     }
 
     for y in 0..WINDOWHEIGHT {
@@ -123,10 +232,18 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
     map_mouse_pos.0 += min_x;
     map_mouse_pos.1 += min_y;
-    if map_mouse_pos.0 >= map.width || map_mouse_pos.1 >= map.height || map_mouse_pos.0 < 0 || map_mouse_pos.1 < 0 { return; }
-    
+    if map_mouse_pos.0 >= map.width
+        || map_mouse_pos.1 >= map.height
+        || map_mouse_pos.0 < 0
+        || map_mouse_pos.1 < 0
+    {
+        return;
+    }
+
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) { return; }
+    if *gamemode != GameMode::Sim && !get_player_map_knowledge(gs).contains_key(&idx) {
+        return;
+    }
 
     let vname = world.borrow::<View<Name>>().unwrap();
     let vpos = world.borrow::<View<Position>>().unwrap();
@@ -141,51 +258,105 @@ pub fn draw_tooltips(gs: &State, ctx: &mut Rltk) {
     // ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("mouse: {:?}", map_mouse_pos));
 
     // ypos += 2;
-    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("PPOS: {:?}", player_pos));
+    ctx.print_color(
+        1,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("PPOS: {:?}", player_pos),
+    );
 
     ypos += 1;
-    ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Frametime: {:?}", frametime));
+    ctx.print_color(
+        1,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("Frametime: {:?}", frametime),
+    );
 
     /* Normal stuff */
     ypos += 2;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Tile:");
 
     ypos += 1;
-    ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", map.tiles[idx]));
+    ctx.print_color(
+        2,
+        ypos,
+        Palette::MAIN_FG,
+        Palette::MAIN_BG,
+        format!("{:?}", map.tiles[idx]),
+    );
 
     ypos += 2;
     ctx.print_color(1, ypos, Palette::MAIN_FG, Palette::MAIN_BG, "Entities:");
-    
+
     for e in map.tile_content[idx].iter() {
         if let Ok(name) = vname.get(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?} {}", e, name.name));
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("{:?} {}", e, name.name),
+            );
         }
 
         if let Ok(pos) = vpos.get(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", pos.ps[0]));
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("{:?}", pos.ps[0]),
+            );
         }
 
         if let Ok(stats) = vstats.get(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("HP: {}/{}", stats.hp, stats.max_hp));
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("HP: {}/{}", stats.hp, stats.max_hp),
+            );
         }
 
         if let Ok(intent) = vintent.get(*e) {
             ypos += 1;
-            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Intent: {}", intent.name));
+            ctx.print_color(
+                2,
+                ypos,
+                Palette::MAIN_FG,
+                Palette::MAIN_BG,
+                format!("Intent: {}", intent.name),
+            );
         }
 
         if let Ok(inv) = vinv.get(*e) {
             if inv.items.len() > 0 {
                 ypos += 1;
-                ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Inventory:"));
-    
+                ctx.print_color(
+                    2,
+                    ypos,
+                    Palette::MAIN_FG,
+                    Palette::MAIN_BG,
+                    format!("Inventory:"),
+                );
+
                 for item in inv.items.iter() {
                     if let Ok(name) = vname.get(*item) {
                         ypos += 1;
-                        ctx.print_color(3, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}, {}", item, name.name));    
+                        ctx.print_color(
+                            3,
+                            ypos,
+                            Palette::MAIN_FG,
+                            Palette::MAIN_BG,
+                            format!("{:?}, {}", item, name.name),
+                        );
                     }
                 }
             }
@@ -242,21 +413,31 @@ pub fn ranged_target(gs: &State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult,
     let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
     let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let player_pos = gs.world.borrow::<UniqueView<PPoint>>().unwrap().0;
-    ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
+    ctx.print_color(
+        5,
+        12,
+        Palette::COLOR_PURPLE,
+        Palette::MAIN_BG,
+        "Select a target",
+    );
 
     let (min_x, max_x, min_y, max_y) = camera::get_map_coords_for_screen(player_pos, ctx);
 
     let mut valid_cells: Vec<Point> = Vec::new();
     let vvs = gs.world.borrow::<View<Viewshed>>().unwrap();
     match vvs.get(player_id) {
-        Err(_e) => {return (ItemMenuResult::Cancel, None)},
+        Err(_e) => return (ItemMenuResult::Cancel, None),
         Ok(player_vs) => {
             for pt in player_vs.visible_tiles.iter() {
                 let dist = rltk::DistanceAlg::Pythagoras.distance2d(player_pos, *pt);
                 if dist as i32 <= range {
                     let screen_x = pt.x - min_x + OFFSET_X as i32;
                     let screen_y = pt.y - min_y + OFFSET_Y as i32; // TODO why is offset needed here??
-                    if screen_x > 1 && screen_x < (max_x - min_x)-1 && screen_y > 1 && screen_y < (max_y - min_y)-1 {
+                    if screen_x > 1
+                        && screen_x < (max_x - min_x) - 1
+                        && screen_y > 1
+                        && screen_y < (max_y - min_y) - 1
+                    {
                         ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));
                         valid_cells.push(*pt);
                     }
@@ -279,24 +460,30 @@ pub fn ranged_target(gs: &State, ctx: &mut Rltk, range: i32) -> (ItemMenuResult,
     // let map_mouse_pos = (mouse_pos.0 - map::OFFSET_X as i32, mouse_pos.1 - map::OFFSET_Y as i32);
     let mut valid_target = false;
     for pt in valid_cells.iter() {
-        if pt.x == map_mouse_pos.0 && pt.y == map_mouse_pos.1 { valid_target = true }
+        if pt.x == map_mouse_pos.0 && pt.y == map_mouse_pos.1 {
+            valid_target = true
+        }
     }
     if valid_target {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_GREEN_DARK);
-        if ctx.left_click { return (ItemMenuResult::Selected, Some(Point::new(map_mouse_pos.0, map_mouse_pos.1))) }
-    }
-    else {
+        if ctx.left_click {
+            return (
+                ItemMenuResult::Selected,
+                Some(Point::new(map_mouse_pos.0, map_mouse_pos.1)),
+            );
+        }
+    } else {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_RED);
-        if ctx.left_click { return (ItemMenuResult::Cancel, None) }
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
     }
 
     match ctx.key {
         None => (ItemMenuResult::NoResponse, None),
-        Some(key) => {
-            match key {
-                VirtualKeyCode::Escape => { return (ItemMenuResult::Cancel, None) },
-                _ => (ItemMenuResult::NoResponse, None)
-            }
-        }
+        Some(key) => match key {
+            VirtualKeyCode::Escape => return (ItemMenuResult::Cancel, None),
+            _ => (ItemMenuResult::NoResponse, None),
+        },
     }
 }

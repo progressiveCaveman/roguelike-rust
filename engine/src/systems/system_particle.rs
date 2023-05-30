@@ -1,7 +1,15 @@
 use rltk::{FontCharType, Point, RGBA};
-use shipyard::{EntityId, Unique, ViewMut, View, IntoIter, IntoWithId, Get, AllStoragesViewMut, UniqueView, UniqueViewMut};
+use shipyard::{
+    AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Unique, UniqueView, UniqueViewMut,
+    View, ViewMut,
+};
 
-use crate::{RenderOrder, components::{Lifetime, Particle, Position, Renderable, Velocity}, utils::FrameTime, effects::{add_effect, EffectType}};
+use crate::{
+    components::{Lifetime, Particle, Position, Renderable, Velocity},
+    effects::{add_effect, EffectType},
+    utils::FrameTime,
+    RenderOrder,
+};
 
 #[derive(Debug)]
 struct ParticleRequest {
@@ -12,25 +20,42 @@ struct ParticleRequest {
     fg: RGBA,
     bg: RGBA,
     glyph: FontCharType,
-    lifetime_ms: f32
+    lifetime_ms: f32,
 }
 
 #[derive(Debug, Unique)]
 pub struct ParticleBuilder {
-    requests: Vec<ParticleRequest>
+    requests: Vec<ParticleRequest>,
 }
 
 impl ParticleBuilder {
     pub fn new() -> ParticleBuilder {
-        ParticleBuilder{ requests: Vec::new() }
+        ParticleBuilder {
+            requests: Vec::new(),
+        }
     }
 
-    pub fn request(&mut self, x: i32, y: i32, vel_x: f32, vel_y: f32, fg: RGBA, bg: RGBA, glyph: FontCharType, lifetime_ms: f32) {
-        self.requests.push(
-            ParticleRequest {
-                x, y, vel_x, vel_y, fg, bg, glyph, lifetime_ms
-            }
-        );
+    pub fn request(
+        &mut self,
+        x: i32,
+        y: i32,
+        vel_x: f32,
+        vel_y: f32,
+        fg: RGBA,
+        bg: RGBA,
+        glyph: FontCharType,
+        lifetime_ms: f32,
+    ) {
+        self.requests.push(ParticleRequest {
+            x,
+            y,
+            vel_x,
+            vel_y,
+            fg,
+            bg,
+            glyph,
+            lifetime_ms,
+        });
     }
 
     pub fn clear(&mut self) {
@@ -41,14 +66,29 @@ impl ParticleBuilder {
 pub fn spawn_particles(mut store: AllStoragesViewMut) {
     let mut to_add = vec![];
     {
-        let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap(); 
+        let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();
         for p in particle_builder.requests.iter() {
             to_add.push((
-                Renderable {glyph: p.glyph, fg: p.fg, bg: p.bg, always_render: true, order: RenderOrder::Particle, ..Default::default()},
-                Position {ps: vec![Point{x: p.x, y: p.y}]},
-                Velocity {x: p.vel_x, y: p.vel_y},
-                Lifetime {ms: p.lifetime_ms},
-                Particle {float_x: p.x as f32, float_y: p.y as f32}
+                Renderable {
+                    glyph: p.glyph,
+                    fg: p.fg,
+                    bg: p.bg,
+                    always_render: true,
+                    order: RenderOrder::Particle,
+                    ..Default::default()
+                },
+                Position {
+                    ps: vec![Point { x: p.x, y: p.y }],
+                },
+                Velocity {
+                    x: p.vel_x,
+                    y: p.vel_y,
+                },
+                Lifetime { ms: p.lifetime_ms },
+                Particle {
+                    float_x: p.x as f32,
+                    float_y: p.y as f32,
+                },
             ));
         }
         particle_builder.clear();
@@ -59,7 +99,13 @@ pub fn spawn_particles(mut store: AllStoragesViewMut) {
     }
 }
 
-pub fn update_particles(frametime: UniqueView<FrameTime>, mut vpart: ViewMut<Particle>, mut vlifetime: ViewMut<Lifetime>, vvel: View<Velocity>, mut vpos: ViewMut<Position>) {
+pub fn update_particles(
+    frametime: UniqueView<FrameTime>,
+    mut vpart: ViewMut<Particle>,
+    mut vlifetime: ViewMut<Lifetime>,
+    vvel: View<Velocity>,
+    mut vpos: ViewMut<Position>,
+) {
     for (id, (particle, lifetime)) in (&mut vpart, &mut vlifetime).iter().with_id() {
         lifetime.ms -= frametime.0;
 

@@ -1,13 +1,13 @@
-use rltk::{RandomNumberGenerator, Point};
-use rand::thread_rng;
+use crate::{entity_factory, SHOW_MAPGEN_ANIMATION};
+use crate::{MAPHEIGHT, MAPWIDTH};
 use rand::seq::SliceRandom;
-use shipyard::{World, AllStoragesViewMut};
+use rand::thread_rng;
+use rltk::{Point, RandomNumberGenerator};
+use shipyard::{AllStoragesViewMut, World};
 use std::cmp;
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
-use crate::{MAPWIDTH, MAPHEIGHT};
 
 use super::common::apply_drunkards_corrider;
-use super::{MapBuilder, Map, Rect, TileType, Position};
+use super::{Map, MapBuilder, Position, Rect, TileType};
 
 pub const MIN_X: i32 = 0;
 pub const MIN_Y: i32 = 0;
@@ -19,7 +19,7 @@ pub struct DrunkardsBombingRunBuilder {
     starting_position: Position,
     depth: i32,
     rooms: Vec<Rect>,
-    history: Vec<Map>
+    history: Vec<Map>,
 }
 
 impl MapBuilder for DrunkardsBombingRunBuilder {
@@ -31,13 +31,13 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
         self.starting_position.clone()
     }
 
-    fn build_map(&mut self){
+    fn build_map(&mut self) {
         dbg!("build_map");
         self.rooms_and_corridors(20, 4, 8);
     }
-    
+
     fn spawn_entities(&mut self, world: &mut World) {
-        world.run(|mut store: AllStoragesViewMut|{
+        world.run(|mut store: AllStoragesViewMut| {
             for room in self.rooms.iter().skip(1) {
                 entity_factory::spawn_room(&mut store, &self.map, room, self.depth);
             }
@@ -57,12 +57,14 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
 
 impl DrunkardsBombingRunBuilder {
     pub fn new(new_depth: i32, size: (i32, i32)) -> DrunkardsBombingRunBuilder {
-        DrunkardsBombingRunBuilder{
+        DrunkardsBombingRunBuilder {
             map: Map::new(new_depth, TileType::Wall, size),
-            starting_position : Position{ ps: vec![Point{x:0, y:0}] },
+            starting_position: Position {
+                ps: vec![Point { x: 0, y: 0 }],
+            },
             depth: new_depth,
             rooms: Vec::new(),
-            history: Vec::new()
+            history: Vec::new(),
         }
     }
 
@@ -120,14 +122,18 @@ impl DrunkardsBombingRunBuilder {
 
             self.take_snapshot();
         }
-        
 
         let stairs_down_pos = self.rooms[self.rooms.len() - 1].center();
         let stairs_idx = self.map.xy_idx(stairs_down_pos.0, stairs_down_pos.1);
         self.map.tiles[stairs_idx] = TileType::StairsDown;
 
         let start_pos = self.rooms[0].center();
-        self.starting_position = Position{ ps:vec![Point{x: start_pos.0, y: start_pos.1}] };
+        self.starting_position = Position {
+            ps: vec![Point {
+                x: start_pos.0,
+                y: start_pos.1,
+            }],
+        };
         self.take_snapshot();
 
         self.bomb_level();
@@ -135,7 +141,7 @@ impl DrunkardsBombingRunBuilder {
 
         // Find islands of walls and convert to other features
         let mut mapcpy = self.map.tiles.clone();
-        
+
         //Remove border 'island'
         // let bi = self.get_flood_fill(&mapcpy, 0);
         // for i in 0..mapcpy.len() {
@@ -157,7 +163,7 @@ impl DrunkardsBombingRunBuilder {
 
                 if first {
                     first = false;
-                }else{
+                } else {
                     islands.push(island);
                 }
             }
@@ -210,32 +216,35 @@ impl DrunkardsBombingRunBuilder {
                 // otherwise use lower half of remaining tiles
                 random_offset = rng.range(0, candidates.len() / 2);
             }
-        
+
             // check boundaries
             if random_offset >= candidates.len() {
                 random_offset = candidates.len() - 1;
             }
-        
+
             let idx = candidates[random_offset];
             let tx = self.map.idx_xy(idx as usize).0;
             let ty = self.map.idx_xy(idx as usize).1;
             let map_width = MAPWIDTH;
             let map_height = MAPHEIGHT;
             let use_borders = true;
-            
+
             // we will use bombs of radius 1 mostly with smaller chance (1/20)
             // that radius will be of size 2
-            let bomb_radius = 1;//random_gen_get_i(20) != 0 ? 1 : 2;
-            
-            // bomb    
-            for x in cmp::max(0, tx - bomb_radius - 1)..cmp::max(map_width as i32, tx + bomb_radius) {
-                for y in cmp::max(0, ty - bomb_radius - 1)..cmp::max(map_height as i32, ty + bomb_radius) {
-            
+            let bomb_radius = 1; //random_gen_get_i(20) != 0 ? 1 : 2;
+
+            // bomb
+            for x in cmp::max(0, tx - bomb_radius - 1)..cmp::max(map_width as i32, tx + bomb_radius)
+            {
+                for y in
+                    cmp::max(0, ty - bomb_radius - 1)..cmp::max(map_height as i32, ty + bomb_radius)
+                {
                     // println!("bomb check {tx} {ty} {x} {y}");
 
                     // check if tile is within the circle
-                    if (x - tx)*(x - tx) + (y - ty)*(y - ty) < bomb_radius * bomb_radius +  bomb_radius {
-            
+                    if (x - tx) * (x - tx) + (y - ty) * (y - ty)
+                        < bomb_radius * bomb_radius + bomb_radius
+                    {
                         if use_borders {
                             if x < MIN_X {
                                 continue;
@@ -250,7 +259,7 @@ impl DrunkardsBombingRunBuilder {
                                 continue;
                             }
                         }
-                        
+
                         // if we have at least one tile bombed on screen
                         // push those coordinates to candidate list
                         let new_idx = self.map.xy_idx(x, y);
@@ -262,10 +271,9 @@ impl DrunkardsBombingRunBuilder {
                     }
                 }
             }
-        
+
             // erase our bombing cell, it is re-added in bombing loop above, if at least one tile is changed.
             candidates.drain(random_offset..random_offset + 1);
-
         }
     }
 
@@ -300,12 +308,11 @@ impl DrunkardsBombingRunBuilder {
             // let cell = image[sidx];
 
             if image[sidx] == initial_color && ret[sidx] == false {
-
                 // *cell = new_color;
                 ret[sidx] = true;
                 count += 1;
 
-                const OFFSETS: &[(i32, i32)] = &[(-1,0),(1,0),(0,-1),(0,1)];
+                const OFFSETS: &[(i32, i32)] = &[(-1, 0), (1, 0), (0, -1), (0, 1)];
 
                 let (sr, sc) = self.map.idx_xy(sidx);
 

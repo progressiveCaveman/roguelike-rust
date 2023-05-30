@@ -1,38 +1,48 @@
 #[macro_use]
 extern crate lazy_static;
 
-use components::{InBackpack, Player, Equipped, Position, Viewshed, Ranged, WantsToUseItem, WantsToDropItem, WantsToUnequipItem};
+use components::{
+    Equipped, InBackpack, Player, Position, Ranged, Viewshed, WantsToDropItem, WantsToUnequipItem,
+    WantsToUseItem,
+};
 use gamelog::GameLog;
-use item_system::{run_drop_item_system, run_unequip_item_system, run_item_use_system};
-use map::{Map};
-use rltk::{RGBA};
-use rltk::{Rltk, GameState, Point};
+use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
+use map::Map;
+use rltk::RGBA;
+use rltk::{GameState, Point, Rltk};
 
 mod item_system;
 
 pub mod ai;
 
 pub mod gui;
-use gui::gui_menus;
 use gui::camera;
+use gui::gui_menus;
 
-pub mod player;
-pub mod map;
 pub mod components;
-pub mod rect;
+pub mod entity_factory;
 pub mod gamelog;
 pub mod input_handler;
-pub mod entity_factory;
-pub mod weighted_table;
+pub mod map;
+pub mod player;
+pub mod rect;
 pub mod utils;
+pub mod weighted_table;
 
 pub mod map_builders;
 use map_builders::MapGenData;
 
 pub mod systems;
-use shipyard::{EntityId, World, ViewMut, Get, Unique, UniqueView, UniqueViewMut, AllStoragesViewMut, View, EntitiesView};
-use systems::{system_cleanup, system_ai_villager, system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_ai_monster, system_particle, system_visibility, system_ai_spawner, system_pathfinding, system_ai_fish};
-use utils::{PlayerID, PPoint, FrameTime, Turn, AutoRun};
+use shipyard::{
+    AllStoragesViewMut, EntitiesView, EntityId, Get, Unique, UniqueView, UniqueViewMut, View,
+    ViewMut, World,
+};
+use systems::{
+    system_ai_fish, system_ai_monster, system_ai_spawner, system_ai_villager, system_cleanup,
+    system_dissasemble, system_fire, system_map_indexing, system_melee_combat, system_particle,
+    system_pathfinding, system_visibility,
+};
+use utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn};
 
 pub mod effects;
 
@@ -47,7 +57,7 @@ pub const WINDOWHEIGHT: usize = 80;
 pub const SCALE: f32 = 1.0;
 
 #[derive(Copy, Clone, PartialEq, Unique)]
-pub enum GameMode{
+pub enum GameMode {
     NotSelected,
     Sim,
     RL,
@@ -60,13 +70,20 @@ pub enum RunState {
     PlayerTurn,
     AiTurn,
     ShowInventory,
-    ShowItemActions {item: EntityId},
-    ShowTargeting {range: i32, item: EntityId},
-    MainMenu {menu_selection: gui_menus::MainMenuSelection},
+    ShowItemActions {
+        item: EntityId,
+    },
+    ShowTargeting {
+        range: i32,
+        item: EntityId,
+    },
+    MainMenu {
+        menu_selection: gui_menus::MainMenuSelection,
+    },
     SaveGame,
     NextLevel,
     GameOver,
-    MapGenAnimation
+    MapGenAnimation,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
@@ -74,19 +91,19 @@ pub enum RenderOrder {
     Items,
     NPC,
     Player,
-    Particle
+    Particle,
 }
 
 pub trait Renderer: 'static {
-    fn render(&self, gs: &State, ctx : &mut Rltk);
+    fn render(&self, gs: &State, ctx: &mut Rltk);
 }
 
 pub struct State {
     pub world: World,
     // resources: Resources,
-    pub mapgen_data: MapGenData, 
+    pub mapgen_data: MapGenData,
     pub wait_frames: i32,
-    pub renderer: Box<dyn Renderer>
+    pub renderer: Box<dyn Renderer>,
 }
 
 impl State {
@@ -98,13 +115,13 @@ impl State {
 
         effects::run_effects_queue(self);
 
-        if runstate == RunState::AiTurn { 
+        if runstate == RunState::AiTurn {
             self.world.run(system_pathfinding::run_pathfinding_system);
             self.world.run(system_ai_spawner::run_spawner_system);
             self.world.run(system_ai_fish::run_fish_ai);
             self.world.run(system_ai_villager::run_villager_ai_system);
             self.world.run(system_ai_monster::run_monster_ai_system);
-            // system_ai_monster::run_monster_ai_system(self);   
+            // system_ai_monster::run_monster_ai_system(self);
         }
 
         effects::run_effects_queue(self);
@@ -138,20 +155,25 @@ impl State {
 
             if let Ok(_) = vplayer.get(id) {
                 to_delete = false;
-            }else if let Ok(backpack) = vpack.get(id) {
-                if backpack.owner == player_id { to_delete = false; }
-            }else if let Ok(equipped) = vequipped.get(id) {
-                if equipped.owner == player_id { to_delete = false; }
+            } else if let Ok(backpack) = vpack.get(id) {
+                if backpack.owner == player_id {
+                    to_delete = false;
+                }
+            } else if let Ok(equipped) = vequipped.get(id) {
+                if equipped.owner == player_id {
+                    to_delete = false;
+                }
             }
 
-            if to_delete { ids_to_delete.push(id); }
+            if to_delete {
+                ids_to_delete.push(id);
+            }
         }
 
         ids_to_delete
     }
 
     fn generate_map(&mut self, new_depth: i32) {
-
         // delete all entities
         let ids_to_delete = self.entities_to_delete_on_level_change();
         for id in ids_to_delete {
@@ -167,9 +189,15 @@ impl State {
 
         // Generate map
         let mut map_builder = match gamemode {
-            GameMode::NotSelected => map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
-            GameMode::Sim => map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
-            GameMode::RL => map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32)),
+            GameMode::NotSelected => {
+                map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+            }
+            GameMode::Sim => {
+                map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+            }
+            GameMode::RL => {
+                map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+            }
         };
 
         map_builder.build_map();
@@ -180,23 +208,33 @@ impl State {
         {
             let mut map = self.world.borrow::<UniqueViewMut<Map>>().unwrap();
             *map = map_builder.get_map();
-            start_pos = map_builder.get_starting_position().ps.first().unwrap().clone();
+            start_pos = map_builder
+                .get_starting_position()
+                .ps
+                .first()
+                .unwrap()
+                .clone();
         }
 
         // Spawn monsters and items
         map_builder.spawn_entities(&mut self.world);
 
         // Update player position
-        self.world.run(|mut ppos: UniqueViewMut<PPoint>, player_id: UniqueView<PlayerID>, mut vpos: ViewMut<Position>, mut vvs: ViewMut<Viewshed>|{
-            *ppos = PPoint(Point::new(start_pos.x, start_pos.y));
-            if let Ok(pos) = (&mut vpos).get(player_id.0) {
-                pos.ps[0] = ppos.0;
-            }
-            
-            if let Ok(mut vs) = (&mut vvs).get(player_id.0) {
-                vs.dirty = true; 
-            }
-        });
+        self.world.run(
+            |mut ppos: UniqueViewMut<PPoint>,
+             player_id: UniqueView<PlayerID>,
+             mut vpos: ViewMut<Position>,
+             mut vvs: ViewMut<Viewshed>| {
+                *ppos = PPoint(Point::new(start_pos.x, start_pos.y));
+                if let Ok(pos) = (&mut vpos).get(player_id.0) {
+                    pos.ps[0] = ppos.0;
+                }
+
+                if let Ok(mut vs) = (&mut vvs).get(player_id.0) {
+                    vs.dirty = true;
+                }
+            },
+        );
     }
 
     fn next_level(&mut self) {
@@ -210,7 +248,8 @@ impl State {
 
         // Notify player
         let mut log = self.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
-        log.messages.push("You descend in the staircase".to_string());
+        log.messages
+            .push("You descend in the staircase".to_string());
     }
 
     fn game_over_cleanup(&mut self) {
@@ -218,7 +257,9 @@ impl State {
         self.world.clear();
 
         // Create player
-        let player_id = self.world.run(|mut store: AllStoragesViewMut|{entity_factory::player(&mut store, (0, 0))});
+        let player_id = self
+            .world
+            .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(PlayerID(player_id));
 
@@ -232,9 +273,15 @@ impl GameState for State {
         ctx.set_active_console(1);
         // write transparent bg
         let (x, y) = ctx.get_char_size();
-        for ix in 0..x{
-            for iy in 0..y{
-                ctx.set(ix, iy, RGBA::from_u8(0, 0, 0, 0), RGBA::from_u8(0, 0, 0, 0), 32)
+        for ix in 0..x {
+            for iy in 0..y {
+                ctx.set(
+                    ix,
+                    iy,
+                    RGBA::from_u8(0, 0, 0, 0),
+                    RGBA::from_u8(0, 0, 0, 0),
+                    32,
+                )
             }
         }
 
@@ -263,7 +310,7 @@ impl GameState for State {
                 new_runstate = input_handler::handle_input(self, ctx);
 
                 let autorun = self.world.borrow::<UniqueView<AutoRun>>().unwrap().clone();
-                
+
                 if new_runstate == RunState::AwaitingInput && autorun.0 {
                     self.wait_frames += 1;
                     if self.wait_frames >= 10 {
@@ -288,24 +335,30 @@ impl GameState for State {
                 let result = gui_menus::show_inventory(self, ctx);
                 match result.0 {
                     gui::ItemMenuResult::NoResponse => {}
-                    gui::ItemMenuResult::Cancel => { new_runstate = RunState::AwaitingInput }
+                    gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::Selected => {
-                        new_runstate = RunState::ShowItemActions{ item: result.1.unwrap() }
+                        new_runstate = RunState::ShowItemActions {
+                            item: result.1.unwrap(),
+                        }
                     }
                 }
             }
-            RunState::ShowItemActions{item} => {
+            RunState::ShowItemActions { item } => {
                 let result = gui_menus::show_item_actions(&mut self.world, item, ctx);
                 match result {
                     gui_menus::ItemActionSelection::NoSelection => {}
                     gui_menus::ItemActionSelection::Used => {
                         let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
-                            let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                            let player_id =
+                                self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                             let vranged = self.world.borrow::<ViewMut<Ranged>>().unwrap();
                             match vranged.get(item) {
                                 Ok(is_item_ranged) => {
-                                    new_runstate = RunState::ShowTargeting{range:is_item_ranged.range, item};
+                                    new_runstate = RunState::ShowTargeting {
+                                        range: is_item_ranged.range,
+                                        item,
+                                    };
                                 }
                                 Err(_) => {
                                     to_add_wants_use_item.push(player_id);
@@ -315,69 +368,84 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            self.world.add_component(*id, WantsToUseItem {item, target: None});
+                            self.world
+                                .add_component(*id, WantsToUseItem { item, target: None });
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
                         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        self.world.add_component(player_id, WantsToDropItem {item});
+                        self.world
+                            .add_component(player_id, WantsToDropItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
                         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        self.world.add_component(player_id, WantsToUnequipItem{item});
+                        self.world
+                            .add_component(player_id, WantsToUnequipItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
-                    gui_menus::ItemActionSelection::Cancel => { new_runstate = RunState::ShowInventory}
+                    gui_menus::ItemActionSelection::Cancel => {
+                        new_runstate = RunState::ShowInventory
+                    }
                 }
             }
-            RunState::ShowTargeting{range, item} => {
+            RunState::ShowTargeting { range, item } => {
                 let res = gui::ranged_target(self, ctx, range);
                 match res.0 {
                     gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
-                    gui::ItemMenuResult::NoResponse => {},
+                    gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
                         let player_id = self.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        self.world.add_component(player_id, WantsToUseItem{item, target: res.1});
+                        self.world.add_component(
+                            player_id,
+                            WantsToUseItem {
+                                item,
+                                target: res.1,
+                            },
+                        );
                         new_runstate = RunState::PlayerTurn;
                     }
                 }
             }
-            RunState::MainMenu{..} => {
+            RunState::MainMenu { .. } => {
                 let result = gui_menus::main_menu(self, ctx);
                 match result {
-                    gui_menus::MainMenuResult::NoSelection{selected} => {new_runstate = RunState::MainMenu{menu_selection: selected}}
-                    gui_menus::MainMenuResult::Selection{selected} => {
-                        match selected {
-                            gui_menus::MainMenuSelection::Roguelike => {
-                                {
-                                    let mut gamemode = self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
-                                    *gamemode = GameMode::RL;
-                                }
-                                self.generate_map(1);
-
-                                new_runstate = RunState::MapGenAnimation
-                            }
-                            gui_menus::MainMenuSelection::Simulator => {
-                                {
-                                    let mut gamemode = self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
-                                    *gamemode = GameMode::Sim;
-                                }
-                                self.generate_map(1);
-                                
-                                new_runstate = RunState::MapGenAnimation
-                            }
-                            gui_menus::MainMenuSelection::LoadGame => {new_runstate = RunState::PreRun}
-                            gui_menus::MainMenuSelection::Exit => {::std::process::exit(0)}
+                    gui_menus::MainMenuResult::NoSelection { selected } => {
+                        new_runstate = RunState::MainMenu {
+                            menu_selection: selected,
                         }
                     }
+                    gui_menus::MainMenuResult::Selection { selected } => match selected {
+                        gui_menus::MainMenuSelection::Roguelike => {
+                            {
+                                let mut gamemode =
+                                    self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
+                                *gamemode = GameMode::RL;
+                            }
+                            self.generate_map(1);
+
+                            new_runstate = RunState::MapGenAnimation
+                        }
+                        gui_menus::MainMenuSelection::Simulator => {
+                            {
+                                let mut gamemode =
+                                    self.world.borrow::<UniqueViewMut<GameMode>>().unwrap();
+                                *gamemode = GameMode::Sim;
+                            }
+                            self.generate_map(1);
+
+                            new_runstate = RunState::MapGenAnimation
+                        }
+                        gui_menus::MainMenuSelection::LoadGame => new_runstate = RunState::PreRun,
+                        gui_menus::MainMenuSelection::Exit => ::std::process::exit(0),
+                    },
                 }
             }
             RunState::SaveGame => {
                 /*
                 let data = serde_json::to_string(&*self.resources.get::<Map>().unwrap()).unwrap();
                 println!("{}", data);
-    
+
                 let c: Context;
                 let mut writer = Vec::with_capacity(128);
                 let s = serde_json::Serializer::new(writer);
@@ -389,7 +457,9 @@ impl GameState for State {
                 */
                 println!("Saving game... TODO");
                 self.game_over_cleanup();
-                new_runstate = RunState::MainMenu{menu_selection: gui_menus::MainMenuSelection::LoadGame};
+                new_runstate = RunState::MainMenu {
+                    menu_selection: gui_menus::MainMenuSelection::LoadGame,
+                };
             }
             RunState::NextLevel => {
                 self.next_level();
@@ -401,14 +471,16 @@ impl GameState for State {
                     gui_menus::GameOverResult::NoSelection => {}
                     gui_menus::GameOverResult::QuitToMenu => {
                         self.game_over_cleanup();
-                        new_runstate = RunState::MainMenu {menu_selection: gui_menus::MainMenuSelection::Roguelike};
+                        new_runstate = RunState::MainMenu {
+                            menu_selection: gui_menus::MainMenuSelection::Roguelike,
+                        };
                     }
                 }
             }
             RunState::MapGenAnimation => {
                 if !SHOW_MAPGEN_ANIMATION {
                     new_runstate = RunState::PreRun;
-                }else{
+                } else {
                     ctx.cls();
                     // todo bring back mapgen rendering
                     // map::draw_map(&self.mapgen_data.history[self.mapgen_data.index], ctx);
@@ -422,11 +494,13 @@ impl GameState for State {
                             new_runstate = RunState::PreRun;
                         }
                     }
-                }       
+                }
             }
         }
 
-        self.world.run(|mut rs: UniqueViewMut<RunState>| { *rs = new_runstate; });
+        self.world.run(|mut rs: UniqueViewMut<RunState>| {
+            *rs = new_runstate;
+        });
         self.world.run(system_cleanup::run_cleanup_system);
     }
 }

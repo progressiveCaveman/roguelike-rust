@@ -1,8 +1,16 @@
 use std::collections::HashMap;
 
-use crate::{State, RunState, GameMode, entity_factory, player, utils::{dir_to_point, PPoint, PlayerID, AutoRun}, effects::{add_effect, EffectType}, map::Map, components::Item};
+use crate::{
+    components::Item,
+    effects::{add_effect, EffectType},
+    entity_factory,
+    map::Map,
+    player,
+    utils::{dir_to_point, AutoRun, PPoint, PlayerID},
+    GameMode, RunState, State,
+};
 use rltk::{Rltk, VirtualKeyCode};
-use shipyard::{AllStoragesViewMut, UniqueView, UniqueViewMut, View, Get};
+use shipyard::{AllStoragesViewMut, Get, UniqueView, UniqueViewMut, View};
 
 pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
     let game_mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
@@ -30,41 +38,120 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
     dir_targets.insert(9, map.point_idx(dir_to_point(player_pos, 9, movemod)));
 
     match *game_mode {
-        GameMode::NotSelected => unreachable!(), 
+        GameMode::NotSelected => unreachable!(),
         GameMode::Sim => {
             match ctx.key {
-                None => { return RunState::AwaitingInput }
+                None => return RunState::AwaitingInput,
                 Some(key) => match key {
-                    VirtualKeyCode::Left => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&4]}),
-                    VirtualKeyCode::Right => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&6]}),
-                    VirtualKeyCode::Up => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&8]}),
-                    VirtualKeyCode::Down => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&2]}),
-                    VirtualKeyCode::Y => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&7]}),
-                    VirtualKeyCode::U => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&9]}),
-                    VirtualKeyCode::N => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&3]}),
-                    VirtualKeyCode::B => add_effect(Some(player_id), EffectType::Move { tile_idx: dir_targets[&1]}),
+                    VirtualKeyCode::Left => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&4],
+                        },
+                    ),
+                    VirtualKeyCode::Right => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&6],
+                        },
+                    ),
+                    VirtualKeyCode::Up => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&8],
+                        },
+                    ),
+                    VirtualKeyCode::Down => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&2],
+                        },
+                    ),
+                    VirtualKeyCode::Y => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&7],
+                        },
+                    ),
+                    VirtualKeyCode::U => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&9],
+                        },
+                    ),
+                    VirtualKeyCode::N => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&3],
+                        },
+                    ),
+                    VirtualKeyCode::B => add_effect(
+                        Some(player_id),
+                        EffectType::Move {
+                            tile_idx: dir_targets[&1],
+                        },
+                    ),
                     VirtualKeyCode::W => return RunState::PlayerTurn,
                     VirtualKeyCode::Escape => return RunState::SaveGame,
                     VirtualKeyCode::Space => autorun.0 = !autorun.0,
-                    _ => { return RunState::AwaitingInput }
-                }
+                    _ => return RunState::AwaitingInput,
+                },
             }
-            RunState::AwaitingInput   
-        },
+            RunState::AwaitingInput
+        }
         GameMode::RL => {
             match ctx.key {
-                None => { return RunState::AwaitingInput
-                 }
+                None => return RunState::AwaitingInput,
                 Some(key) => match key {
-                    VirtualKeyCode::Left => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&4]}),
-                    VirtualKeyCode::Right => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&6]}),
-                    VirtualKeyCode::Up => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&8]}),
-                    VirtualKeyCode::Down => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&2]}),
-                    VirtualKeyCode::Y => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&7]}),
-                    VirtualKeyCode::U => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&9]}),
-                    VirtualKeyCode::N => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&3]}),
-                    VirtualKeyCode::B => add_effect(Some(player_id), EffectType::MoveOrAttack { tile_idx: dir_targets[&1]}),
-                    VirtualKeyCode::G => { 
+                    VirtualKeyCode::Left => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&4],
+                        },
+                    ),
+                    VirtualKeyCode::Right => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&6],
+                        },
+                    ),
+                    VirtualKeyCode::Up => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&8],
+                        },
+                    ),
+                    VirtualKeyCode::Down => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&2],
+                        },
+                    ),
+                    VirtualKeyCode::Y => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&7],
+                        },
+                    ),
+                    VirtualKeyCode::U => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&9],
+                        },
+                    ),
+                    VirtualKeyCode::N => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&3],
+                        },
+                    ),
+                    VirtualKeyCode::B => add_effect(
+                        Some(player_id),
+                        EffectType::MoveOrAttack {
+                            tile_idx: dir_targets[&1],
+                        },
+                    ),
+                    VirtualKeyCode::G => {
                         gs.world.run(|vitem: View<Item>| {
                             for e in map.tile_content[player_pos_idx].iter() {
                                 if let Ok(_) = vitem.get(*e) {
@@ -72,20 +159,29 @@ pub fn handle_input(gs: &State, ctx: &Rltk) -> RunState {
                                 }
                             }
                         });
-                    }, //add_effect(Some(player_id), EffectType::PickUp { entity: EntityId::default() }, Targets::Tile { tile_idx: player_pos_idx}),
+                    } //add_effect(Some(player_id), EffectType::PickUp { entity: EntityId::default() }, Targets::Tile { tile_idx: player_pos_idx}),
                     VirtualKeyCode::X => add_effect(Some(player_id), EffectType::Explore {}),
                     VirtualKeyCode::R => player::reveal_map(gs),
-                    VirtualKeyCode::F => return RunState::ShowTargeting { range: 6, item: gs.world.run(|mut store: AllStoragesViewMut|{entity_factory::tmp_fireball(&mut store)}) },
+                    VirtualKeyCode::F => {
+                        return RunState::ShowTargeting {
+                            range: 6,
+                            item: gs.world.run(|mut store: AllStoragesViewMut| {
+                                entity_factory::tmp_fireball(&mut store)
+                            }),
+                        }
+                    }
                     VirtualKeyCode::I => return RunState::ShowInventory,
                     VirtualKeyCode::W => add_effect(Some(player_id), EffectType::Wait {}),
                     VirtualKeyCode::Escape => return RunState::SaveGame,
                     VirtualKeyCode::Period => {
-                        if player::try_next_level(gs) { return RunState::NextLevel; }
+                        if player::try_next_level(gs) {
+                            return RunState::NextLevel;
+                        }
                     }
-                    _ => { return RunState::AwaitingInput }
-                }
+                    _ => return RunState::AwaitingInput,
+                },
             }
-            RunState::PlayerTurn    
-        },
+            RunState::PlayerTurn
+        }
     }
 }

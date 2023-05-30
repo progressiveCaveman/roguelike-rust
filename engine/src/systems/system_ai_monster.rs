@@ -1,19 +1,21 @@
-use rltk;
-use shipyard::{EntityId, AllStoragesViewMut, ViewMut, UniqueViewMut, UniqueView, View, IntoIter, IntoWithId, Get, AddComponent, Remove};
+use crate::components::{Confusion, Monster, Position, Viewshed, WantsToAttack};
 use crate::effects::{add_effect, EffectType};
-use crate::utils::{PPoint, self, PlayerID};
 use crate::gui::Palette;
-use crate::{systems::system_particle::ParticleBuilder};
-use crate::components::{Position, Monster, Viewshed, WantsToAttack, Confusion};
 use crate::map::Map;
+use crate::systems::system_particle::ParticleBuilder;
+use crate::utils::{self, PPoint, PlayerID};
+use rltk;
+use shipyard::{
+    AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueView,
+    UniqueViewMut, View, ViewMut,
+};
 
 pub fn run_monster_ai_system(store: AllStoragesViewMut) {
-
     let mut map = store.borrow::<UniqueViewMut<Map>>().unwrap();
     let player_id = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let ppos = store.borrow::<UniqueView<PPoint>>().unwrap().0;
     let mut particle_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();
-    
+
     let vpos = store.borrow::<View<Position>>().unwrap();
     let vvs = store.borrow::<View<Viewshed>>().unwrap();
     let mut vconfusion = store.borrow::<ViewMut<Confusion>>().unwrap();
@@ -26,11 +28,20 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
     // Monster ai
     for (id, (_mon, pos, vs)) in (&vmonster, &vpos, &vvs).iter().with_id() {
         match vconfusion.get(id) {
-            Err(_e) => {},
+            Err(_e) => {}
             Ok(confusion) => {
                 to_update_confusion.push((id, *confusion));
                 for pos in pos.ps.iter() {
-                    particle_builder.request(pos.x, pos.y, 0.0, 0.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('?'), 300.0);
+                    particle_builder.request(
+                        pos.x,
+                        pos.y,
+                        0.0,
+                        0.0,
+                        Palette::COLOR_3,
+                        Palette::MAIN_BG,
+                        rltk::to_cp437('?'),
+                        300.0,
+                    );
                 }
 
                 // TODO attempt to move in a random direction
@@ -48,8 +59,7 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
         let distance = rltk::DistanceAlg::Pythagoras.distance2d(ppos, pos.ps[0]);
         if distance < 1.5 {
             needs_wants_to_attack.push(id);
-        } else if vs.visible_tiles.contains(&ppos){
-
+        } else if vs.visible_tiles.contains(&ppos) {
             // in order to stop multi-tile monsters from blocking themselves, make them not block before running A*
             // this is still just a hack since multi-tile monsters still path through 1 wide areas
             for pos in pos.ps.iter() {
@@ -65,13 +75,18 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
             }
 
             if path.success && path.steps.len() > 1 {
-                add_effect(Some(id), EffectType::Move { tile_idx: path.steps[1] })
+                add_effect(
+                    Some(id),
+                    EffectType::Move {
+                        tile_idx: path.steps[1],
+                    },
+                )
             }
         }
     }
-    
+
     for id in needs_wants_to_attack.iter() {
-        vwantsattack.add_component_unchecked(*id, WantsToAttack {target: player_id});
+        vwantsattack.add_component_unchecked(*id, WantsToAttack { target: player_id });
     }
 
     for (id, _confusion) in to_update_confusion.iter() {
@@ -79,8 +94,12 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
         {
             let mut c = *vconfusion.get(*id).unwrap();
             c.turns -= 1;
-            if c.turns <= 0 { to_remove = true }
+            if c.turns <= 0 {
+                to_remove = true
+            }
         }
-        if to_remove { vconfusion.remove(*id); }
+        if to_remove {
+            vconfusion.remove(*id);
+        }
     }
 }

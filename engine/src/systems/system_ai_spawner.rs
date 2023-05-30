@@ -1,10 +1,10 @@
-use rltk::Point;
-use shipyard::{UniqueView, View, IntoIter, IntoWithId, AllStoragesViewMut};
+use crate::components::{Faction, Position, Spawner, SpawnerType};
+use crate::entity_factory;
 use crate::utils::Turn;
-use crate::{entity_factory};
-use crate::components::{Position, Spawner, Faction, SpawnerType};
+use rltk::Point;
+use shipyard::{AllStoragesViewMut, IntoIter, IntoWithId, UniqueView, View};
 
-pub fn run_spawner_system(mut store: AllStoragesViewMut) {    
+pub fn run_spawner_system(mut store: AllStoragesViewMut) {
     let mut to_spawn: Vec<(Point, i32, SpawnerType)> = vec![];
 
     {
@@ -14,10 +14,17 @@ pub fn run_spawner_system(mut store: AllStoragesViewMut) {
         let vspawner = store.borrow::<View<Spawner>>().unwrap();
         let vfaction = store.borrow::<View<Faction>>().unwrap();
 
-        for (_, (pos, spawner, faction)) in (&vpos, &vspawner, &vfaction).iter().with_id() {     
+        for (_, (pos, spawner, faction)) in (&vpos, &vspawner, &vfaction).iter().with_id() {
             let fpos = pos.ps.first().unwrap();
             if turn.0 % spawner.rate == 0 {
-                to_spawn.push((Point { x: fpos.x, y: fpos.y + 1 }, faction.faction, spawner.typ));
+                to_spawn.push((
+                    Point {
+                        x: fpos.x,
+                        y: fpos.y + 1,
+                    },
+                    faction.faction,
+                    spawner.typ,
+                ));
             }
         }
     }
@@ -26,11 +33,11 @@ pub fn run_spawner_system(mut store: AllStoragesViewMut) {
         match t {
             SpawnerType::Orc => {
                 let e = entity_factory::orc(&mut store, p.x, p.y);
-                store.add_component(e, Faction {faction: *f});
-            },
+                store.add_component(e, Faction { faction: *f });
+            }
             SpawnerType::Fish => {
-                entity_factory::fish(&mut store, p.x, p.y);        
-            },
+                entity_factory::fish(&mut store, p.x, p.y);
+            }
         }
     }
 }

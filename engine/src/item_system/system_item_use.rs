@@ -1,17 +1,23 @@
-use shipyard::{EntityId, AllStoragesViewMut, View, UniqueView, IntoIter, IntoWithId, Get, ViewMut, Remove, AddComponent, UniqueViewMut};
+use crate::components::{
+    AreaOfEffect, CombatStats, Confusion, Consumable, DealsDamage, Equippable, Equipped, Fire,
+    InBackpack, Inventory, Name, ProvidesHealing, WantsToUseItem,
+};
 use crate::effects::add_effect;
+use crate::effects::{EffectType, Targets};
 use crate::gui::Palette;
+use crate::map::Map;
 use crate::utils::PlayerID;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
-use crate::components::{WantsToUseItem, CombatStats, ProvidesHealing, Name, Consumable, DealsDamage, AreaOfEffect, Confusion, Equippable, Equipped, InBackpack, Fire, Inventory};
-use crate::map::Map;
-use crate::effects::{EffectType, Targets};
+use shipyard::{
+    AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueView,
+    UniqueViewMut, View, ViewMut,
+};
 
 pub fn run_item_use_system(store: AllStoragesViewMut) {
-    let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();//res.get_mut::<GameLog>().unwrap();
+    let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap(); //res.get_mut::<GameLog>().unwrap();
     let player_id = store.borrow::<UniqueView<PlayerID>>().ok().unwrap(); //res.get::<EntityId>().unwrap();
-    let map = store.borrow::<UniqueView<Map>>().unwrap();//res.get::<Map>().unwrap();
-    let mut p_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap();//res.get_mut::<ParticleBuilder>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap(); //res.get::<Map>().unwrap();
+    let mut p_builder = store.borrow::<UniqueViewMut<ParticleBuilder>>().unwrap(); //res.get_mut::<ParticleBuilder>().unwrap();
     let mut to_remove: Vec<(EntityId, EntityId)> = Vec::new();
     let mut to_remove_wants_use: Vec<EntityId> = Vec::new();
     let mut to_unequip: Vec<(EntityId, Name, EntityId)> = Vec::new();
@@ -49,14 +55,16 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                             let stats = vstats.get(*entity);
                             match stats {
                                 Err(_e) => {}
-                                Ok(_stats) => { targets.push(*entity) }
+                                Ok(_stats) => targets.push(*entity),
                             }
                         }
                     }
                     Ok(aoe) => {
                         // AOE
                         let mut affected_tiles = rltk::field_of_view(t, aoe.radius, &*map);
-                        affected_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1);
+                        affected_tiles.retain(|p| {
+                            p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1
+                        });
                         for pt in affected_tiles.iter() {
                             let idx = map.xy_idx(pt.x, pt.y);
                             target_tiles.push(idx);
@@ -64,10 +72,19 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                                 let stats = vstats.get(*entity);
                                 match stats {
                                     Err(_e) => {}
-                                    Ok(_stats) => { targets.push(*entity) }
+                                    Ok(_stats) => targets.push(*entity),
                                 }
                             }
-                            p_builder.request(pt.x, pt.y, 0.0, 0.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('o'), 250.0)
+                            p_builder.request(
+                                pt.x,
+                                pt.y,
+                                0.0,
+                                0.0,
+                                Palette::COLOR_3,
+                                Palette::MAIN_BG,
+                                rltk::to_cp437('o'),
+                                250.0,
+                            )
                         }
                     }
                 }
@@ -81,8 +98,13 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
             Ok(fire) => {
                 add_effect(
                     Some(id),
-                    EffectType::Fire { turns: fire.turns, target: Targets::Tiles { tiles: target_tiles }}
-                );                            
+                    EffectType::Fire {
+                        turns: fire.turns,
+                        target: Targets::Tiles {
+                            tiles: target_tiles,
+                        },
+                    },
+                );
                 used_item = true;
             }
         }
@@ -96,21 +118,37 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                 for target in targets.iter() {
                     let stats = vstats.get(*target);
                     match stats {
-                        Err(_e) => {},
+                        Err(_e) => {}
                         Ok(_stats) => {
                             add_effect(
-                                Some(id), 
-                                EffectType::Heal { amount: healer.heal, target: Targets::Single { target: *target } }, 
+                                Some(id),
+                                EffectType::Heal {
+                                    amount: healer.heal,
+                                    target: Targets::Single { target: *target },
+                                },
                             );
-                            if id == player_id.0 { // todo should this code be in /effects?
+                            if id == player_id.0 {
+                                // todo should this code be in /effects?
                                 let name = vname.get(use_item.item).unwrap();
-                                log.messages.push(format!("You use the {}, healing {} hp", name.name, healer.heal));
+                                log.messages.push(format!(
+                                    "You use the {}, healing {} hp",
+                                    name.name, healer.heal
+                                ));
                             }
                             used_item = true;
 
                             if let Ok(pos) = vpos.get(*target) {
                                 for pos in pos.ps.iter() {
-                                    p_builder.request(pos.x, pos.y, 0.0, -3.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('♥'), 1000.0)
+                                    p_builder.request(
+                                        pos.x,
+                                        pos.y,
+                                        0.0,
+                                        -3.0,
+                                        Palette::COLOR_3,
+                                        Palette::MAIN_BG,
+                                        rltk::to_cp437('♥'),
+                                        1000.0,
+                                    )
                                 }
                             }
                         }
@@ -129,18 +167,33 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                 for target in targets.iter() {
                     add_effect(
                         Some(id),
-                        EffectType::Damage{ amount: dd.damage, target: Targets::Single{ target: *target } },
+                        EffectType::Damage {
+                            amount: dd.damage,
+                            target: Targets::Single { target: *target },
+                        },
                     );
                     if id == player_id.0 {
                         let monster_name = vname.get(*target).unwrap();
                         let item_name = vname.get(use_item.item).unwrap();
-                        log.messages.push(format!("You use {} on {}, dealing {} hp", item_name.name, monster_name.name, dd.damage));
+                        log.messages.push(format!(
+                            "You use {} on {}, dealing {} hp",
+                            item_name.name, monster_name.name, dd.damage
+                        ));
                     }
                     used_item = true;
 
                     if let Ok(pos) = vpos.get(*target) {
                         for pos in pos.ps.iter() {
-                            p_builder.request(pos.x, pos.y, 0.0, 0.0, Palette::COLOR_4, Palette::MAIN_BG, rltk::to_cp437('‼'), 250.0)
+                            p_builder.request(
+                                pos.x,
+                                pos.y,
+                                0.0,
+                                0.0,
+                                Palette::COLOR_4,
+                                Palette::MAIN_BG,
+                                rltk::to_cp437('‼'),
+                                250.0,
+                            )
                         }
                     }
                 }
@@ -150,24 +203,39 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
         // Apply confusion
         let confusion = vconfusion.get(use_item.item);
         match confusion {
-            Err(_e) => {},
+            Err(_e) => {}
             Ok(confusion) => {
                 used_item = false;
                 for target in targets.iter() {
                     add_effect(
-                        Some(id), 
-                        EffectType::Confusion { turns: confusion.turns, target: Targets::Single { target: *target } }, 
+                        Some(id),
+                        EffectType::Confusion {
+                            turns: confusion.turns,
+                            target: Targets::Single { target: *target },
+                        },
                     );
                     if id == player_id.0 {
                         let monster_name = vname.get(*target).unwrap();
                         let item_name = vname.get(use_item.item).unwrap();
-                        log.messages.push(format!("You use {} on {}, confusing them", item_name.name, monster_name.name));
+                        log.messages.push(format!(
+                            "You use {} on {}, confusing them",
+                            item_name.name, monster_name.name
+                        ));
                     }
                     used_item = true;
 
                     if let Ok(pos) = vpos.get(*target) {
                         for pos in pos.ps.iter() {
-                            p_builder.request(pos.x, pos.y, 0.0, 0.0, Palette::COLOR_3, Palette::MAIN_BG, rltk::to_cp437('?'), 300.0)
+                            p_builder.request(
+                                pos.x,
+                                pos.y,
+                                0.0,
+                                0.0,
+                                Palette::COLOR_3,
+                                Palette::MAIN_BG,
+                                rltk::to_cp437('?'),
+                                300.0,
+                            )
                         }
                     }
                 }
@@ -191,9 +259,10 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
             Err(_e) => {}
             Ok(equippable) => {
                 let target = targets[0];
-                
+
                 // Unequip already equipped item
-                for (id, (equipped, name)) in (&vequipped, &vname).iter().with_id() { //world.query::<(&Equipped, &Name)>().iter() {
+                for (id, (equipped, name)) in (&vequipped, &vname).iter().with_id() {
+                    //world.query::<(&Equipped, &Name)>().iter() {
                     if equipped.owner == target && equipped.slot == equippable.slot {
                         to_unequip.push((id, name.clone(), target));
                     }
@@ -213,10 +282,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
             }
         }
 
-        add_effect(
-            None, 
-            EffectType::Delete { entity: item }, 
-        );
+        add_effect(None, EffectType::Delete { entity: item });
     }
 
     for id in to_remove_wants_use {
@@ -225,7 +291,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
 
     for (id, name, target) in to_unequip {
         vequipped.remove(id);
-        vinbackpack.add_component_unchecked(id, InBackpack{owner: target});
+        vinbackpack.add_component_unchecked(id, InBackpack { owner: target });
         if target == player_id.0 {
             log.messages.push(format!("You unequip your {}", name.name));
         }
@@ -233,7 +299,13 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
 
     for (id, equippable, name, target) in to_equip {
         vinbackpack.remove(id);
-        vequipped.add_component_unchecked(id, Equipped{owner: target, slot: equippable.slot});
+        vequipped.add_component_unchecked(
+            id,
+            Equipped {
+                owner: target,
+                slot: equippable.slot,
+            },
+        );
         if target == player_id.0 {
             log.messages.push(format!("You equip your {}", name.name));
         }

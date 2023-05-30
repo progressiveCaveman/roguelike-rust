@@ -2,15 +2,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub struct Rect {
-   pub x1: i32,
-   pub x2: i32,
-   pub y1: i32,
-   pub y2: i32,
+    pub x1: i32,
+    pub x2: i32,
+    pub y1: i32,
+    pub y2: i32,
 }
 
 impl Rect {
-    pub fn new(x: i32, y:i32, w:i32, h:i32) -> Rect {
-        Rect{x1: x, x2: x + w, y1: y, y2: y + h}
+    pub fn new(x: i32, y: i32, w: i32, h: i32) -> Rect {
+        Rect {
+            x1: x,
+            x2: x + w,
+            y1: y,
+            y2: y + h,
+        }
     }
 
     pub fn intersect(&self, other: &Rect) -> bool {

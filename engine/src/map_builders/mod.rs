@@ -29,14 +29,14 @@ mod common;
 use common::*;
 use shipyard::World;
 
-use crate::rect::Rect;
-use crate::map::{Map, TileType};
 use crate::components::Position;
+use crate::map::{Map, TileType};
+use crate::rect::Rect;
 
 pub struct MapGenData {
     pub history: Vec<Map>,
     pub index: usize,
-    pub timer: f32
+    pub timer: f32,
 }
 
 pub trait MapBuilder {
@@ -57,7 +57,7 @@ pub fn random_builder(new_depth: i32, size: (i32, i32)) -> Box<dyn MapBuilder> {
         3 => Box::new(CellularAutomataBuilder::new(new_depth, size)),
         4 => Box::new(DrunkardsBombingRunBuilder::new(new_depth, size)),
         5 => Box::new(BspFarmBuilder::new(new_depth, size)),
-        _ => Box::new(SimpleMapBuilder::new(new_depth, size))
+        _ => Box::new(SimpleMapBuilder::new(new_depth, size)),
     }
 }
 

@@ -1,8 +1,16 @@
-use rltk::{Point, DijkstraMap};
-use shipyard::{World, UniqueView, View, Get, UniqueViewMut, ViewMut, AddComponent};
+use rltk::{DijkstraMap, Point};
+use shipyard::{AddComponent, Get, UniqueView, UniqueViewMut, View, ViewMut, World};
 
 use super::*;
-use crate::{components::{CombatStats, WantsToAttack, Position, Player, Locomotive, LocomotionType, BlocksTile, SpatialKnowledge, Viewshed, Fire}, utils::{dijkstra_backtrace, point_plus, normalize, PPoint}, map::{Map, TileType}, GameMode};
+use crate::{
+    components::{
+        BlocksTile, CombatStats, Fire, LocomotionType, Locomotive, Player, Position,
+        SpatialKnowledge, Viewshed, WantsToAttack,
+    },
+    map::{Map, TileType},
+    utils::{dijkstra_backtrace, normalize, point_plus, PPoint},
+    GameMode,
+};
 
 pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) {
     let mut map = gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
@@ -13,7 +21,7 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
     let mut vwantsattack = gs.world.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     let entity = effect.creator.unwrap();
-    let is_player = gs.world.run(|vplayer: View<Player>|{
+    let is_player = gs.world.run(|vplayer: View<Player>| {
         return vplayer.get(entity).is_ok();
     });
 
@@ -27,17 +35,17 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
 
     if let Ok(pos) = (&mut vpos).get(entity) {
         let tp = map.idx_point(tile_idx);
-        let dp = Point{ 
-            x: normalize(tp.x - pos.ps[0].x), 
-            y: normalize(tp.y - pos.ps[0].y)
+        let dp = Point {
+            x: normalize(tp.x - pos.ps[0].x),
+            y: normalize(tp.y - pos.ps[0].y),
         };
 
         let canmove = can_move(&gs.world, &map, entity, &pos, dp);
 
         // In Sim mode, player is basically just a camera object
         let mut is_camera = false;
-        if is_player && *mode == GameMode::Sim { 
-            is_camera = true; 
+        if is_player && *mode == GameMode::Sim {
+            is_camera = true;
             dbg!("is camera");
         }
 
@@ -45,13 +53,13 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
             // dbg!("testing attack");
             if let Some(target) = get_target(&gs.world, &map, entity, &pos, dp) {
                 // dbg!("found target");
-                vwantsattack.add_component_unchecked(entity, WantsToAttack {target});
+                vwantsattack.add_component_unchecked(entity, WantsToAttack { target });
             }
         }
 
         // do movement
-        if is_camera || canmove {    
-            // dbg!("can move");            
+        if is_camera || canmove {
+            // dbg!("can move");
             if let Ok(mut vs) = (&mut vvs).get(entity) {
                 vs.dirty = true;
             }
@@ -79,11 +87,10 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
     }
 }
 
-pub fn autoexplore(gs: &mut State, effect: &EffectSpawner){
-    if let (Some(entity), EffectType::Explore { }) = (effect.creator, effect.effect_type.clone()) {
-
+pub fn autoexplore(gs: &mut State, effect: &EffectSpawner) {
+    if let (Some(entity), EffectType::Explore {}) = (effect.creator, effect.effect_type.clone()) {
         // TODO Check for adjacent enemies and attack them
-        
+
         // Use djikstras to find nearest unexplored tile
         let mut target = (0 as usize, std::f32::MAX); // tile_idx, distance
         {
@@ -92,7 +99,7 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner){
 
             let vpos = gs.world.borrow::<View<Position>>().unwrap();
             let vspace = gs.world.borrow::<View<SpatialKnowledge>>().unwrap();
-    
+
             let e_pos = if let Ok(pos) = vpos.get(entity) {
                 pos
             } else {
@@ -134,7 +141,7 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner){
             let t = dijkstra_backtrace(dijkstra_map, map, e_idx, target.0);
             target = (t, 1.0);
         }
-        
+
         // Send a move command
         // let dx: i32;
         // let dy: i32;
@@ -142,14 +149,12 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner){
         //     dx = target.0.x - entity_point.x;
         //     dy = target.0.y - entity_point.y;
         // }
-        
+
         // try_move_entity(entity, target.0, gs);
 
-        let effect = &EffectSpawner { 
-            creator: effect.creator, 
-            effect_type: EffectType::Move { 
-                tile_idx: target.0
-            }
+        let effect = &EffectSpawner {
+            creator: effect.creator,
+            effect_type: EffectType::Move { tile_idx: target.0 },
         };
 
         try_move_or_attack(gs, effect, true);
@@ -178,11 +183,11 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
             // check for tiles that block
             let dest_idx = map.xy_idx(pos.x + dp.x, pos.y + dp.y);
             // let dest_idx = map.point_idx(tp);
-            if loco.mtype == LocomotionType::Ground && map.blocks_movement(dest_idx) { 
+            if loco.mtype == LocomotionType::Ground && map.blocks_movement(dest_idx) {
                 return false;
             }
 
-            if loco.mtype == LocomotionType::Water && map.tiles[dest_idx] != TileType::Water { 
+            if loco.mtype == LocomotionType::Water && map.tiles[dest_idx] != TileType::Water {
                 return false;
             }
 
@@ -192,7 +197,7 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
                 if *potential_target == entity {
                     continue;
                 }
-    
+
                 // dbg!(2);
                 if vblocks.get(*potential_target).is_ok() {
                     return false;
@@ -200,16 +205,22 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
             }
         }
 
-        return true
+        return true;
     } else {
         dbg!("no locomotion");
     }
 
-    return false
+    return false;
 }
 
 // checks for entities with combat stats on block
-pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> Option<EntityId> {
+pub fn get_target(
+    world: &World,
+    map: &Map,
+    entity: EntityId,
+    pos: &Position,
+    dp: Point,
+) -> Option<EntityId> {
     let vstats = world.borrow::<View<CombatStats>>().unwrap();
 
     // check for combat stats on entity
@@ -228,9 +239,7 @@ pub fn get_target(world: &World, map: &Map, entity: EntityId, pos: &Position, dp
 
             // dbg!("does enetiy have stats");
             match vstats.get(*potential_target) {
-                Ok(_cs) => {
-                    return Some(*potential_target)
-                }
+                Ok(_cs) => return Some(*potential_target),
                 Err(_e) => {}
             }
         }

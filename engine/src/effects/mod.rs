@@ -1,5 +1,5 @@
-use std::sync::Mutex;
 use std::collections::VecDeque;
+use std::sync::Mutex;
 
 mod damage;
 pub use damage::inflict_damage;
@@ -19,23 +19,23 @@ pub use inventory::pick_up;
 
 mod movement;
 
-use shipyard::{EntityId, UniqueView, View, Get, World};
+use shipyard::{EntityId, Get, UniqueView, View, World};
 
-use crate::{State, map::Map, components::Position};
+use crate::{components::Position, map::Map, State};
 
 lazy_static! {
-    pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
+    pub static ref EFFECT_QUEUE: Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
 }
 
 #[derive(Clone)]
-pub enum EffectType { 
-    Damage { amount : i32, target: Targets},
+pub enum EffectType {
+    Damage { amount: i32, target: Targets },
     Confusion { turns: i32, target: Targets },
     Fire { turns: i32, target: Targets },
     PickUp { entity: EntityId },
     Drop { entity: EntityId },
-    Explore { },
-    Heal { amount: i32, target: Targets},
+    Explore {},
+    Heal { amount: i32, target: Targets },
     Move { tile_idx: usize },
     MoveOrAttack { tile_idx: usize },
     Wait {},
@@ -44,7 +44,7 @@ pub enum EffectType {
 
 #[derive(Clone)]
 pub enum Targets {
-    Tile { tile_idx: usize},
+    Tile { tile_idx: usize },
     Tiles { tiles: Vec<usize> },
     Single { target: EntityId },
     Area { target: Vec<EntityId> },
@@ -52,23 +52,20 @@ pub enum Targets {
 
 #[derive(Clone)]
 pub struct EffectSpawner {
-    pub creator : Option<EntityId>,
-    pub effect_type : EffectType,
+    pub creator: Option<EntityId>,
+    pub effect_type: EffectType,
 }
 
-pub fn add_effect(creator : Option<EntityId>, effect_type: EffectType) {
-    EFFECT_QUEUE
-        .lock()
-        .unwrap()
-        .push_back(EffectSpawner{
-            creator,
-            effect_type,
-        });
+pub fn add_effect(creator: Option<EntityId>, effect_type: EffectType) {
+    EFFECT_QUEUE.lock().unwrap().push_back(EffectSpawner {
+        creator,
+        effect_type,
+    });
 }
 
 pub fn run_effects_queue(gs: &mut State) {
     loop {
-        let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
+        let effect: Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
         if let Some(effect) = effect {
             target_applicator(gs, &effect);
         } else {
@@ -90,20 +87,20 @@ fn get_effected_entities(gs: &State, targets: &Targets) -> Vec<EntityId> {
             for entity in map.tile_content[*tile_idx].iter() {
                 entities.push(*entity);
             }
-        },
+        }
         Targets::Tiles { tiles } => {
             for tile_idx in tiles {
                 for entity in map.tile_content[*tile_idx].iter() {
                     entities.push(*entity);
-                }  
+                }
             }
-        },
+        }
         Targets::Single { target } => {
             entities.push(*target);
-        },
+        }
         Targets::Area { target } => {
             entities = target.clone();
-        },
+        }
     }
 
     return entities;
@@ -119,15 +116,15 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
             // for entity in map.tile_content[*tile_idx].iter() {
             //     entities.push(*entity);
             // }
-        },
+        }
         Targets::Tiles { tiles } => {
             ret = tiles.clone();
             // for tile_idx in tiles {
             //     for entity in map.tile_content[*tile_idx].iter() {
             //         entities.push(*entity);
-            //     }  
+            //     }
             // }
-        },
+        }
         Targets::Single { target } => {
             if let Ok(vpos) = world.borrow::<View<Position>>() {
                 if let Ok(pos) = vpos.get(*target) {
@@ -137,7 +134,7 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
                 }
             }
             // entities.push(*target);
-        },
+        }
         Targets::Area { target } => {
             if let Ok(vpos) = world.borrow::<View<Position>>() {
                 for target in target {
@@ -149,27 +146,26 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
                 }
             }
             // entities = target.clone();
-        },
+        }
     }
 
     return ret;
 }
 
-fn target_applicator(gs: &mut State, effect : &EffectSpawner) {
+fn target_applicator(gs: &mut State, effect: &EffectSpawner) {
     match &effect.effect_type {
         EffectType::Damage { .. } => damage::inflict_damage(gs, effect),
         EffectType::Confusion { .. } => confusion::inflict_confusion(gs, effect),
         EffectType::Fire { .. } => fire::inflict_fire(gs, effect),
         EffectType::PickUp { .. } => inventory::pick_up(gs, effect),
         EffectType::Drop { .. } => inventory::drop_item(gs, effect),
-        EffectType::Explore {  } => movement::autoexplore(gs, effect),
+        EffectType::Explore {} => movement::autoexplore(gs, effect),
         EffectType::Heal { .. } => heal::heal(gs, effect),
         EffectType::Move { .. } => movement::try_move_or_attack(gs, effect, false),
-        EffectType::Wait {  } => movement::skip_turn(gs, effect),
-        EffectType::Delete { .. } => delete::delete(gs, effect) ,
+        EffectType::Wait {} => movement::skip_turn(gs, effect),
+        EffectType::Delete { .. } => delete::delete(gs, effect),
         EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(gs, effect, true),
     }
-
 
     // match &effect.targets {
     //     Targets::Tile{tile_idx} => affect_tile(gs, effect, *tile_idx),
@@ -223,7 +219,7 @@ fn target_applicator(gs: &mut State, effect : &EffectSpawner) {
 //         EffectType::Heal {..} => {}, // todo make this cause a burst of life or something
 //         EffectType::Move {  } => movement::try_move(gs, effect, tile_idx),
 //         EffectType::Wait {  } => {},
-//         EffectType::Delete {..} => {}, 
+//         EffectType::Delete {..} => {},
 //     }
 // }
 

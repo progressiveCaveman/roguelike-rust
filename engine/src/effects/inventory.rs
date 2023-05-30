@@ -1,7 +1,11 @@
-use shipyard::{ViewMut, Get, UniqueView, UniqueViewMut, View, Remove, AddComponent};
+use shipyard::{AddComponent, Get, Remove, UniqueView, UniqueViewMut, View, ViewMut};
 
 use super::*;
-use crate::{components::{Position, Inventory, InBackpack, Name, Equipped, WantsToPickupItem}, utils::{PlayerID}, gamelog::GameLog};
+use crate::{
+    components::{Equipped, InBackpack, Inventory, Name, Position, WantsToPickupItem},
+    gamelog::GameLog,
+    utils::PlayerID,
+};
 
 pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
     let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
@@ -10,7 +14,8 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
     let mut vwantspickup = gs.world.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
     let mut vpacks = gs.world.borrow::<ViewMut<InBackpack>>().unwrap();
 
-    if let (Some(id), EffectType::PickUp { entity: target }) = (effect.creator, &effect.effect_type) {
+    if let (Some(id), EffectType::PickUp { entity: target }) = (effect.creator, &effect.effect_type)
+    {
         let mut log = gs.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
         let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
@@ -23,7 +28,7 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
             // dbg!("Entity doesn't have a position");
             return;
         }
-    
+
         if let Ok(name) = vname.get(id) {
             if let Ok(inv) = (&mut vinv).get(id) {
                 inv.items.push(*target);
@@ -47,15 +52,15 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
                 dbg!("Entity has no inventory");
             }
         }
-    
+
         let _res = vpos.remove(*target);
-        let _r = vpacks.add_component_unchecked(*target, InBackpack {owner: id});
-    
+        let _r = vpacks.add_component_unchecked(*target, InBackpack { owner: id });
+
         if id == player_id {
             let name = vname.get(*target).unwrap();
             log.messages.push(format!("You pick up the {}", name.name));
         }
-    
+
         let _re = vwantspickup.remove(id);
     }
 }
@@ -69,7 +74,7 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner) {
     if let (Some(id), EffectType::Drop { entity: target }) = (effect.creator, &effect.effect_type) {
         let pos = if let Ok(p) = vpos.get(id) {
             p.any_point()
-        }else{
+        } else {
             unreachable!()
         };
         if let Ok(inv) = (&mut vinv).get(id) {
@@ -77,9 +82,9 @@ pub fn drop_item(gs: &mut State, effect: &EffectSpawner) {
                 inv.items.remove(pos);
             }
         }
-        
+
         vpack.remove(id);
         vequipped.remove(id);
-        vpos.add_component_unchecked(*target, Position { ps:vec![pos]});
+        vpos.add_component_unchecked(*target, Position { ps: vec![pos] });
     }
 }

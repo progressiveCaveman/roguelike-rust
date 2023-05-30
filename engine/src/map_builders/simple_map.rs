@@ -1,18 +1,19 @@
-use rltk::{RandomNumberGenerator, Point};
-use shipyard::{World, AllStoragesViewMut};
+use rltk::{Point, RandomNumberGenerator};
+use shipyard::{AllStoragesViewMut, World};
 
-use crate::{SHOW_MAPGEN_ANIMATION, entity_factory};
+use crate::{entity_factory, SHOW_MAPGEN_ANIMATION};
 
-use super::{MapBuilder, Map, apply_room_to_map, apply_horizontal_corridor,
-            apply_vertical_corridor, Rect, TileType, Position};
-
+use super::{
+    apply_horizontal_corridor, apply_room_to_map, apply_vertical_corridor, Map, MapBuilder,
+    Position, Rect, TileType,
+};
 
 pub struct SimpleMapBuilder {
     map: Map,
     starting_position: Position,
     depth: i32,
     rooms: Vec<Rect>,
-    history: Vec<Map>
+    history: Vec<Map>,
 }
 
 impl MapBuilder for SimpleMapBuilder {
@@ -24,12 +25,12 @@ impl MapBuilder for SimpleMapBuilder {
         self.starting_position.clone()
     }
 
-    fn build_map(&mut self){
+    fn build_map(&mut self) {
         self.rooms_and_corridors(10, 4, 8);
     }
-    
+
     fn spawn_entities(&mut self, world: &mut World) {
-        world.run(|mut store: AllStoragesViewMut|{
+        world.run(|mut store: AllStoragesViewMut| {
             for room in self.rooms.iter().skip(1) {
                 entity_factory::spawn_room(&mut store, &self.map, room, self.depth);
             }
@@ -49,12 +50,14 @@ impl MapBuilder for SimpleMapBuilder {
 
 impl SimpleMapBuilder {
     pub fn new(new_depth: i32, size: (i32, i32)) -> SimpleMapBuilder {
-        SimpleMapBuilder{
+        SimpleMapBuilder {
             map: Map::new(new_depth, TileType::Wall, size),
-            starting_position : Position{ ps: vec![Point{x:0, y:0}] },
+            starting_position: Position {
+                ps: vec![Point { x: 0, y: 0 }],
+            },
             depth: new_depth,
             rooms: Vec::new(),
-            history: Vec::new()
+            history: Vec::new(),
         }
     }
 
@@ -84,7 +87,6 @@ impl SimpleMapBuilder {
             self.take_snapshot();
         }
 
-
         for i in 1..self.rooms.len() {
             let (x1, y1) = self.rooms[i].center();
             let (x2, y2) = self.rooms[i - 1].center();
@@ -96,7 +98,6 @@ impl SimpleMapBuilder {
 
             self.take_snapshot();
         }
-        
 
         let stairs_down_pos = self.rooms[self.rooms.len() - 1].center();
         let stairs_idx = self.map.xy_idx(stairs_down_pos.0, stairs_down_pos.1);
@@ -105,7 +106,12 @@ impl SimpleMapBuilder {
         // remove_useless_walls(&mut self.map);
 
         let start_pos = self.rooms[0].center();
-        self.starting_position = Position{ ps:vec![Point{x: start_pos.0, y: start_pos.1}] };
+        self.starting_position = Position {
+            ps: vec![Point {
+                x: start_pos.0,
+                y: start_pos.1,
+            }],
+        };
         self.take_snapshot();
     }
 }
