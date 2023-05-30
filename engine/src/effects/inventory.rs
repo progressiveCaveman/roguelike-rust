@@ -7,17 +7,17 @@ use crate::{
     utils::PlayerID,
 };
 
-pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
-    let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
-    let vname = gs.world.borrow::<View<Name>>().unwrap();
-    let mut vinv = gs.world.borrow::<ViewMut<Inventory>>().unwrap();
-    let mut vwantspickup = gs.world.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
-    let mut vpacks = gs.world.borrow::<ViewMut<InBackpack>>().unwrap();
+pub fn pick_up(store: &AllStoragesViewMut, effect: &EffectSpawner) {
+    let mut vpos = store.borrow::<ViewMut<Position>>().unwrap();
+    let vname = store.borrow::<View<Name>>().unwrap();
+    let mut vinv = store.borrow::<ViewMut<Inventory>>().unwrap();
+    let mut vwantspickup = store.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
+    let mut vpacks = store.borrow::<ViewMut<InBackpack>>().unwrap();
 
     if let (Some(id), EffectType::PickUp { entity: target }) = (effect.creator, &effect.effect_type)
     {
-        let mut log = gs.world.borrow::<UniqueViewMut<GameLog>>().unwrap();
-        let player_id = gs.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+        let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();
+        let player_id = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
         if let Err(_) = vpos.get(id) {
             dbg!("Entity doesn't have a position");
@@ -65,11 +65,11 @@ pub fn pick_up(gs: &mut State, effect: &EffectSpawner) {
     }
 }
 
-pub fn drop_item(gs: &mut State, effect: &EffectSpawner) {
-    let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
-    let mut vinv = gs.world.borrow::<ViewMut<Inventory>>().unwrap();
-    let mut vpack = gs.world.borrow::<ViewMut<InBackpack>>().unwrap();
-    let mut vequipped = gs.world.borrow::<ViewMut<Equipped>>().unwrap();
+pub fn drop_item(store: &AllStoragesViewMut, effect: &EffectSpawner) {
+    let mut vpos = store.borrow::<ViewMut<Position>>().unwrap();
+    let mut vinv = store.borrow::<ViewMut<Inventory>>().unwrap();
+    let mut vpack = store.borrow::<ViewMut<InBackpack>>().unwrap();
+    let mut vequipped = store.borrow::<ViewMut<Equipped>>().unwrap();
 
     if let (Some(id), EffectType::Drop { entity: target }) = (effect.creator, &effect.effect_type) {
         let pos = if let Ok(p) = vpos.get(id) {

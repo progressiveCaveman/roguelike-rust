@@ -95,13 +95,14 @@ pub enum RenderOrder {
 
 pub trait EngineController: 'static {
     fn render(&self, gs: &State, ctx: &mut Rltk);
+    fn update(&self, gs: &State);
 }
 
 pub struct State {
     pub world: World,
     pub mapgen_data: MapGenData,
     pub wait_frames: i32,
-    pub renderer: Box<dyn EngineController>,
+    pub engine_controller: Box<dyn EngineController>,
 }
 
 impl State {
@@ -111,7 +112,7 @@ impl State {
         }
         self.world.run(system_visibility::run_visibility_system);
 
-        effects::run_effects_queue(self);
+        self.world.run(effects::run_effects_queue);
 
         if runstate == RunState::AiTurn {
             self.world.run(system_pathfinding::run_pathfinding_system);
@@ -122,7 +123,7 @@ impl State {
             // system_ai_monster::run_monster_ai_system(self);
         }
 
-        effects::run_effects_queue(self);
+        self.world.run(effects::run_effects_queue);
 
         self.world.run(system_map_indexing::run_map_indexing_system);
 
@@ -134,7 +135,7 @@ impl State {
         self.world.run(run_item_use_system);
         self.world.run(system_particle::spawn_particles);
 
-        effects::run_effects_queue(self);
+        self.world.run(effects::run_effects_queue);
         self.world.run(system_map_indexing::run_map_indexing_system);
     }
 
@@ -291,13 +292,15 @@ impl GameState for State {
             i.0 = ctx.frame_time_ms;
         }
 
-        self.renderer.render(self, ctx);
+        self.engine_controller.update(self);
+
+        self.engine_controller.render(self, ctx);
 
         let mut new_runstate = *self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
         // dbg!(new_runstate);
 
         self.world.run(system_particle::update_particles);
-        effects::run_effects_queue(self);
+        self.world.run(effects::run_effects_queue);
 
         match new_runstate {
             RunState::PreRun => {
@@ -482,8 +485,7 @@ impl GameState for State {
                     ctx.cls();
                     // todo bring back mapgen rendering
                     // map::draw_map(&self.mapgen_data.history[self.mapgen_data.index], ctx);
-                    self.renderer.render(self, ctx);
-
+                    self.engine_controller.render(self, ctx);
 
                     self.mapgen_data.timer += ctx.frame_time_ms;
                     if self.mapgen_data.timer > MAPGEN_FRAME_TIME {

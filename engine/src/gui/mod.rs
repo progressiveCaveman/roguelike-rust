@@ -1,10 +1,7 @@
-use crate::ai::decisions::Intent;
-use crate::components::{CombatStats, Fire, Inventory, Name, Position, Viewshed};
-use crate::gamelog::GameLog;
+use crate::components::Viewshed;
 use crate::map::Map;
-use crate::player::get_player_map_knowledge;
-use crate::utils::{FrameTime, PPoint, PlayerID, Turn};
-use crate::{GameMode, State, WINDOWHEIGHT, WINDOWWIDTH, MAPWIDTH, MAPHEIGHT, SCALE};
+use crate::utils::{PPoint, PlayerID};
+use crate::{State, MAPHEIGHT, MAPWIDTH, SCALE};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB, RGBA};
 use shipyard::{Get, UniqueView, View};
 

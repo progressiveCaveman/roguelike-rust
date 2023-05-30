@@ -2,7 +2,7 @@ use engine::gui::gui_menus;
 use engine::map::{Map, TileType};
 use engine::systems::system_particle;
 use engine::utils::{AutoRun, FrameTime, PPoint, PlayerID, Turn, RNG};
-use engine::{entity_factory, gamelog, GameMode, EngineController, RunState, MAPHEIGHT, MAPWIDTH};
+use engine::{entity_factory, gamelog, EngineController, GameMode, RunState, MAPHEIGHT, MAPWIDTH};
 use engine::{map_builders::MapGenData, State, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
 use render::camera;
 use rltk::{Point, Rltk, RltkBuilder};
@@ -29,6 +29,10 @@ impl EngineController for Game {
                 render::draw_gui(gs, ctx);
             }
         }
+    }
+
+    fn update(&self, gs: &State) {
+        dbg!("update");
     }
 }
 
@@ -58,7 +62,7 @@ fn main() -> rltk::BError {
             index: 0,
         },
         wait_frames: 0,
-        renderer: Game::new(),
+        engine_controller: Game::new(),
     };
 
     gs.world.add_unique(Map::new(

@@ -19,9 +19,9 @@ pub use inventory::pick_up;
 
 mod movement;
 
-use shipyard::{EntityId, Get, UniqueView, View, World};
+use shipyard::{EntityId, Get, UniqueView, View, AllStoragesViewMut};
 
-use crate::{components::Position, map::Map, State};
+use crate::{components::Position, map::Map};
 
 lazy_static! {
     pub static ref EFFECT_QUEUE: Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
@@ -63,12 +63,25 @@ pub fn add_effect(creator: Option<EntityId>, effect_type: EffectType) {
     });
 }
 
-pub fn run_effects_queue(gs: &mut State) {
+pub fn run_effects_queue(mut store: AllStoragesViewMut) {
     loop {
         let effect: Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
-        if let Some(effect) = effect {
-            target_applicator(gs, &effect);
+        if let Some(effect) = &effect {
+            match effect.effect_type {
+                EffectType::Damage { .. } => damage::inflict_damage(&mut store, effect),
+                EffectType::Confusion { .. } => confusion::inflict_confusion(&mut store, effect),
+                EffectType::Fire { .. } => fire::inflict_fire(&mut store, effect),
+                EffectType::PickUp { .. } => inventory::pick_up(&store, effect),
+                EffectType::Drop { .. } => inventory::drop_item(&store, effect),
+                EffectType::Explore {} => movement::autoexplore(&store, effect),
+                EffectType::Heal { .. } => heal::heal(&store, effect),
+                EffectType::Move { .. } => movement::try_move_or_attack(&store, effect, false),
+                EffectType::Wait {} => movement::skip_turn(&store, effect),
+                EffectType::Delete { .. } => delete::delete(&mut store, effect),
+                EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(&store, effect, true),
+            }
         } else {
+            dbg!("breaking loop");
             break;
         }
     }
@@ -78,9 +91,9 @@ pub fn run_effects_queue(gs: &mut State) {
     }
 }
 
-fn get_effected_entities(gs: &State, targets: &Targets) -> Vec<EntityId> {
+fn get_effected_entities(store: &AllStoragesViewMut, targets: &Targets) -> Vec<EntityId> {
     let mut entities: Vec<EntityId> = vec![];
-    let map = gs.world.borrow::<UniqueView<Map>>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();
 
     match targets {
         Targets::Tile { tile_idx } => {
@@ -106,9 +119,9 @@ fn get_effected_entities(gs: &State, targets: &Targets) -> Vec<EntityId> {
     return entities;
 }
 
-fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
+fn get_effected_tiles(store: &AllStoragesViewMut, targets: &Targets) -> Vec<usize> {
     let mut ret: Vec<usize> = vec![];
-    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();
 
     match targets {
         Targets::Tile { tile_idx } => {
@@ -126,7 +139,7 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
             // }
         }
         Targets::Single { target } => {
-            if let Ok(vpos) = world.borrow::<View<Position>>() {
+            if let Ok(vpos) = store.borrow::<View<Position>>() {
                 if let Ok(pos) = vpos.get(*target) {
                     for p in pos.ps.iter() {
                         ret.push(map.point_idx(*p));
@@ -136,7 +149,7 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
             // entities.push(*target);
         }
         Targets::Area { target } => {
-            if let Ok(vpos) = world.borrow::<View<Position>>() {
+            if let Ok(vpos) = store.borrow::<View<Position>>() {
                 for target in target {
                     if let Ok(pos) = vpos.get(*target) {
                         for p in pos.ps.iter() {
@@ -152,28 +165,28 @@ fn get_effected_tiles(world: &World, targets: &Targets) -> Vec<usize> {
     return ret;
 }
 
-fn target_applicator(gs: &mut State, effect: &EffectSpawner) {
-    match &effect.effect_type {
-        EffectType::Damage { .. } => damage::inflict_damage(gs, effect),
-        EffectType::Confusion { .. } => confusion::inflict_confusion(gs, effect),
-        EffectType::Fire { .. } => fire::inflict_fire(gs, effect),
-        EffectType::PickUp { .. } => inventory::pick_up(gs, effect),
-        EffectType::Drop { .. } => inventory::drop_item(gs, effect),
-        EffectType::Explore {} => movement::autoexplore(gs, effect),
-        EffectType::Heal { .. } => heal::heal(gs, effect),
-        EffectType::Move { .. } => movement::try_move_or_attack(gs, effect, false),
-        EffectType::Wait {} => movement::skip_turn(gs, effect),
-        EffectType::Delete { .. } => delete::delete(gs, effect),
-        EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(gs, effect, true),
-    }
+// fn target_applicator(store: AllStoragesViewMut, effect: &EffectSpawner) {
+//     match &effect.effect_type {
+//         EffectType::Damage { .. } => damage::inflict_damage(store, effect),
+//         EffectType::Confusion { .. } => confusion::inflict_confusion(store, effect),
+//         EffectType::Fire { .. } => fire::inflict_fire(store, effect),
+//         EffectType::PickUp { .. } => inventory::pick_up(store, effect),
+//         EffectType::Drop { .. } => inventory::drop_item(store, effect),
+//         EffectType::Explore {} => movement::autoexplore(store, effect),
+//         EffectType::Heal { .. } => heal::heal(store, effect),
+//         EffectType::Move { .. } => movement::try_move_or_attack(store, effect, false),
+//         EffectType::Wait {} => movement::skip_turn(store, effect),
+//         EffectType::Delete { .. } => delete::delete(store, effect),
+//         EffectType::MoveOrAttack { .. } => movement::try_move_or_attack(store, effect, true),
+//     }
 
-    // match &effect.targets {
-    //     Targets::Tile{tile_idx} => affect_tile(gs, effect, *tile_idx),
-    //     Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(gs, effect, *tile_idx)),
-    //     Targets::Single{target} => affect_entity(gs, effect, *target),
-    //     Targets::Area{target} => target.iter().for_each(|entity| affect_entity(gs, effect, *entity)),
-    // }
-}
+//     // match &effect.targets {
+//     //     Targets::Tile{tile_idx} => affect_tile(gs, effect, *tile_idx),
+//     //     Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(gs, effect, *tile_idx)),
+//     //     Targets::Single{target} => affect_entity(gs, effect, *target),
+//     //     Targets::Area{target} => target.iter().for_each(|entity| affect_entity(gs, effect, *entity)),
+//     // }
+// }
 
 // fn tile_effect_hits_entities(effect: &EffectType) -> bool {
 //     match effect {

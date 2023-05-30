@@ -1,5 +1,5 @@
 use rltk::{DijkstraMap, Point};
-use shipyard::{AddComponent, Get, UniqueView, UniqueViewMut, View, ViewMut, World};
+use shipyard::{AddComponent, Get, UniqueView, UniqueViewMut, View, ViewMut};
 
 use super::*;
 use crate::{
@@ -12,16 +12,16 @@ use crate::{
     GameMode,
 };
 
-pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) {
-    let mut map = gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
-    let mode = gs.world.borrow::<UniqueView<GameMode>>().unwrap();
+pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, attack: bool) {
+    let mut map = store.borrow::<UniqueViewMut<Map>>().unwrap();
+    let mode = store.borrow::<UniqueView<GameMode>>().unwrap();
 
-    let mut vpos = gs.world.borrow::<ViewMut<Position>>().unwrap();
-    let mut vvs = gs.world.borrow::<ViewMut<Viewshed>>().unwrap();
-    let mut vwantsattack = gs.world.borrow::<ViewMut<WantsToAttack>>().unwrap();
+    let mut vpos = store.borrow::<ViewMut<Position>>().unwrap();
+    let mut vvs = store.borrow::<ViewMut<Viewshed>>().unwrap();
+    let mut vwantsattack = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     let entity = effect.creator.unwrap();
-    let is_player = gs.world.run(|vplayer: View<Player>| {
+    let is_player = store.run(|vplayer: View<Player>| {
         return vplayer.get(entity).is_ok();
     });
 
@@ -40,7 +40,7 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
             y: normalize(tp.y - pos.ps[0].y),
         };
 
-        let canmove = can_move(&gs.world, &map, entity, &pos, dp);
+        let canmove = can_move(&store, &map, entity, &pos, dp);
 
         // In Sim mode, player is basically just a camera object
         let mut is_camera = false;
@@ -51,7 +51,7 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
 
         if !is_camera && attack {
             // dbg!("testing attack");
-            if let Some(target) = get_target(&gs.world, &map, entity, &pos, dp) {
+            if let Some(target) = get_target(&store, &map, entity, &pos, dp) {
                 // dbg!("found target");
                 vwantsattack.add_component_unchecked(entity, WantsToAttack { target });
             }
@@ -77,7 +77,7 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
 
             // If this is a player, change the position in resources according to first in pos.ps
             if is_player {
-                let mut ppos = gs.world.borrow::<UniqueViewMut<PPoint>>().unwrap();
+                let mut ppos = store.borrow::<UniqueViewMut<PPoint>>().unwrap();
                 *ppos = PPoint(pos.ps[0]);
             }
 
@@ -87,7 +87,7 @@ pub fn try_move_or_attack(gs: &mut State, effect: &EffectSpawner, attack: bool) 
     }
 }
 
-pub fn autoexplore(gs: &mut State, effect: &EffectSpawner) {
+pub fn autoexplore(store: &AllStoragesViewMut, effect: &EffectSpawner) {
     if let (Some(entity), EffectType::Explore {}) = (effect.creator, effect.effect_type.clone()) {
         // TODO Check for adjacent enemies and attack them
 
@@ -95,10 +95,10 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner) {
         let mut target = (0 as usize, std::f32::MAX); // tile_idx, distance
         {
             let dijkstra_map: DijkstraMap;
-            let map = &mut gs.world.borrow::<UniqueViewMut<Map>>().unwrap();
+            let map = &mut store.borrow::<UniqueViewMut<Map>>().unwrap();
 
-            let vpos = gs.world.borrow::<View<Position>>().unwrap();
-            let vspace = gs.world.borrow::<View<SpatialKnowledge>>().unwrap();
+            let vpos = store.borrow::<View<Position>>().unwrap();
+            let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
 
             let e_pos = if let Ok(pos) = vpos.get(entity) {
                 pos
@@ -157,13 +157,13 @@ pub fn autoexplore(gs: &mut State, effect: &EffectSpawner) {
             effect_type: EffectType::Move { tile_idx: target.0 },
         };
 
-        try_move_or_attack(gs, effect, true);
+        try_move_or_attack(store, effect, true);
     }
 }
 
-pub fn skip_turn(gs: &mut State, effect: &EffectSpawner) {
-    let mut vstats = gs.world.borrow::<ViewMut<CombatStats>>().unwrap();
-    let vfire = gs.world.borrow::<View<Fire>>().unwrap();
+pub fn skip_turn(store: &AllStoragesViewMut, effect: &EffectSpawner) {
+    let mut vstats = store.borrow::<ViewMut<CombatStats>>().unwrap();
+    let vfire = store.borrow::<View<Fire>>().unwrap();
 
     if let Some(id) = effect.creator {
         if let Ok(stats) = (&mut vstats).get(id) {
@@ -174,9 +174,9 @@ pub fn skip_turn(gs: &mut State, effect: &EffectSpawner) {
     }
 }
 
-pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> bool {
-    let vloco = world.borrow::<View<Locomotive>>().unwrap();
-    let vblocks = world.borrow::<View<BlocksTile>>().unwrap();
+pub fn can_move(store: &AllStoragesViewMut, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> bool {
+    let vloco = store.borrow::<View<Locomotive>>().unwrap();
+    let vblocks = store.borrow::<View<BlocksTile>>().unwrap();
 
     if let Ok(loco) = vloco.get(entity) {
         for pos in pos.ps.iter() {
@@ -215,13 +215,13 @@ pub fn can_move(world: &World, map: &Map, entity: EntityId, pos: &Position, dp: 
 
 // checks for entities with combat stats on block
 pub fn get_target(
-    world: &World,
+    store: &AllStoragesViewMut,
     map: &Map,
     entity: EntityId,
     pos: &Position,
     dp: Point,
 ) -> Option<EntityId> {
-    let vstats = world.borrow::<View<CombatStats>>().unwrap();
+    let vstats = store.borrow::<View<CombatStats>>().unwrap();
 
     // check for combat stats on entity
     if let Err(_) = vstats.get(entity) {

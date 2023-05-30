@@ -1,7 +1,7 @@
 use super::*;
 
-pub fn delete(gs: &mut State, effect: &EffectSpawner) {
+pub fn delete(store: &mut AllStoragesViewMut, effect: &EffectSpawner) {
     if let EffectType::Delete { entity } = effect.effect_type {
-        gs.world.delete_entity(entity);
+        store.delete_entity(entity);
     }
 }

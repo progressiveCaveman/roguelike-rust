@@ -1,11 +1,11 @@
 use crate::gamelog::GameLog;
 use crate::{GameMode, State, WINDOWHEIGHT, WINDOWWIDTH};
-use engine::{SCALE, MAPWIDTH, MAPHEIGHT};
 use engine::ai::decisions::Intent;
-use engine::components::{CombatStats, Fire, Name, Position, Inventory};
+use engine::components::{CombatStats, Fire, Inventory, Name, Position};
 use engine::map::Map;
 use engine::player::get_player_map_knowledge;
-use engine::utils::{PlayerID, Turn, PPoint, FrameTime};
+use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
+use engine::{MAPHEIGHT, MAPWIDTH, SCALE};
 use rltk::{Point, Rltk, RGBA};
 use shipyard::{Get, UniqueView, View};
 
