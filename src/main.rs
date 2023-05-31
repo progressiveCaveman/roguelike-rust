@@ -1,5 +1,5 @@
 use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUseItem};
-use engine::systems::{system_cleanup, system_particle};
+use engine::systems::{system_cleanup, system_particle, system_visibility};
 use engine::utils::{FrameTime, PlayerID, Turn};
 use engine::{effects, gamelog, Engine, GameMode};
 use engine::{map_builders::MapGenData, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
@@ -258,11 +258,17 @@ impl GameState for State {
 
         self.state = new_runstate;
 
+        world.run(system_visibility::run_visibility_system);
         world.run(system_cleanup::run_cleanup_system);
 
         //now render
-        camera::render_camera(world, ctx);
-        render::draw_gui(world, ctx);
+        match self.state {
+            RunState::MainMenu { .. } | RunState::EscPressed | RunState::GameOver => {},
+            _ => {
+                camera::render_camera(world, ctx);
+                render::draw_gui(world, ctx);        
+            }
+        }
     }
 }
 
