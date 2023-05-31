@@ -4,7 +4,7 @@ use crate::components::{
 };
 use crate::effects::add_effect;
 use crate::effects::{EffectType, Targets};
-use crate::gui::Palette;
+use crate::palette::Palette;
 use crate::map::Map;
 use crate::utils::PlayerID;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};

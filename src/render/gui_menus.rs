@@ -1,4 +1,4 @@
-use crate::gui::{ItemMenuResult, Palette};
+use engine::palette::Palette;
 use crate::RunState;
 use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use engine::utils::PlayerID;
@@ -6,6 +6,8 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{EntityId, Get, IntoIter, IntoWithId, UniqueView, View, World};
 use std::convert::TryFrom;
+
+use super::ItemMenuResult;
 
 pub enum ItemActionSelection {
     Cancel,

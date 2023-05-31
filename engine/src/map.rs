@@ -6,8 +6,7 @@ use shipyard::{EntityId, Get, Unique, View};
 
 use crate::ai::decisions::Target;
 use crate::components::Position;
-use crate::gui::{OFFSET_X, OFFSET_Y};
-use crate::SCALE;
+use crate::{OFFSET_X, OFFSET_Y, SCALE};
 
 #[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum TileType {

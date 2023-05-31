@@ -5,18 +5,17 @@ use components::{Equipped, InBackpack, IsCamera, Player, Position, Viewshed};
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use map::{Map, TileType};
-use rltk::{Point, Rltk};
+use rltk::Point;
 
 mod item_system;
 
 pub mod ai;
 
-pub mod gui;
-
 pub mod components;
 pub mod entity_factory;
 pub mod gamelog;
 pub mod map;
+pub mod palette;
 pub mod player;
 pub mod rect;
 pub mod utils;
@@ -48,6 +47,9 @@ pub const WINDOWWIDTH: usize = 160;
 pub const WINDOWHEIGHT: usize = 80;
 pub const SCALE: f32 = 1.0;
 
+pub const OFFSET_X: usize = 31;
+pub const OFFSET_Y: usize = 11;
+
 #[derive(Copy, Clone, PartialEq, Unique)]
 pub enum GameMode {
     NotSelected,
@@ -61,10 +63,6 @@ pub enum RenderOrder {
     NPC,
     Player,
     Particle,
-}
-pub trait EngineController: 'static {
-    fn start(&self, world: &mut World);
-    fn update(&self, world: &mut World, ctx: &mut Rltk);
 }
 
 pub struct Engine {}

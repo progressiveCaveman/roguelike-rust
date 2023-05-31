@@ -1,19 +1,37 @@
 use crate::gamelog::GameLog;
 use crate::{GameMode, WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
-use engine::components::{CombatStats, Fire, Inventory, Name, Position};
-use engine::gui::{Palette, OFFSET_X, OFFSET_Y};
+use engine::components::{CombatStats, Fire, Inventory, Name, Position, Viewshed};
+use engine::palette::Palette;
 use engine::map::Map;
 use engine::player::get_player_map_knowledge;
 use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
-use engine::{MAPHEIGHT, MAPWIDTH, SCALE};
-use rltk::{Point, Rltk};
+use engine::{MAPHEIGHT, MAPWIDTH, OFFSET_X, OFFSET_Y, SCALE};
+use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use shipyard::{Get, UniqueView, View, World};
 
 pub mod camera;
 pub use camera::*;
 
 pub mod gui_menus;
+
+/*
+Render strategy:
+Background color shows material
+Glyph shows entity
+glyph color is set by entity in general
+Background color is modified by tile status such as gas, light, or fire
+Glyph color is modified by some statuses?
+ */
+
+// https://dwarffortresswiki.org/index.php/Character_table
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum ItemMenuResult {
+    Cancel,
+    NoResponse,
+    Selected,
+}
 
 pub fn draw_gui(world: &World, ctx: &mut Rltk) {
     let world = &world;
@@ -315,4 +333,83 @@ pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32
     }
 
     (min_x, max_x, min_y, max_y)
+}
+
+pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResult, Option<Point>) {
+    let map = world.borrow::<UniqueView<Map>>().unwrap();
+    let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+    let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
+    ctx.print_color(
+        5,
+        12,
+        Palette::COLOR_PURPLE,
+        Palette::MAIN_BG,
+        "Select a target",
+    );
+
+    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
+
+    let mut valid_cells: Vec<Point> = Vec::new();
+    let vvs = world.borrow::<View<Viewshed>>().unwrap();
+    match vvs.get(player_id) {
+        Err(_e) => return (ItemMenuResult::Cancel, None),
+        Ok(player_vs) => {
+            for pt in player_vs.visible_tiles.iter() {
+                let dist = rltk::DistanceAlg::Pythagoras.distance2d(player_pos, *pt);
+                if dist as i32 <= range {
+                    let screen_x = pt.x - min_x + OFFSET_X as i32;
+                    let screen_y = pt.y - min_y + OFFSET_Y as i32; // TODO why is offset needed here??
+                    if screen_x > 1
+                        && screen_x < (max_x - min_x) - 1
+                        && screen_y > 1
+                        && screen_y < (max_y - min_y) - 1
+                    {
+                        ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));
+                        valid_cells.push(*pt);
+                    }
+                    ctx.set_bg(screen_x, screen_y, Palette::COLOR_4);
+                    valid_cells.push(*pt);
+                }
+            }
+        }
+    }
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x;
+    mouse_map_pos.1 += min_y;
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
+    map_mouse_pos.0 += min_x;
+    map_mouse_pos.1 += min_y;
+    // let map_mouse_pos = (mouse_pos.0 - map::OFFSET_X as i32, mouse_pos.1 - map::OFFSET_Y as i32);
+    let mut valid_target = false;
+    for pt in valid_cells.iter() {
+        if pt.x == map_mouse_pos.0 && pt.y == map_mouse_pos.1 {
+            valid_target = true
+        }
+    }
+    if valid_target {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_GREEN_DARK);
+        if ctx.left_click {
+            return (
+                ItemMenuResult::Selected,
+                Some(Point::new(map_mouse_pos.0, map_mouse_pos.1)),
+            );
+        }
+    } else {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, Palette::COLOR_RED);
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => match key {
+            VirtualKeyCode::Escape => return (ItemMenuResult::Cancel, None),
+            _ => (ItemMenuResult::NoResponse, None),
+        },
+    }
 }

@@ -7,8 +7,8 @@ use crate::components::{
     MeleePowerBonus, Monster, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
     Renderable, SerializeMe, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Villager,
 };
-use crate::gui::Palette;
 use crate::map::{Map, TileType};
+use crate::palette::Palette;
 use crate::rect::Rect;
 use crate::systems::system_fire::NEW_FIRE_TURNS;
 use crate::weighted_table::WeightedTable;

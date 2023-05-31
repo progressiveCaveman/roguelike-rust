@@ -1,11 +1,11 @@
 use crate::effects::{EffectType, Targets};
 use crate::gamelog::GameLog;
+use crate::palette::Palette;
 use crate::{
     components::{
         CombatStats, Equipped, MeleeDefenseBonus, MeleePowerBonus, Name, Position, WantsToAttack,
     },
     effects::add_effect,
-    gui::Palette,
     systems::system_particle::ParticleBuilder,
 };
 use shipyard::{

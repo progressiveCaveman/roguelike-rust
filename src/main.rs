@@ -1,5 +1,4 @@
 use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUseItem};
-use engine::gui::{self};
 use engine::systems::{system_cleanup, system_particle};
 use engine::utils::{FrameTime, PlayerID, Turn};
 use engine::{effects, gamelog, Engine, GameMode};
@@ -119,9 +118,9 @@ impl GameState for State {
             RunState::ShowInventory => {
                 let result = gui_menus::show_inventory(world, ctx);
                 match result.0 {
-                    gui::ItemMenuResult::NoResponse => {}
-                    gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
-                    gui::ItemMenuResult::Selected => {
+                    render::ItemMenuResult::NoResponse => {}
+                    render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
+                    render::ItemMenuResult::Selected => {
                         new_runstate = RunState::ShowItemActions {
                             item: result.1.unwrap(),
                         }
@@ -170,11 +169,11 @@ impl GameState for State {
                 }
             }
             RunState::ShowTargeting { range, item } => {
-                let res = gui::ranged_target(world, ctx, range);
+                let res = render::ranged_target(world, ctx, range);
                 match res.0 {
-                    gui::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
-                    gui::ItemMenuResult::NoResponse => {}
-                    gui::ItemMenuResult::Selected => {
+                    render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
+                    render::ItemMenuResult::NoResponse => {}
+                    render::ItemMenuResult::Selected => {
                         let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
                         world.add_component(
                             player_id,

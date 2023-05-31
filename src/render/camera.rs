@@ -1,6 +1,6 @@
 use engine::{
     components::{Player, Renderable},
-    gui::Palette,
+    palette::Palette,
     map::TileType,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
