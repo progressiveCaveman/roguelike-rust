@@ -2,7 +2,7 @@ use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUse
 use engine::systems::{system_cleanup, system_particle, system_visibility};
 use engine::utils::{FrameTime, PlayerID, Turn};
 use engine::{effects, gamelog, Engine, GameMode};
-use engine::{map_builders::MapGenData, SCALE, TILE_SIZE, WINDOWHEIGHT, WINDOWWIDTH};
+use engine::{map_builders::MapGenData, SCALE, TILE_SIZE};
 use render::{camera, gui_menus};
 use rltk::{GameState, Rltk, RltkBuilder, RGBA};
 use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
@@ -10,6 +10,10 @@ use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
 pub mod input_handler;
 pub mod menus;
 pub mod render;
+pub mod game_modes;
+
+pub const WINDOWWIDTH: usize = 160;
+pub const WINDOWHEIGHT: usize = 80;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum RunState {
@@ -35,18 +39,17 @@ pub enum RunState {
 }
 
 pub struct State {
-    pub world: World,
+    pub engine: Engine,
     pub mapgen_data: MapGenData,
-    pub first_run: bool,
     pub state: RunState,
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
-        if self.first_run {
-            self.first_run = false;
+        if self.engine.first_run {
+            self.engine.first_run = false;
 
-            Engine::reset_engine(&mut self.world);
+            self.engine.reset_engine(game_modes::get_settings(GameMode::RL));
         }
 
         ctx.set_active_console(1);
@@ -68,7 +71,7 @@ impl GameState for State {
         ctx.cls();
 
         {
-            let mut i = self.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
+            let mut i = self.engine.world.borrow::<UniqueViewMut<FrameTime>>().unwrap();
             i.0 = ctx.frame_time_ms;
         }
 
@@ -76,28 +79,27 @@ impl GameState for State {
 
         let mut new_runstate = self.state; //*self.world.borrow::<UniqueViewMut<RunState>>().unwrap();
 
-        let world = &mut self.world;
-        let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
+        let player_id = self.engine.world.borrow::<UniqueView<PlayerID>>().unwrap().0;
         // dbg!(new_runstate);
 
-        world.run(system_particle::update_particles);
-        world.run(effects::run_effects_queue);
+        self.engine.world.run(system_particle::update_particles);
+        self.engine.world.run(effects::run_effects_queue);
 
         match new_runstate {
             RunState::PreRun => {
                 Engine::run_systems(
-                    world,
+                    &mut self.engine.world,
                     new_runstate == RunState::PlayerTurn,
                     new_runstate == RunState::AiTurn,
                 );
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
-                new_runstate = input_handler::handle_input(&world, ctx);
+                new_runstate = input_handler::handle_input(&self.engine.world, ctx);
             }
             RunState::PlayerTurn => {
                 Engine::run_systems(
-                    world,
+                    &mut self.engine.world,
                     new_runstate == RunState::PlayerTurn,
                     new_runstate == RunState::AiTurn,
                 );
@@ -105,18 +107,18 @@ impl GameState for State {
             }
             RunState::AiTurn => {
                 {
-                    let mut turn = world.borrow::<UniqueViewMut<Turn>>().unwrap();
+                    let mut turn = self.engine.world.borrow::<UniqueViewMut<Turn>>().unwrap();
                     turn.0 += 1;
                 }
                 Engine::run_systems(
-                    world,
+                    &mut self.engine.world,
                     new_runstate == RunState::PlayerTurn,
                     new_runstate == RunState::AiTurn,
                 );
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
-                let result = gui_menus::show_inventory(world, ctx);
+                let result = gui_menus::show_inventory(&self.engine.world, ctx);
                 match result.0 {
                     render::ItemMenuResult::NoResponse => {}
                     render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
@@ -128,13 +130,13 @@ impl GameState for State {
                 }
             }
             RunState::ShowItemActions { item } => {
-                let result = gui_menus::show_item_actions(&world, item, ctx);
+                let result = gui_menus::show_item_actions(&self.engine.world, item, ctx);
                 match result {
                     gui_menus::ItemActionSelection::NoSelection => {}
                     gui_menus::ItemActionSelection::Used => {
                         let mut to_add_wants_use_item: Vec<EntityId> = Vec::new();
                         {
-                            let vranged = world.borrow::<ViewMut<Ranged>>().unwrap();
+                            let vranged = self.engine.world.borrow::<ViewMut<Ranged>>().unwrap();
                             match vranged.get(item) {
                                 Ok(is_item_ranged) => {
                                     new_runstate = RunState::ShowTargeting {
@@ -150,17 +152,17 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            world.add_component(*id, WantsToUseItem { item, target: None });
+                            self.engine.world.add_component(*id, WantsToUseItem { item, target: None });
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
-                        let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        world.add_component(player_id, WantsToDropItem { item });
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine.world.add_component(player_id, WantsToDropItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
-                        let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        world.add_component(player_id, WantsToUnequipItem { item });
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine.world.add_component(player_id, WantsToUnequipItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Cancel => {
@@ -169,13 +171,13 @@ impl GameState for State {
                 }
             }
             RunState::ShowTargeting { range, item } => {
-                let res = render::ranged_target(world, ctx, range);
+                let res = render::ranged_target(&self.engine.world, ctx, range);
                 match res.0 {
                     render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     render::ItemMenuResult::NoResponse => {}
                     render::ItemMenuResult::Selected => {
-                        let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        world.add_component(
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine.world.add_component(
                             player_id,
                             WantsToUseItem {
                                 item,
@@ -196,15 +198,11 @@ impl GameState for State {
                     }
                     gui_menus::MainMenuResult::Selection { selected } => match selected {
                         gui_menus::MainMenuSelection::Roguelike => {
-                            Engine::set_game_mode(world, GameMode::RL);
-                            Engine::generate_map(world, 1);
-
+                            self.engine.reset_engine(game_modes::get_settings(GameMode::RL));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Simulator => {
-                            Engine::set_game_mode(world, GameMode::Sim);
-                            Engine::generate_map(world, 1);
-
+                            self.engine.reset_engine(game_modes::get_settings(GameMode::Sim));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Exit => ::std::process::exit(0),
@@ -212,13 +210,13 @@ impl GameState for State {
                 }
             }
             RunState::EscPressed => {
-                Engine::reset_engine(world);
+                // Engine::reset_engine(world);
                 new_runstate = RunState::MainMenu {
                     menu_selection: gui_menus::MainMenuSelection::Roguelike,
                 };
             }
             RunState::NextLevel => {
-                Engine::next_level(world);
+                Engine::next_level(&mut self.engine.world);
                 new_runstate = RunState::PreRun;
             }
             RunState::GameOver => {
@@ -226,7 +224,7 @@ impl GameState for State {
                 match result {
                     gui_menus::GameOverResult::NoSelection => {}
                     gui_menus::GameOverResult::QuitToMenu => {
-                        Engine::reset_engine(world);
+                        // Engine::reset_engine(world);
                         new_runstate = RunState::MainMenu {
                             menu_selection: gui_menus::MainMenuSelection::Roguelike,
                         };
@@ -258,15 +256,15 @@ impl GameState for State {
 
         self.state = new_runstate;
 
-        world.run(system_visibility::run_visibility_system);
-        world.run(system_cleanup::run_cleanup_system);
+        self.engine.world.run(system_visibility::run_visibility_system);
+        self.engine.world.run(system_cleanup::run_cleanup_system);
 
         //now render
         match self.state {
             RunState::MainMenu { .. } | RunState::EscPressed | RunState::GameOver => {},
             _ => {
-                camera::render_camera(world, ctx);
-                render::draw_gui(world, ctx);        
+                camera::render_camera(&self.engine.world, ctx);
+                render::draw_gui(&self.engine.world, ctx);        
             }
         }
     }
@@ -290,14 +288,15 @@ fn main() -> rltk::BError {
         .build()?;
 
     let gs = State {
-        world: World::new(),
-        // resources: Resources::default(),
+        engine: Engine { 
+            world: World::new(), 
+            first_run: true
+        },
         mapgen_data: MapGenData {
             history: Vec::new(),
             timer: 0.0,
             index: 0,
         },
-        first_run: true,
         state: RunState::MainMenu {
             menu_selection: gui_menus::MainMenuSelection::Roguelike,
         },

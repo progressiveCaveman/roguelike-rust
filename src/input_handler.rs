@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use engine::{
     components::Item,
     effects::{add_effect, EffectType},
-    entity_factory,
     map::Map,
     player,
     utils::{dir_to_point, PPoint, PlayerID},
-    GameMode,
+    GameMode, GameSettings,
 };
 use rltk::{Rltk, VirtualKeyCode};
-use shipyard::{AllStoragesViewMut, Get, UniqueView, UniqueViewMut, View, World, EntityId};
+use shipyard::{Get, UniqueView, UniqueViewMut, View, World, EntityId};
 
 use crate::RunState;
 
@@ -97,12 +96,14 @@ impl Command {
                 RunState::PlayerTurn
             },
             Command::Fireball => {
-                RunState::ShowTargeting {
-                    range: 6,
-                    item: world.run(|mut store: AllStoragesViewMut| {
-                        entity_factory::tmp_fireball(&mut store)
-                    }),
-                }
+                dbg!("fireball is broken");
+                RunState::AwaitingInput
+                // RunState::ShowTargeting {
+                //     range: 6,
+                //     item: world.run(|mut store: AllStoragesViewMut| {
+                //         entity_factory::tmp_fireball(&mut store)
+                //     }),
+                // }
             },
             Command::UseStairs => {
                 if player::try_next_level(&world) {
@@ -177,10 +178,10 @@ pub fn map_keys(ctx: &Rltk) -> Command {
 pub fn handle_input(world: &World, ctx: &Rltk) -> RunState {
     let command = map_keys(ctx);
 
-    let game_mode = world.borrow::<UniqueView<GameMode>>().unwrap();
+    let settings = world.borrow::<UniqueView<GameSettings>>().unwrap();
     let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
 
-    let can_use = can_use_command(*game_mode, command);
+    let can_use = can_use_command(settings.mode, command);
 
     if can_use {
         return command.execute(world, Some(player_id));

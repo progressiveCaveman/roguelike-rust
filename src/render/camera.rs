@@ -4,7 +4,7 @@ use engine::{
     map::TileType,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
-    GameMode, SCALE,
+    GameMode, SCALE, GameSettings,
 };
 
 use super::{Map, Position, OFFSET_X, OFFSET_Y};
@@ -26,7 +26,7 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
     let size = ctx.get_char_size();
 
     let map = world.borrow::<UniqueView<Map>>().unwrap();
-    let gamemode = *world.borrow::<UniqueView<GameMode>>().unwrap();
+    let settings = *world.borrow::<UniqueView<GameSettings>>().unwrap();
     let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
     let player_knowledge = get_player_map_knowledge(world);
     let player_vs = get_player_viewshed(world);
@@ -43,10 +43,10 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
             if tx >= 0 && tx < map_width && ty >= 0 && ty < map_height {
                 let idx = map.xy_idx(tx, ty);
                 let p = Point { x: tx, y: ty };
-                if gamemode == GameMode::Sim || player_knowledge.contains_key(&idx) {
+                if settings.mode == GameMode::Sim || player_knowledge.contains_key(&idx) {
                     let (glyph, mut fg, mut bg) = get_tile_glyph(idx, &*map);
 
-                    if gamemode != GameMode::Sim && !player_vs.is_visible(p) {
+                    if settings.mode != GameMode::Sim && !player_vs.is_visible(p) {
                         fg = fg.scaled(0.5);
                         bg = bg.scaled(0.5);
                     }
@@ -74,7 +74,7 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
         |vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>| {
             for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
                 if let Ok(_) = vplayer.get(id) {
-                    if gamemode == GameMode::Sim {
+                    if settings.mode == GameMode::Sim {
                         continue;
                     }
                 }
@@ -83,7 +83,7 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
                     let idx = map.xy_idx(pos.x, pos.y);
                     if pos.y > min_y - 1
                         && pos.x > min_x - 1
-                        && (gamemode == GameMode::Sim || player_vs.is_visible(*pos))
+                        && (settings.mode == GameMode::Sim || player_vs.is_visible(*pos))
                     {
                         let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
 

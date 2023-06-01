@@ -43,14 +43,18 @@ pub const MAPGEN_FRAME_TIME: f32 = 25.0;
 pub const TILE_SIZE: usize = 10;
 pub const MAPWIDTH: usize = 200;
 pub const MAPHEIGHT: usize = 80;
-pub const WINDOWWIDTH: usize = 160;
-pub const WINDOWHEIGHT: usize = 80;
 pub const SCALE: f32 = 1.0;
 
 pub const OFFSET_X: usize = 31;
 pub const OFFSET_Y: usize = 11;
 
 #[derive(Copy, Clone, PartialEq, Unique)]
+pub struct GameSettings {
+    pub mode: GameMode,
+    pub mapsize: (usize, usize),
+}
+
+#[derive(Copy, Clone, PartialEq)]
 pub enum GameMode {
     NotSelected,
     Sim,
@@ -65,7 +69,11 @@ pub enum RenderOrder {
     Particle,
 }
 
-pub struct Engine {}
+pub struct Engine {
+    pub world: World,
+    pub first_run: bool,
+}
+
 impl Engine {
     pub fn run_systems(world: &mut World, player_turn: bool, ai_turn: bool) {
         if player_turn {
@@ -145,15 +153,16 @@ impl Engine {
         // self.mapgen_data.history.clear();
 
         // get game mode
-        let gamemode = *world.borrow::<UniqueView<GameMode>>().unwrap();
+        let settings = *world.borrow::<UniqueView<GameSettings>>().unwrap();
+
 
         // Generate map
-        let mut map_builder = match gamemode {
+        let mut map_builder = match settings.mode {
             GameMode::NotSelected => {
                 map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
             }
             GameMode::Sim => {
-                map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+                map_builders::village_world_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
             }
             GameMode::RL => {
                 map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
@@ -212,56 +221,37 @@ impl Engine {
             .push("You descend in the staircase".to_string());
     }
 
-    pub fn set_game_mode(world: &mut World, mode: GameMode) {
-        world.run(|mut store: AllStoragesViewMut| {
-            let player_id: EntityId = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
-            let player_is_alive = {
-                let entities = store.borrow::<EntitiesView>().unwrap();
-                entities.is_alive(player_id)
-            };
-
-            dbg!(player_is_alive);
-
-            match mode {
-                GameMode::Sim => {
-                    if player_is_alive {
-                        store.add_component(player_id, IsCamera {});
-                    }
-                }
-                _ => {
-                    store.delete_component::<IsCamera>(player_id);
-                }
-            }
-
-            let mut gamemode = store.borrow::<UniqueViewMut<GameMode>>().unwrap();
-            *gamemode = mode;
-        });
-    }
-
-    pub fn reset_engine(world: &mut World) {
+    pub fn reset_engine(&mut self, settings: GameSettings) {
         // Delete everything
-        world.clear();
+        // world.clear();
+        self.world = World::new();
 
         // Re-add defaults for all uniques
-        world.add_unique(Map::new(
+        self.world.add_unique(Map::new(
             1,
             TileType::Wall,
             (MAPWIDTH as i32, MAPHEIGHT as i32),
         ));
-        world.add_unique(PPoint(Point::new(0, 0)));
-        world.add_unique(Turn(0));
-        world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
+        self.world.add_unique(PPoint(Point::new(0, 0)));
+        self.world.add_unique(Turn(0));
+        self.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
-        let player_id =
-            world.run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
-        world.add_unique(PlayerID(player_id));
+        let player_id = self.world.run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
+        self.world.add_unique(PlayerID(player_id));
 
-        world.add_unique(GameMode::NotSelected);
-        world.add_unique(gamelog::GameLog { messages: vec![] });
-        world.add_unique(system_particle::ParticleBuilder::new());
-        world.add_unique(FrameTime(0.));
+        self.world.add_unique(settings);
+        self.world.add_unique(gamelog::GameLog { messages: vec![] });
+        self.world.add_unique(system_particle::ParticleBuilder::new());
+        self.world.add_unique(FrameTime(0.));
+
+        match settings.mode {
+            GameMode::Sim => {
+                self.world.add_component(player_id, IsCamera {});
+            }
+            _ => { }
+        }
 
         // Generate new map
-        Self::generate_map(world, 1);
+        Self::generate_map(&mut self.world, 1);
     }
 }

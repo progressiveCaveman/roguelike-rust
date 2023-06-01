@@ -6,7 +6,7 @@ use engine::palette::Palette;
 use engine::map::Map;
 use engine::player::get_player_map_knowledge;
 use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
-use engine::{MAPHEIGHT, MAPWIDTH, OFFSET_X, OFFSET_Y, SCALE};
+use engine::{MAPHEIGHT, MAPWIDTH, OFFSET_X, OFFSET_Y, SCALE, GameSettings};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use shipyard::{Get, UniqueView, View, World};
 
@@ -116,7 +116,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
 
     let (min_x, _max_x, min_y, _max_y) = get_map_coords_for_screen(player_pos, ctx);
     let map = world.borrow::<UniqueView<Map>>().unwrap();
-    let gamemode = world.borrow::<UniqueView<GameMode>>().unwrap();
+    let settings = world.borrow::<UniqueView<GameSettings>>().unwrap();
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
@@ -131,7 +131,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
     }
 
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if *gamemode != GameMode::Sim && !get_player_map_knowledge(world).contains_key(&idx) {
+    if settings.mode != GameMode::Sim && !get_player_map_knowledge(world).contains_key(&idx) {
         return;
     }
 
