@@ -52,6 +52,8 @@ pub const OFFSET_Y: usize = 11;
 pub struct GameSettings {
     pub mode: GameMode,
     pub mapsize: (usize, usize),
+    pub follow_player: bool,
+    pub use_player_los: bool
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -157,6 +159,7 @@ impl Engine {
 
 
         // Generate map
+        // TODO eventually this should not look at mode, but use map vonfig info from settings
         let mut map_builder = match settings.mode {
             GameMode::NotSelected => {
                 map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))

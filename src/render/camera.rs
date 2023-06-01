@@ -4,7 +4,7 @@ use engine::{
     map::TileType,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
-    GameMode, SCALE, GameSettings,
+    SCALE, GameSettings,
 };
 
 use super::{Map, Position, OFFSET_X, OFFSET_Y};
@@ -14,7 +14,7 @@ use shipyard::{Get, IntoIter, IntoWithId, UniqueView, View, World};
 const SHOW_BOUNDARIES: bool = true;
 const RENDER_DJIKSTRA: bool = false;
 
-pub fn render_camera(world: &World, ctx: &mut Rltk) {
+pub fn render_game(world: &World, ctx: &mut Rltk) {
     let world = &world;
     // let res = &gs.resources;
 
@@ -43,10 +43,10 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
             if tx >= 0 && tx < map_width && ty >= 0 && ty < map_height {
                 let idx = map.xy_idx(tx, ty);
                 let p = Point { x: tx, y: ty };
-                if settings.mode == GameMode::Sim || player_knowledge.contains_key(&idx) {
+                if !settings.use_player_los || player_knowledge.contains_key(&idx) {
                     let (glyph, mut fg, mut bg) = get_tile_glyph(idx, &*map);
 
-                    if settings.mode != GameMode::Sim && !player_vs.is_visible(p) {
+                    if settings.use_player_los && !player_vs.is_visible(p) {
                         fg = fg.scaled(0.5);
                         bg = bg.scaled(0.5);
                     }
@@ -74,7 +74,7 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
         |vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>| {
             for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
                 if let Ok(_) = vplayer.get(id) {
-                    if settings.mode == GameMode::Sim {
+                    if !settings.use_player_los {
                         continue;
                     }
                 }
@@ -83,7 +83,7 @@ pub fn render_camera(world: &World, ctx: &mut Rltk) {
                     let idx = map.xy_idx(pos.x, pos.y);
                     if pos.y > min_y - 1
                         && pos.x > min_x - 1
-                        && (settings.mode == GameMode::Sim || player_vs.is_visible(*pos))
+                        && (!settings.use_player_los || player_vs.is_visible(*pos))
                     {
                         let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
 

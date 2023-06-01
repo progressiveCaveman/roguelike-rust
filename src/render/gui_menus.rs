@@ -138,7 +138,6 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
 pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<EntityId>) {
     let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    dbg!("Inventory display code is outdated");
     // Items in backpack
     // let mut query = //world.query::<(&InBackpack, &Name)>();
     let vinv = world.borrow::<View<Inventory>>().unwrap();

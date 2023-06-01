@@ -1,5 +1,5 @@
 use crate::gamelog::GameLog;
-use crate::{GameMode, WINDOWHEIGHT, WINDOWWIDTH};
+use crate::{WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
 use engine::components::{CombatStats, Fire, Inventory, Name, Position, Viewshed};
 use engine::palette::Palette;
@@ -131,7 +131,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
     }
 
     let idx = map.xy_idx(map_mouse_pos.0, map_mouse_pos.1);
-    if settings.mode != GameMode::Sim && !get_player_map_knowledge(world).contains_key(&idx) {
+    if settings.use_player_los && !get_player_map_knowledge(world).contains_key(&idx) {
         return;
     }
 

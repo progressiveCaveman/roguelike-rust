@@ -1,11 +1,13 @@
 use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUseItem};
 use engine::systems::{system_cleanup, system_particle, system_visibility};
 use engine::utils::{FrameTime, PlayerID, Turn};
-use engine::{effects, gamelog, Engine, GameMode};
+use engine::{effects, gamelog, Engine, GameMode, GameSettings};
 use engine::{map_builders::MapGenData, SCALE, TILE_SIZE};
 use render::{camera, gui_menus};
 use rltk::{GameState, Rltk, RltkBuilder, RGBA};
 use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
+
+use crate::game_modes::get_settings;
 
 pub mod input_handler;
 pub mod menus;
@@ -42,6 +44,7 @@ pub struct State {
     pub engine: Engine,
     pub mapgen_data: MapGenData,
     pub state: RunState,
+    pub settings: GameSettings,
 }
 
 impl GameState for State {
@@ -263,7 +266,7 @@ impl GameState for State {
         match self.state {
             RunState::MainMenu { .. } | RunState::EscPressed | RunState::GameOver => {},
             _ => {
-                camera::render_camera(&self.engine.world, ctx);
+                camera::render_game(&self.engine.world, ctx);
                 render::draw_gui(&self.engine.world, ctx);        
             }
         }
@@ -300,6 +303,7 @@ fn main() -> rltk::BError {
         state: RunState::MainMenu {
             menu_selection: gui_menus::MainMenuSelection::Roguelike,
         },
+        settings: get_settings(GameMode::RL),
     };
 
     rltk::main_loop(context, gs)
