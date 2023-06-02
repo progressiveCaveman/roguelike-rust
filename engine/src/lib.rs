@@ -58,9 +58,8 @@ pub struct GameSettings {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameMode {
-    NotSelected,
-    Sim,
     RL,
+    Sim,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
@@ -161,9 +160,6 @@ impl Engine {
         // Generate map
         // TODO eventually this should not look at mode, but use map vonfig info from settings
         let mut map_builder = match settings.mode {
-            GameMode::NotSelected => {
-                map_builders::random_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
-            }
             GameMode::Sim => {
                 map_builders::village_world_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
             }

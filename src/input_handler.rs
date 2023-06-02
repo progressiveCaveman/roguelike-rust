@@ -118,7 +118,6 @@ impl Command {
 
 pub fn can_use_command(gamemode: GameMode, command: Command) -> bool {
     match gamemode {
-        GameMode::NotSelected => unreachable!(),
         GameMode::Sim => {
             match command {
                 Command::None => true,

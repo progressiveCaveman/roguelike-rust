@@ -2,7 +2,6 @@ use engine::{GameSettings, GameMode};
 
 pub fn get_settings(mode: GameMode) -> GameSettings {
     match mode {
-        GameMode::NotSelected => unreachable!(),
         GameMode::Sim => {
             GameSettings { 
                 mode, 
