@@ -1,7 +1,7 @@
 use rltk::{Point, RandomNumberGenerator};
 use shipyard::{AllStoragesViewMut, World};
 
-use crate::{components::SpawnerType, entity_factory, SHOW_MAPGEN_ANIMATION};
+use crate::{components::{SpawnerType, Faction}, entity_factory, SHOW_MAPGEN_ANIMATION};
 
 use super::{Map, MapBuilder, Position, TileType};
 
@@ -35,7 +35,7 @@ impl MapBuilder for VillageBuilder {
                 }
             }
 
-            entity_factory::spawner(&mut store, 1, self.map.height - 7, 0, SpawnerType::Fish, 1);
+            entity_factory::spawner(&mut store, 1, self.map.height - 7, Faction::Nature, SpawnerType::Fish, 1);
 
             for i in 1..=10 {
                 entity_factory::plank_house(&mut store, 20 + 10 * i, self.map.height - 14, 4, 4);

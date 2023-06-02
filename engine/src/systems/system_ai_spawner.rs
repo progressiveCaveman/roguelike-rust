@@ -1,20 +1,20 @@
-use crate::components::{Faction, Position, Spawner, SpawnerType};
+use crate::components::{Faction, Position, Spawner, SpawnerType, Actor};
 use crate::entity_factory;
 use crate::utils::Turn;
 use rltk::Point;
-use shipyard::{AllStoragesViewMut, IntoIter, IntoWithId, UniqueView, View};
+use shipyard::{AllStoragesViewMut, IntoIter, IntoWithId, UniqueView, View, ViewMut, Get};
 
 pub fn run_spawner_system(mut store: AllStoragesViewMut) {
-    let mut to_spawn: Vec<(Point, i32, SpawnerType)> = vec![];
+    let mut to_spawn: Vec<(Point, Faction, SpawnerType)> = vec![];
 
     {
         let turn = store.borrow::<UniqueView<Turn>>().unwrap();
 
         let vpos = store.borrow::<View<Position>>().unwrap();
         let vspawner = store.borrow::<View<Spawner>>().unwrap();
-        let vfaction = store.borrow::<View<Faction>>().unwrap();
+        let vactor = store.borrow::<View<Actor>>().unwrap();
 
-        for (_, (pos, spawner, faction)) in (&vpos, &vspawner, &vfaction).iter().with_id() {
+        for (_, (pos, spawner, actor)) in (&vpos, &vspawner, &vactor).iter().with_id() {
             let fpos = pos.ps.first().unwrap();
             if turn.0 % spawner.rate == 0 {
                 to_spawn.push((
@@ -22,7 +22,7 @@ pub fn run_spawner_system(mut store: AllStoragesViewMut) {
                         x: fpos.x,
                         y: fpos.y + 1,
                     },
-                    faction.faction,
+                    actor.faction,
                     spawner.typ,
                 ));
             }
@@ -33,7 +33,13 @@ pub fn run_spawner_system(mut store: AllStoragesViewMut) {
         match t {
             SpawnerType::Orc => {
                 let e = entity_factory::orc(&mut store, p.x, p.y);
-                store.add_component(e, Faction { faction: *f });
+                store.run(|mut vactor: ViewMut<Actor>|{
+                    if let Ok(mut actor) = (&mut vactor).get(e){
+                        actor.faction = *f;
+                    } else {
+                        dbg!("Error: Orc isn't an actor, this shouldn't happen");
+                    }
+                });
             }
             SpawnerType::Fish => {
                 entity_factory::fish(&mut store, p.x, p.y);

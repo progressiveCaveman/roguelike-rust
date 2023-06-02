@@ -1,4 +1,4 @@
-use crate::components::{Fish, Position};
+use crate::components::{Position, Actor, ActorType};
 use crate::effects::{add_effect, EffectType};
 use crate::map::{Map, TileType};
 use rand::prelude::SliceRandom;
@@ -7,11 +7,15 @@ use rltk::Point;
 use shipyard::{EntityId, IntoIter, IntoWithId, UniqueView, View};
 
 // currently fish only move east
-pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vfish: View<Fish>) {
+pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vactor: View<Actor>) {
     let mut to_try_move: Vec<(EntityId, Point)> = vec![];
     let mut to_remove: Vec<EntityId> = vec![];
 
-    for (id, (pos, _)) in (&vpos, &vfish).iter().with_id() {
+    for (id, (pos, actor)) in (&vpos, &vactor).iter().with_id() {
+        if actor.atype != ActorType::Fish {
+            continue;
+        }
+
         if pos.ps.len() == 1 {
             // if at edge of map, remove fish
 

@@ -160,7 +160,7 @@ impl Engine {
         // TODO eventually this should not look at mode, but use map vonfig info from settings
         let mut map_builder = match settings.mode {
             GameMode::Sim => {
-                map_builders::village_world_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+                map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
             }
             GameMode::RL => {
                 map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))

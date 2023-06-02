@@ -93,17 +93,29 @@ pub struct Name {
 pub struct Player {}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Monster {}
+pub struct Actor {
+    pub atype: ActorType,
+    pub faction: Faction,
+}
 
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Villager {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Faction {
+    Nuetral,
+    Nature,
+    Player,
+    Orcs,
+    Villager,
+    Wizard1,
+    Wizard2
+}
 
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Fish {}
-
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
-pub struct Faction {
-    pub faction: i32,
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ActorType {
+    Player,
+    Orc,
+    Villager,
+    Fish,
+    Spawner
 }
 
 /// Structures
@@ -317,9 +329,6 @@ pub struct Fire {
 pub struct Flammable {}
 
 /// Save components
-
-#[derive(Component)]
-pub struct SerializeMe {}
 
 #[derive(Component)]
 pub struct Lifetime {

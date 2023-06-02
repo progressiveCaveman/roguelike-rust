@@ -1,4 +1,4 @@
-use crate::components::{Confusion, Monster, Position, Viewshed, WantsToAttack};
+use crate::components::{Confusion, Position, Viewshed, WantsToAttack, Actor, ActorType};
 use crate::effects::{add_effect, EffectType};
 use crate::map::Map;
 use crate::palette::Palette;
@@ -19,14 +19,18 @@ pub fn run_monster_ai_system(store: AllStoragesViewMut) {
     let vpos = store.borrow::<View<Position>>().unwrap();
     let vvs = store.borrow::<View<Viewshed>>().unwrap();
     let mut vconfusion = store.borrow::<ViewMut<Confusion>>().unwrap();
-    let vmonster = store.borrow::<View<Monster>>().unwrap();
+    let vactor = store.borrow::<View<Actor>>().unwrap();
     let mut vwantsattack = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     let mut needs_wants_to_attack: Vec<EntityId> = Vec::new();
     let mut to_update_confusion: Vec<(EntityId, Confusion)> = Vec::new();
 
     // Monster ai
-    for (id, (_mon, pos, vs)) in (&vmonster, &vpos, &vvs).iter().with_id() {
+    for (id, (actor, pos, vs)) in (&vactor, &vpos, &vvs).iter().with_id() {
+        if actor.atype != ActorType::Orc {
+            continue;
+        }
+
         match vconfusion.get(id) {
             Err(_e) => {}
             Ok(confusion) => {

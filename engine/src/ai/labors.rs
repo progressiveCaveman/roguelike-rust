@@ -3,7 +3,7 @@ use shipyard::{AllStoragesView, EntityId, Get, UniqueView, View};
 
 use crate::{
     components::{
-        Fish, FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree,
+        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType,
     },
     map::{Map, TileType},
     utils::Turn,
@@ -318,7 +318,7 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
     let vitem = store.borrow::<View<Item>>().unwrap();
-    let vfish = store.borrow::<View<Fish>>().unwrap();
+    let vactors = store.borrow::<View<Actor>>().unwrap(); // Used to find fish
     let vfishery = store.borrow::<View<FishCleaner>>().unwrap();
     let vspace = store.borrow::<View<SpatialKnowledge>>().unwrap();
     let vinv = store.borrow::<View<Inventory>>().unwrap();
@@ -346,9 +346,11 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
     let mut fish_in_inv = 0;
     let mut inventory_fish: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
-        if let Ok(_) = vfish.get(*e) {
-            fish_in_inv += 1;
-            inventory_fish = *e;
+        if let Ok(actor) = vactors.get(*e) {
+            if actor.atype == ActorType::Fish{
+                fish_in_inv += 1;
+                inventory_fish = *e;
+            }
         }
     }
 

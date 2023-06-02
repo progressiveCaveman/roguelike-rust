@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use crate::components::{
     AreaOfEffect, BlocksTile, ChiefHouse, CombatStats, Confusion, Consumable, DealsDamage,
-    DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, Fish, FishCleaner, Flammable,
+    DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, FishCleaner, Flammable,
     Inventory, Item, ItemType, LocomotionType, Locomotive, LumberMill, MeleeDefenseBonus,
-    MeleePowerBonus, Monster, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
-    Renderable, SerializeMe, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Villager,
+    MeleePowerBonus, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
+    Renderable, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Actor, ActorType,
 };
 use crate::map::{Map, TileType};
 use crate::palette::Palette;
@@ -21,7 +21,6 @@ const MAX_MONSTERS: i32 = 4;
 
 pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
     store.add_entity((
-        SerializeMe {},
         Position {
             ps: vec![Point { x: pos.0, y: pos.1 }],
         },
@@ -33,6 +32,10 @@ pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
             ..Default::default()
         },
         Player {},
+        Actor {
+            faction: Faction::Player,
+            atype: ActorType::Player,
+        },
         Locomotive {
             mtype: LocomotionType::Ground,
             speed: 1,
@@ -181,7 +184,10 @@ pub fn villager(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         SpatialKnowledge {
             tiles: HashMap::new(),
         },
-        Villager {},
+        Actor {
+            faction: Faction::Villager,
+            atype: ActorType::Villager,
+        }
     ))
 }
 
@@ -209,7 +215,10 @@ pub fn fish(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Name {
             name: "Fish".to_string(),
         },
-        Fish {},
+        Actor {
+            faction: Faction::Nature,
+            atype: ActorType::Fish,
+        },
         Item {
             typ: ItemType::Fish,
         },
@@ -247,7 +256,10 @@ pub fn monster(
             range: 8,
             dirty: true,
         },
-        Monster {},
+        Actor {
+            faction: Faction::Orcs,
+            atype: ActorType::Orc,
+        },
         Locomotive {
             mtype: LocomotionType::Ground,
             speed: 1,
@@ -291,7 +303,10 @@ pub fn big_monster(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             range: 8,
             dirty: true,
         },
-        Monster {},
+        Actor {
+            faction: Faction::Orcs,
+            atype: ActorType::Orc,
+        },
         Locomotive {
             mtype: LocomotionType::Ground,
             speed: 1,
@@ -536,7 +551,7 @@ pub fn spawner(
     store: &mut AllStoragesViewMut,
     x: i32,
     y: i32,
-    faction: i32,
+    faction: Faction,
     typ: SpawnerType,
     rate: i32,
 ) -> EntityId {
@@ -555,7 +570,10 @@ pub fn spawner(
             name: "Spawner".to_string(),
         },
         Spawner { typ, rate },
-        Faction { faction },
+        Actor {
+            atype: ActorType::Spawner,
+            faction
+        }
     ))
 }
 
