@@ -1,6 +1,6 @@
-use engine::palette::Palette;
 use crate::RunState;
 use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
+use engine::palette::Palette;
 use engine::utils::PlayerID;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};

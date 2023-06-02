@@ -53,7 +53,7 @@ pub struct GameSettings {
     pub mode: GameMode,
     pub mapsize: (usize, usize),
     pub follow_player: bool,
-    pub use_player_los: bool
+    pub use_player_los: bool,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -155,7 +155,6 @@ impl Engine {
 
         // get game mode
         let settings = *world.borrow::<UniqueView<GameSettings>>().unwrap();
-
 
         // Generate map
         // TODO eventually this should not look at mode, but use map vonfig info from settings

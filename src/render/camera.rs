@@ -1,10 +1,10 @@
 use engine::{
     components::{Player, Renderable},
-    palette::Palette,
     map::TileType,
+    palette::Palette,
     player::{get_player_map_knowledge, get_player_viewshed},
     utils::{PPoint, Scale},
-    SCALE, GameSettings,
+    GameSettings, SCALE,
 };
 
 use super::{Map, Position, OFFSET_X, OFFSET_Y};

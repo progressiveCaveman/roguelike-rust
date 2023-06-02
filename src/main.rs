@@ -9,10 +9,10 @@ use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
 
 use crate::game_modes::get_settings;
 
+pub mod game_modes;
 pub mod input_handler;
 pub mod menus;
 pub mod render;
-pub mod game_modes;
 
 pub const WINDOWWIDTH: usize = 160;
 pub const WINDOWHEIGHT: usize = 80;
@@ -155,17 +155,33 @@ impl GameState for State {
                         }
 
                         for id in to_add_wants_use_item.iter() {
-                            self.engine.world.add_component(*id, WantsToUseItem { item, target: None });
+                            self.engine
+                                .world
+                                .add_component(*id, WantsToUseItem { item, target: None });
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
-                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        self.engine.world.add_component(player_id, WantsToDropItem { item });
+                        let player_id = self
+                            .engine
+                            .world
+                            .borrow::<UniqueViewMut<PlayerID>>()
+                            .unwrap()
+                            .0;
+                        self.engine
+                            .world
+                            .add_component(player_id, WantsToDropItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
-                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
-                        self.engine.world.add_component(player_id, WantsToUnequipItem { item });
+                        let player_id = self
+                            .engine
+                            .world
+                            .borrow::<UniqueViewMut<PlayerID>>()
+                            .unwrap()
+                            .0;
+                        self.engine
+                            .world
+                            .add_component(player_id, WantsToUnequipItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Cancel => {
@@ -179,7 +195,12 @@ impl GameState for State {
                     render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     render::ItemMenuResult::NoResponse => {}
                     render::ItemMenuResult::Selected => {
-                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        let player_id = self
+                            .engine
+                            .world
+                            .borrow::<UniqueViewMut<PlayerID>>()
+                            .unwrap()
+                            .0;
                         self.engine.world.add_component(
                             player_id,
                             WantsToUseItem {
@@ -201,11 +222,13 @@ impl GameState for State {
                     }
                     gui_menus::MainMenuResult::Selection { selected } => match selected {
                         gui_menus::MainMenuSelection::Roguelike => {
-                            self.engine.reset_engine(game_modes::get_settings(GameMode::RL));
+                            self.engine
+                                .reset_engine(game_modes::get_settings(GameMode::RL));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Simulator => {
-                            self.engine.reset_engine(game_modes::get_settings(GameMode::Sim));
+                            self.engine
+                                .reset_engine(game_modes::get_settings(GameMode::Sim));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Exit => ::std::process::exit(0),
@@ -259,15 +282,17 @@ impl GameState for State {
 
         self.state = new_runstate;
 
-        self.engine.world.run(system_visibility::run_visibility_system);
+        self.engine
+            .world
+            .run(system_visibility::run_visibility_system);
         self.engine.world.run(system_cleanup::run_cleanup_system);
 
         //now render
         match self.state {
-            RunState::MainMenu { .. } | RunState::EscPressed | RunState::GameOver => {},
+            RunState::MainMenu { .. } | RunState::EscPressed | RunState::GameOver => {}
             _ => {
                 camera::render_game(&self.engine.world, ctx);
-                render::draw_gui(&self.engine.world, ctx);        
+                render::draw_gui(&self.engine.world, ctx);
             }
         }
     }
@@ -291,9 +316,9 @@ fn main() -> rltk::BError {
         .build()?;
 
     let gs = State {
-        engine: Engine { 
-            world: World::new(), 
-            first_run: true
+        engine: Engine {
+            world: World::new(),
+            first_run: true,
         },
         mapgen_data: MapGenData {
             history: Vec::new(),

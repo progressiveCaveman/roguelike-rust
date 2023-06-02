@@ -9,16 +9,14 @@ use engine::{
     GameMode, GameSettings,
 };
 use rltk::{Rltk, VirtualKeyCode};
-use shipyard::{Get, UniqueView, UniqueViewMut, View, World, EntityId};
+use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, View, World};
 
 use crate::RunState;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum Command {
+pub enum InputCommand {
     None,
-    Move {
-        dir: i32,
-    },
+    Move { dir: i32 },
     ShowInventory,
     Wait,
     Escape,
@@ -26,10 +24,10 @@ pub enum Command {
     Explore,
     RevealMap,
     Fireball,
-    UseStairs
+    UseStairs,
 }
 
-impl Command {
+impl InputCommand {
     fn execute(&self, world: &World, creator: Option<EntityId>) -> RunState {
         let map = world.borrow::<UniqueView<Map>>().unwrap();
 
@@ -38,10 +36,8 @@ impl Command {
 
         // return RunState::AwaitingInput to ignore input, RunState::PlayerTurn to advance engine
         return match self {
-            Command::None => {
-                RunState::AwaitingInput
-            },
-            Command::Move { dir } => {
+            InputCommand::None => RunState::AwaitingInput,
+            InputCommand::Move { dir } => {
                 // hold shift to move by 10 squares at a time
                 let movemod = 1;
 
@@ -63,18 +59,14 @@ impl Command {
                 );
 
                 RunState::PlayerTurn
-            },
-            Command::ShowInventory => {
-                RunState::ShowInventory
-            },
-            Command::Wait => {
-                add_effect(creator, EffectType::Wait {}); //todo is this weird on sim mode? 
+            }
+            InputCommand::ShowInventory => RunState::ShowInventory,
+            InputCommand::Wait => {
+                add_effect(creator, EffectType::Wait {}); //todo is this weird on sim mode?
                 RunState::PlayerTurn
-            },
-            Command::Escape => {
-                RunState::EscPressed
-            },
-            Command::Get => {
+            }
+            InputCommand::Escape => RunState::EscPressed,
+            InputCommand::Get => {
                 world.run(|vitem: View<Item>| {
                     for e in map.tile_content[player_pos_idx].iter() {
                         if let Ok(_) = vitem.get(*e) {
@@ -84,18 +76,18 @@ impl Command {
                 });
 
                 RunState::PlayerTurn
-            },
-            Command::Explore => {
+            }
+            InputCommand::Explore => {
                 add_effect(creator, EffectType::Explore {});
 
                 RunState::PlayerTurn
-            },
-            Command::RevealMap => {
+            }
+            InputCommand::RevealMap => {
                 player::reveal_map(&world);
 
                 RunState::PlayerTurn
-            },
-            Command::Fireball => {
+            }
+            InputCommand::Fireball => {
                 dbg!("fireball is broken");
                 RunState::AwaitingInput
                 // RunState::ShowTargeting {
@@ -104,87 +96,67 @@ impl Command {
                 //         entity_factory::tmp_fireball(&mut store)
                 //     }),
                 // }
-            },
-            Command::UseStairs => {
+            }
+            InputCommand::UseStairs => {
                 if player::try_next_level(&world) {
                     RunState::NextLevel
-                }else {
+                } else {
                     RunState::AwaitingInput
                 }
-            },
+            }
         };
     }
 }
 
-pub fn can_use_command(gamemode: GameMode, command: Command) -> bool {
-    match gamemode {
-        GameMode::Sim => {
-            match command {
-                Command::None => true,
-                Command::Move { .. } => true,
-                Command::ShowInventory => false,
-                Command::Wait => true,
-                Command::Escape => true,
-                Command::Get { .. } => false,
-                Command::Explore => false,
-                Command::RevealMap => false,
-                Command::Fireball => false,
-                Command::UseStairs => false,   
-            }
+pub fn map_keys(ctx: &Rltk, mode: GameMode) -> InputCommand {
+    match mode {
+        GameMode::RL => match ctx.key {
+            None => InputCommand::None,
+            Some(key) => match key {
+                VirtualKeyCode::Left => InputCommand::Move { dir: 4 },
+                VirtualKeyCode::Right => InputCommand::Move { dir: 6 },
+                VirtualKeyCode::Up => InputCommand::Move { dir: 8 },
+                VirtualKeyCode::Down => InputCommand::Move { dir: 2 },
+                VirtualKeyCode::Y => InputCommand::Move { dir: 7 },
+                VirtualKeyCode::U => InputCommand::Move { dir: 9 },
+                VirtualKeyCode::N => InputCommand::Move { dir: 3 },
+                VirtualKeyCode::B => InputCommand::Move { dir: 1 },
+                VirtualKeyCode::G => InputCommand::Get,
+                VirtualKeyCode::X => InputCommand::Explore,
+                VirtualKeyCode::R => InputCommand::RevealMap,
+                VirtualKeyCode::F => InputCommand::Fireball,
+                VirtualKeyCode::I => InputCommand::ShowInventory,
+                VirtualKeyCode::W => InputCommand::Wait,
+                VirtualKeyCode::Escape => InputCommand::Escape,
+                VirtualKeyCode::Period => InputCommand::UseStairs,
+                _ => InputCommand::None,
+            },
         },
-        GameMode::RL => {
-            match command {
-                Command::None => true,
-                Command::Move { .. } => true,
-                Command::ShowInventory => true,
-                Command::Wait => true,
-                Command::Escape => true,
-                Command::Get { .. } => true,
-                Command::Explore => true,
-                Command::RevealMap => true,
-                Command::Fireball => true,
-                Command::UseStairs => true,
-            }
-        },
-    }
-}
-
-pub fn map_keys(ctx: &Rltk) -> Command {
-    return match ctx.key {
-        None => Command::None,
-        Some(key) => match key {
-            VirtualKeyCode::Left => Command::Move { dir: 4 },
-            VirtualKeyCode::Right => Command::Move { dir: 6 },
-            VirtualKeyCode::Up => Command::Move { dir: 8 },
-            VirtualKeyCode::Down => Command::Move { dir: 2 },
-            VirtualKeyCode::Y => Command::Move { dir: 7 },
-            VirtualKeyCode::U => Command::Move { dir: 9 },
-            VirtualKeyCode::N => Command::Move { dir: 3 },
-            VirtualKeyCode::B => Command::Move { dir: 1 },
-            VirtualKeyCode::G => Command::Get,
-            VirtualKeyCode::X => Command::Explore,
-            VirtualKeyCode::R => Command::RevealMap,
-            VirtualKeyCode::F => Command::Fireball,
-            VirtualKeyCode::I => Command::ShowInventory,
-            VirtualKeyCode::W => Command::Wait,
-            VirtualKeyCode::Escape => Command::Escape,
-            VirtualKeyCode::Period => Command::UseStairs,
-            _ => Command::None,
+        GameMode::Sim => match ctx.key {
+            None => InputCommand::None,
+            Some(key) => match key {
+                VirtualKeyCode::Left => InputCommand::Move { dir: 4 },
+                VirtualKeyCode::Right => InputCommand::Move { dir: 6 },
+                VirtualKeyCode::Up => InputCommand::Move { dir: 8 },
+                VirtualKeyCode::Down => InputCommand::Move { dir: 2 },
+                VirtualKeyCode::Y => InputCommand::Move { dir: 7 },
+                VirtualKeyCode::U => InputCommand::Move { dir: 9 },
+                VirtualKeyCode::N => InputCommand::Move { dir: 3 },
+                VirtualKeyCode::B => InputCommand::Move { dir: 1 },
+                VirtualKeyCode::F => InputCommand::Fireball,
+                VirtualKeyCode::W => InputCommand::Wait,
+                VirtualKeyCode::Escape => InputCommand::Escape,
+                _ => InputCommand::None,
+            },
         },
     }
 }
 
 pub fn handle_input(world: &World, ctx: &Rltk) -> RunState {
-    let command = map_keys(ctx);
-
     let settings = world.borrow::<UniqueView<GameSettings>>().unwrap();
     let player_id = world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
 
-    let can_use = can_use_command(settings.mode, command);
+    let command = map_keys(ctx, settings.mode);
 
-    if can_use {
-        return command.execute(world, Some(player_id));
-    }
-
-    return RunState::AwaitingInput;
+    return command.execute(world, Some(player_id));
 }

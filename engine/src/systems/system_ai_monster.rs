@@ -1,7 +1,7 @@
 use crate::components::{Confusion, Monster, Position, Viewshed, WantsToAttack};
 use crate::effects::{add_effect, EffectType};
-use crate::palette::Palette;
 use crate::map::Map;
+use crate::palette::Palette;
 use crate::systems::system_particle::ParticleBuilder;
 use crate::utils::{self, PPoint, PlayerID};
 use rltk;
