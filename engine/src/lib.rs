@@ -29,9 +29,9 @@ use shipyard::{
     ViewMut, World,
 };
 use systems::{
-    system_ai_fish, system_ai_monster, system_ai_spawner, system_ai_villager, system_dissasemble,
+    system_ai_fish, system_ai_spawner, system_dissasemble,
     system_fire, system_map_indexing, system_melee_combat, system_particle, system_pathfinding,
-    system_visibility,
+    system_visibility, system_ai,
 };
 use utils::{FrameTime, PPoint, PlayerID, Turn, RNG};
 
@@ -88,9 +88,7 @@ impl Engine {
             world.run(system_pathfinding::run_pathfinding_system);
             world.run(system_ai_spawner::run_spawner_system);
             world.run(system_ai_fish::run_fish_ai);
-            world.run(system_ai_villager::run_villager_ai_system);
-            world.run(system_ai_monster::run_monster_ai_system);
-            // system_ai_monster::run_monster_ai_system(self);
+            world.run(system_ai::run_ai_system);
         }
 
         world.run(effects::run_effects_queue);

@@ -224,6 +224,17 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
                 Palette::MAIN_BG,
                 format!("Intent: {}", intent.name),
             );
+
+            if intent.target.len() > 0 {
+                ypos += 1;
+                ctx.print_color(
+                    3,
+                    ypos,
+                    Palette::MAIN_FG,
+                    Palette::MAIN_BG,
+                    format!("Target: {:?}", intent.target[0].get_point(&vpos)),
+                );
+            }
         }
 
         if let Ok(inv) = vinv.get(*e) {

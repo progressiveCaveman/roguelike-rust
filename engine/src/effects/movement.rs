@@ -49,6 +49,7 @@ pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, at
             if let Some(target) = get_target(&store, &map, entity, &pos, dp) {
                 // dbg!("found target");
                 vwantsattack.add_component_unchecked(entity, WantsToAttack { target });
+                return;
             }
         }
 

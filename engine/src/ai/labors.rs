@@ -3,17 +3,62 @@ use shipyard::{AllStoragesView, EntityId, Get, UniqueView, View};
 
 use crate::{
     components::{
-        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType,
+        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType, Viewshed,
     },
     map::{Map, TileType},
     utils::Turn,
 };
 
 use super::decisions::{
-    Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task,
+    Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task, AI,
 };
 
-pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+#[derive(Clone, Debug, PartialEq)]
+pub enum AIBehaviors {
+    GatherWood,
+    GatherFish,
+    AttackEnemies,
+    Confused,
+    Wander
+}
+
+pub fn get_action(store: &AllStoragesView, id: EntityId) -> Action {
+    let vactor = store.borrow::<View<Actor>>().unwrap();
+    let turn = store.borrow::<UniqueView<Turn>>().unwrap();
+
+    let mut potential_actions: Vec<Action> = vec![];
+
+    potential_actions.push(Action {
+        intent: Intent {
+            name: "idle".to_string(),
+            task: Task::Idle,
+            target: vec![],
+            turn: *turn,
+        },
+        cons: vec![Consideration::new(
+            "baseline".to_string(),
+            1.0,
+            ConsiderationParam::new_const(0.1),
+        )],
+        priority: 1.0,
+    });
+
+    if let Ok(actor) = vactor.get(id) {
+        for b in actor.behaviors.iter() {
+            match b {
+                AIBehaviors::GatherWood => potential_actions.append(&mut get_gather_wood_actions(&store, id)),
+                AIBehaviors::GatherFish => potential_actions.append(&mut get_gather_fish_actions(&store, id)),
+                AIBehaviors::AttackEnemies => potential_actions.append(&mut get_attack_options(&store, id)),
+                _ => {}
+                // AIBehaviors::Wander => ,
+            }
+        }
+    }
+
+    return AI::choose_action(potential_actions);
+}
+
+pub fn get_gather_wood_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -313,7 +358,7 @@ pub fn get_wood_gathering_actions(store: &AllStoragesView, id: EntityId) -> Vec<
     potential_actions
 }
 
-pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+pub fn get_gather_fish_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -563,6 +608,100 @@ pub fn get_fishing_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action>
                 priority: 2.0,
             });
         }
+    }
+
+    potential_actions
+}
+
+pub fn get_attack_options(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+    let turn = store.borrow::<UniqueView<Turn>>().unwrap();
+    let map = store.borrow::<UniqueView<Map>>().unwrap();
+    let vpos = store.borrow::<View<Position>>().unwrap();
+    let vactors = store.borrow::<View<Actor>>().unwrap(); // Used to find fish
+    let vvs = store.borrow::<View<Viewshed>>().unwrap();
+
+    let pos = if let Ok(pos) = vpos.get(id) {
+        pos
+    } else {
+        return vec![];
+    };
+    
+    let actor = if let Ok(actor) = vactors.get(id) {
+        actor
+    } else {
+        return vec![];
+    };
+    
+    let viewshed = if let Ok(vs) = vvs.get(id) {
+        vs
+    } else {
+        return vec![];
+    };
+
+    let pos = pos.ps[0];
+
+    // if enemies are present, move toward them or attack
+    let mut enemies: Vec<(EntityId, Point)> = vec![];
+
+    for point in viewshed.visible_tiles.iter() {
+        let idx = map.point_idx(*point);
+        for entity in map.tile_content[idx].iter() {
+            if let Ok(eactor) = vactors.get(*entity) {
+                if actor.faction != eactor.faction { // TODO need more complex faction relations at some point
+                    enemies.push((*entity, *point));
+                }
+            }
+        }
+    }
+
+    let mut potential_actions: Vec<Action> = vec![];
+
+    for (_, epoint) in enemies.iter() {
+        potential_actions.push(Action {
+            intent: Intent {
+                name: "go to enemy".to_string(),
+                task: Task::MoveTo,
+                target: vec![Target::from(*epoint)],
+                turn: *turn,
+            },
+            cons: vec![
+                Consideration::new(
+                    "Distance".to_string(),
+                    map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
+                    ConsiderationParam {
+                        t: ResponseCurveType::Linear,
+                        m: -1.0 / 100.0,
+                        k: 1.0,
+                        c: 2.0,
+                        b: 1.0,
+                    },
+                ),
+            ],
+            priority: 1.0,
+        });
+
+        potential_actions.push(Action {
+            intent: Intent {
+                name: "Attack enemy".to_string(),
+                task: Task::Attack,
+                target: vec![Target::from(*epoint)],
+                turn: *turn,
+            },
+            cons: vec![
+                Consideration::new(
+                    "Distance".to_string(),
+                    map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
+                    ConsiderationParam {
+                        t: ResponseCurveType::LessThan,
+                        m: 1.5,
+                        k: 1.0,
+                        c: 1.0,
+                        b: 1.0,
+                    },
+                ),
+            ],
+            priority: 2.0,
+        });
     }
 
     potential_actions

@@ -6,7 +6,7 @@ use shipyard::{Component, EntityId, IntoIter, View};
 
 use crate::{
     map::{Map, TileType},
-    RenderOrder,
+    RenderOrder, ai::labors::AIBehaviors,
 };
 
 /// Basic UI components
@@ -92,10 +92,11 @@ pub struct Name {
 #[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub struct Player {}
 
-#[derive(Component, Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct Actor {
     pub atype: ActorType,
     pub faction: Faction,
+    pub behaviors: Vec<AIBehaviors>, // TODO instead of specifying, make a selector. Then give add copy back to this comp
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

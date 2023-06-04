@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::ai::labors::AIBehaviors;
 use crate::components::{
     AreaOfEffect, BlocksTile, ChiefHouse, CombatStats, Confusion, Consumable, DealsDamage,
     DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, FishCleaner, Flammable,
@@ -35,6 +36,7 @@ pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
         Actor {
             faction: Faction::Player,
             atype: ActorType::Player,
+            behaviors: Vec::new(),
         },
         Locomotive {
             mtype: LocomotionType::Ground,
@@ -187,6 +189,7 @@ pub fn villager(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Actor {
             faction: Faction::Villager,
             atype: ActorType::Villager,
+            behaviors: vec![AIBehaviors::GatherWood, AIBehaviors::GatherFish, AIBehaviors::Wander],
         }
     ))
 }
@@ -218,6 +221,7 @@ pub fn fish(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Actor {
             faction: Faction::Nature,
             atype: ActorType::Fish,
+            behaviors: Vec::new(),
         },
         Item {
             typ: ItemType::Fish,
@@ -259,6 +263,7 @@ pub fn monster(
         Actor {
             faction: Faction::Orcs,
             atype: ActorType::Orc,
+            behaviors: vec![AIBehaviors::AttackEnemies],
         },
         Locomotive {
             mtype: LocomotionType::Ground,
@@ -306,6 +311,7 @@ pub fn big_monster(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Actor {
             faction: Faction::Orcs,
             atype: ActorType::Orc,
+            behaviors: vec![AIBehaviors::AttackEnemies],
         },
         Locomotive {
             mtype: LocomotionType::Ground,
@@ -572,7 +578,8 @@ pub fn spawner(
         Spawner { typ, rate },
         Actor {
             atype: ActorType::Spawner,
-            faction
+            faction,
+            behaviors: Vec::new(),
         }
     ))
 }

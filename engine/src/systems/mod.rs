@@ -2,6 +2,7 @@ pub mod system_ai_fish;
 pub mod system_ai_monster;
 pub mod system_ai_spawner;
 pub mod system_ai_villager;
+pub mod system_ai;
 pub mod system_cleanup;
 pub mod system_dissasemble;
 pub mod system_fire;

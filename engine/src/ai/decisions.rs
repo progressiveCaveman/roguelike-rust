@@ -9,7 +9,11 @@ use crate::{
 pub struct AI {}
 
 impl AI {
-    pub fn choose_action(actions: Vec<Action>) -> Intent {
+    pub fn choose_action(actions: Vec<Action>) -> Action {
+        if actions.len() < 1 {
+            panic!("No actions to choose from");
+        }
+
         let mut best_action: &Action = &actions[0];
         let mut best_score = 0.;
 
@@ -25,7 +29,7 @@ impl AI {
             }
         }
 
-        best_action.intent.clone()
+        best_action.clone()
     }
 }
 
@@ -72,6 +76,7 @@ pub enum Task {
     UseWorkshop,
     DepositItemToInventory,
     Attack,
+    Idle
 }
 
 #[derive(Component, Clone, Debug)]
