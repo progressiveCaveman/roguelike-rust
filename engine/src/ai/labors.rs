@@ -1,5 +1,5 @@
 use rltk::Point;
-use shipyard::{AllStoragesView, EntityId, Get, UniqueView, View};
+use shipyard::{EntityId, Get, UniqueView, View, AllStorages};
 
 use crate::{
     components::{
@@ -22,7 +22,7 @@ pub enum AIBehaviors {
     Wander
 }
 
-pub fn get_action(store: &AllStoragesView, id: EntityId) -> Action {
+pub fn get_action(store: &AllStorages, id: EntityId) -> Action {
     let vactor = store.borrow::<View<Actor>>().unwrap();
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
 
@@ -58,7 +58,7 @@ pub fn get_action(store: &AllStoragesView, id: EntityId) -> Action {
     return AI::choose_action(potential_actions);
 }
 
-pub fn get_gather_wood_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+pub fn get_gather_wood_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -358,7 +358,7 @@ pub fn get_gather_wood_actions(store: &AllStoragesView, id: EntityId) -> Vec<Act
     potential_actions
 }
 
-pub fn get_gather_fish_actions(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+pub fn get_gather_fish_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
@@ -613,7 +613,7 @@ pub fn get_gather_fish_actions(store: &AllStoragesView, id: EntityId) -> Vec<Act
     potential_actions
 }
 
-pub fn get_attack_options(store: &AllStoragesView, id: EntityId) -> Vec<Action> {
+pub fn get_attack_options(store: &AllStorages, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();

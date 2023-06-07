@@ -29,7 +29,7 @@ use shipyard::{
     ViewMut, World,
 };
 use systems::{
-    system_ai_fish, system_ai_spawner, system_dissasemble,
+    system_ai_fish, system_dissasemble,
     system_fire, system_map_indexing, system_melee_combat, system_particle, system_pathfinding,
     system_visibility, system_ai,
 };
@@ -86,7 +86,6 @@ impl Engine {
 
         if ai_turn {
             world.run(system_pathfinding::run_pathfinding_system);
-            world.run(system_ai_spawner::run_spawner_system);
             world.run(system_ai_fish::run_fish_ai);
             world.run(system_ai::run_ai_system);
         }

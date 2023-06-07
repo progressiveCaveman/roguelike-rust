@@ -76,7 +76,8 @@ pub enum Task {
     UseWorkshop,
     DepositItemToInventory,
     Attack,
-    Idle
+    Idle,
+    Spawn
 }
 
 #[derive(Component, Clone, Debug)]
