@@ -6,7 +6,7 @@ use engine::map::Map;
 use engine::palette::Palette;
 use engine::player::get_player_map_knowledge;
 use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
-use engine::{GameSettings, MAPHEIGHT, MAPWIDTH, OFFSET_X, OFFSET_Y, SCALE};
+use engine::{GameSettings, OFFSET_X, OFFSET_Y, SCALE};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use shipyard::{Get, UniqueView, View, World};
 
@@ -113,10 +113,10 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
     let world = &world;
     let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
     let frametime = world.borrow::<UniqueView<FrameTime>>().unwrap().0;
-
-    let (min_x, _max_x, min_y, _max_y) = get_map_coords_for_screen(player_pos, ctx);
     let map = world.borrow::<UniqueView<Map>>().unwrap();
     let settings = world.borrow::<UniqueView<GameSettings>>().unwrap();
+
+    let (min_x, _max_x, min_y, _max_y) = get_map_coords_for_screen(player_pos, ctx, (map.width, map.height));
 
     let mouse_pos = ctx.mouse_pos();
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
@@ -310,7 +310,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
     // }
 }
 
-pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32, i32) {
+pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk, mapsize: (i32, i32)) -> (i32, i32, i32, i32) {
     let (mut x_chars, mut y_chars) = ctx.get_char_size();
     x_chars -= (OFFSET_X as f32 / SCALE).ceil() as u32;
     y_chars -= (OFFSET_Y as f32 / SCALE).ceil() as u32;
@@ -323,8 +323,8 @@ pub fn get_map_coords_for_screen(focus: Point, ctx: &mut Rltk) -> (i32, i32, i32
     let mut min_y = focus.y - center_y;
     let mut max_y = focus.y + center_y;
 
-    let w = MAPWIDTH as i32;
-    let h = MAPHEIGHT as i32;
+    let w = mapsize.0;
+    let h = mapsize.1;
 
     // Now check for borders, don't scroll past map edge
     if min_x < 0 {
@@ -358,7 +358,7 @@ pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResu
         "Select a target",
     );
 
-    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx);
+    let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx, (map.width, map.height));
 
     let mut valid_cells: Vec<Point> = Vec::new();
     let vvs = world.borrow::<View<Viewshed>>().unwrap();

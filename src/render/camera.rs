@@ -31,7 +31,7 @@ pub fn render_game(world: &World, ctx: &mut Rltk) {
     let player_knowledge = get_player_map_knowledge(world);
     let player_vs = get_player_viewshed(world);
 
-    let (min_x, max_x, min_y, max_y) = super::get_map_coords_for_screen(player_pos, ctx);
+    let (min_x, max_x, min_y, max_y) = super::get_map_coords_for_screen(player_pos, ctx, (map.width, map.height));
 
     let map_width = map.width;
     let map_height = map.height;

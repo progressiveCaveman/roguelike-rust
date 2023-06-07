@@ -41,8 +41,6 @@ pub const SHOW_MAPGEN_ANIMATION: bool = true;
 pub const MAPGEN_FRAME_TIME: f32 = 25.0;
 
 pub const TILE_SIZE: usize = 10;
-pub const MAPWIDTH: usize = 200;
-pub const MAPHEIGHT: usize = 80;
 pub const SCALE: f32 = 1.0;
 
 pub const OFFSET_X: usize = 31;
@@ -51,15 +49,16 @@ pub const OFFSET_Y: usize = 11;
 #[derive(Copy, Clone, PartialEq, Unique)]
 pub struct GameSettings {
     pub mode: GameMode,
-    pub mapsize: (usize, usize),
+    pub mapsize: (i32, i32),
     pub follow_player: bool,
     pub use_player_los: bool,
 }
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameMode {
-    RL,
-    Sim,
+    RL, // trad roguelike, basically bracketlib tutorial in caves
+    VillageSim, 
+    OrcHalls, // Orcs spawn in groups, for testing group tactics
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
@@ -156,11 +155,14 @@ impl Engine {
         // Generate map
         // TODO eventually this should not look at mode, but use map vonfig info from settings
         let mut map_builder = match settings.mode {
-            GameMode::Sim => {
-                map_builders::village_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+            GameMode::VillageSim => {
+                map_builders::village_builder(new_depth, settings.mapsize)
             }
             GameMode::RL => {
-                map_builders::rl_builder(new_depth, (MAPWIDTH as i32, MAPHEIGHT as i32))
+                map_builders::rl_builder(new_depth, settings.mapsize)
+            }
+            GameMode::OrcHalls => {
+                map_builders::random_builder(new_depth, settings.mapsize)
             }
         };
 
@@ -225,7 +227,7 @@ impl Engine {
         self.world.add_unique(Map::new(
             1,
             TileType::Wall,
-            (MAPWIDTH as i32, MAPHEIGHT as i32),
+            settings.mapsize,
         ));
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(Turn(0));
@@ -240,7 +242,7 @@ impl Engine {
         self.world.add_unique(FrameTime(0.));
 
         match settings.mode {
-            GameMode::Sim => {
+            GameMode::VillageSim => {
                 self.world.add_component(player_id, IsCamera {});
             }
             _ => { }

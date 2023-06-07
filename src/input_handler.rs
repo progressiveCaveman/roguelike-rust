@@ -110,7 +110,7 @@ impl InputCommand {
 
 pub fn map_keys(ctx: &Rltk, mode: GameMode) -> InputCommand {
     match mode {
-        GameMode::RL => match ctx.key {
+        GameMode::RL | GameMode::OrcHalls => match ctx.key {
             None => InputCommand::None,
             Some(key) => match key {
                 VirtualKeyCode::Left => InputCommand::Move { dir: 4 },
@@ -132,7 +132,7 @@ pub fn map_keys(ctx: &Rltk, mode: GameMode) -> InputCommand {
                 _ => InputCommand::None,
             },
         },
-        GameMode::Sim => match ctx.key {
+        GameMode::VillageSim => match ctx.key {
             None => InputCommand::None,
             Some(key) => match key {
                 VirtualKeyCode::Left => InputCommand::Move { dir: 4 },

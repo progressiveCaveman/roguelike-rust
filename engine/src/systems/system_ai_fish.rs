@@ -6,6 +6,8 @@ use rand::thread_rng;
 use rltk::Point;
 use shipyard::{EntityId, IntoIter, IntoWithId, UniqueView, View};
 
+// Leaving this in a separate system for now as I suspect AI is going to change significantly
+
 // currently fish only move east
 pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vactor: View<Actor>) {
     let mut to_try_move: Vec<(EntityId, Point)> = vec![];

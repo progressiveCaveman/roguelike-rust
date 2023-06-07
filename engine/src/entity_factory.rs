@@ -14,9 +14,8 @@ use crate::rect::Rect;
 use crate::systems::system_fire::NEW_FIRE_TURNS;
 use crate::weighted_table::WeightedTable;
 use crate::RenderOrder;
-use crate::MAPWIDTH;
 use rltk::{DijkstraMap, Point, RandomNumberGenerator};
-use shipyard::{AllStoragesViewMut, EntityId};
+use shipyard::{AllStoragesViewMut, EntityId, UniqueView};
 
 const MAX_MONSTERS: i32 = 4;
 
@@ -134,8 +133,9 @@ pub fn spawn_region(store: &mut AllStoragesViewMut, area: &[usize], map_depth: i
 
 /// Spawns a named entity (name in tuple.1) at the location in (tuple.0)
 fn spawn_entity(store: &mut AllStoragesViewMut, spawn: &(&usize, &String)) {
-    let x = (*spawn.0 % MAPWIDTH) as i32;
-    let y = (*spawn.0 / MAPWIDTH) as i32;
+    let (x, y) = store.run(|map: UniqueView<Map>| {
+        map.idx_xy(*spawn.0)
+    });
 
     match spawn.1.as_ref() {
         "Goblin" => goblin(store, x, y),

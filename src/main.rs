@@ -11,7 +11,6 @@ use crate::game_modes::get_settings;
 
 pub mod game_modes;
 pub mod input_handler;
-pub mod menus;
 pub mod render;
 
 pub const WINDOWWIDTH: usize = 160;
@@ -222,13 +221,15 @@ impl GameState for State {
                     }
                     gui_menus::MainMenuResult::Selection { selected } => match selected {
                         gui_menus::MainMenuSelection::Roguelike => {
-                            self.engine
-                                .reset_engine(game_modes::get_settings(GameMode::RL));
+                            self.engine.reset_engine(game_modes::get_settings(GameMode::RL));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Simulator => {
-                            self.engine
-                                .reset_engine(game_modes::get_settings(GameMode::Sim));
+                            self.engine.reset_engine(game_modes::get_settings(GameMode::VillageSim));
+                            new_runstate = RunState::MapGenAnimation
+                        }
+                        gui_menus::MainMenuSelection::OrcHalls => {
+                            self.engine.reset_engine(game_modes::get_settings(GameMode::OrcHalls));
                             new_runstate = RunState::MapGenAnimation
                         }
                         gui_menus::MainMenuSelection::Exit => ::std::process::exit(0),

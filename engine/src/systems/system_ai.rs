@@ -122,7 +122,6 @@ pub fn run_ai_system(mut store: AllStoragesViewMut) {
                             to_attack.push((id, target_pos.ps[0]));
                         }
                     } else if let Target::LOCATION(loc) = new_intent.target[0] {
-                        dbg!(2);
                         to_attack.push((id, loc));
                     }
                 },

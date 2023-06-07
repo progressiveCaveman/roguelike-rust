@@ -1,5 +1,4 @@
 use crate::{entity_factory, SHOW_MAPGEN_ANIMATION};
-use crate::{MAPHEIGHT, MAPWIDTH};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rltk::{Point, RandomNumberGenerator};
@@ -8,11 +7,6 @@ use std::cmp;
 
 use super::common::apply_drunkards_corrider;
 use super::{Map, MapBuilder, Position, Rect, TileType};
-
-pub const MIN_X: i32 = 0;
-pub const MIN_Y: i32 = 0;
-pub const MAX_X: i32 = MAPWIDTH as i32;
-pub const MAX_Y: i32 = MAPHEIGHT as i32;
 
 pub struct DrunkardsBombingRunBuilder {
     map: Map,
@@ -225,8 +219,6 @@ impl DrunkardsBombingRunBuilder {
             let idx = candidates[random_offset];
             let tx = self.map.idx_xy(idx as usize).0;
             let ty = self.map.idx_xy(idx as usize).1;
-            let map_width = MAPWIDTH;
-            let map_height = MAPHEIGHT;
             let use_borders = true;
 
             // we will use bombs of radius 1 mostly with smaller chance (1/20)
@@ -234,11 +226,8 @@ impl DrunkardsBombingRunBuilder {
             let bomb_radius = 1; //random_gen_get_i(20) != 0 ? 1 : 2;
 
             // bomb
-            for x in cmp::max(0, tx - bomb_radius - 1)..cmp::max(map_width as i32, tx + bomb_radius)
-            {
-                for y in
-                    cmp::max(0, ty - bomb_radius - 1)..cmp::max(map_height as i32, ty + bomb_radius)
-                {
+            for x in cmp::max(0, tx - bomb_radius - 1)..cmp::min(self.map.width as i32, tx + bomb_radius) {
+                for y in cmp::max(0, ty - bomb_radius - 1)..cmp::min(self.map.height as i32, ty + bomb_radius) {
                     // println!("bomb check {tx} {ty} {x} {y}");
 
                     // check if tile is within the circle
@@ -246,16 +235,16 @@ impl DrunkardsBombingRunBuilder {
                         < bomb_radius * bomb_radius + bomb_radius
                     {
                         if use_borders {
-                            if x < MIN_X {
+                            if x < 0 {
                                 continue;
                             }
-                            if x >= MAX_X {
+                            if x >= self.map.width {
                                 continue;
                             }
-                            if y < MIN_Y {
+                            if y < 0 {
                                 continue;
                             }
-                            if y >= MAX_Y {
+                            if y >= self.map.height {
                                 continue;
                             }
                         }
@@ -298,9 +287,6 @@ impl DrunkardsBombingRunBuilder {
         //     return image;
         // }
 
-        let height = MAPHEIGHT;
-        let width = MAPWIDTH;
-
         let mut cells: VecDeque<usize> = VecDeque::new();
         cells.push_back(sidx);
 
@@ -320,7 +306,7 @@ impl DrunkardsBombingRunBuilder {
                     let new_r = sr + delta_r;
                     let new_c = sc + delta_c;
 
-                    if new_r < 0 || new_r >= width as i32 || new_c < 0 || new_c >= height as i32 {
+                    if new_r < 0 || new_r >= self.map.width as i32 || new_c < 0 || new_c >= self.map.height as i32 {
                         continue;
                     }
 
