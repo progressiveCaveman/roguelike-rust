@@ -64,13 +64,13 @@ impl Default for Renderable {
 }
 
 #[derive(Component, Clone, Debug, PartialEq)]
-pub struct Viewshed {
+pub struct Vision {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
     pub dirty: bool,
 }
 
-impl Viewshed {
+impl Vision {
     pub fn is_visible(&self, idx: Point) -> bool {
         for p in self.visible_tiles.iter() {
             if p.x == idx.x && p.y == idx.y {
@@ -116,7 +116,8 @@ pub enum ActorType {
     Orc,
     Villager,
     Fish,
-    Spawner
+    Spawner,
+    Wolf
 }
 
 /// Structures

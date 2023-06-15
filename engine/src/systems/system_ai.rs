@@ -26,7 +26,7 @@ pub fn run_ai_system(mut store: AllStoragesViewMut) {
 
             let new_intent = match actor.atype {
                 ActorType::Player => continue,
-                ActorType::Orc | ActorType::Villager => labors::get_action(&store, id).intent,
+                ActorType::Orc | ActorType::Villager | ActorType::Wolf => labors::get_action(&store, id).intent,
                 ActorType::Fish => continue,
                 ActorType::Spawner => {
                     if let Ok(spawner) = vspawner.get(id) {

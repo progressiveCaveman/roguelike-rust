@@ -74,7 +74,7 @@ pub fn render_game(world: &World, ctx: &mut Rltk) {
         |vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>| {
             for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
                 if let Ok(_) = vplayer.get(id) {
-                    if !settings.use_player_los {
+                    if !settings.show_player {
                         continue;
                     }
                 }

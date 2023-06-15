@@ -1,4 +1,4 @@
-use crate::components::{Position, SpatialKnowledge, Viewshed};
+use crate::components::{Position, SpatialKnowledge, Vision};
 use crate::map::Map;
 use rltk;
 use rltk::Point;
@@ -7,7 +7,7 @@ use shipyard::{Get, IntoIter, IntoWithId, UniqueView, View, ViewMut};
 pub fn run_visibility_system(
     map: UniqueView<Map>,
     vpos: View<Position>,
-    mut vvs: ViewMut<Viewshed>,
+    mut vvs: ViewMut<Vision>,
     mut vspace: ViewMut<SpatialKnowledge>,
 ) {
     for (id, (pos, vs)) in (&vpos, &mut vvs).iter().with_id() {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
 
-use crate::components::{SpatialKnowledge, Viewshed};
+use crate::components::{SpatialKnowledge, Vision};
 use crate::gamelog::GameLog;
 use crate::map::{Map, TileType};
 use crate::utils::{PPoint, PlayerID};
@@ -19,15 +19,15 @@ pub fn get_player_map_knowledge(world: &World) -> HashMap<usize, (TileType, Vec<
     HashMap::new()
 }
 
-pub fn get_player_viewshed(world: &World) -> Viewshed {
+pub fn get_player_viewshed(world: &World) -> Vision {
     let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
 
-    let vvs = world.borrow::<ViewMut<Viewshed>>().unwrap();
+    let vvs = world.borrow::<ViewMut<Vision>>().unwrap();
 
     if let Ok(vs) = vvs.get(player_id) {
         vs.clone()
     } else {
-        Viewshed {
+        Vision {
             visible_tiles: Vec::new(),
             range: 0,
             dirty: true,

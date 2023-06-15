@@ -76,3 +76,7 @@ pub fn rl_builder(new_depth: i32, size: (i32, i32)) -> Box<dyn MapBuilder> {
 pub fn arena_builder(new_depth: i32, size: (i32, i32)) -> Box<dyn MapBuilder> {
     Box::new(AernaBuilder::new(new_depth, size))
 }
+
+pub fn orc_halls_builder(new_depth: i32, size: (i32, i32)) -> Box<dyn MapBuilder> {
+    Box::new(BspDungeonBuilder::new(new_depth, size))
+}

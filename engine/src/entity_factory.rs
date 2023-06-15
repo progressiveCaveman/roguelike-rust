@@ -6,7 +6,7 @@ use crate::components::{
     DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, FishCleaner, Flammable,
     Inventory, Item, ItemType, LocomotionType, Locomotive, LumberMill, MeleeDefenseBonus,
     MeleePowerBonus, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
-    Renderable, SpatialKnowledge, Spawner, SpawnerType, Tree, Viewshed, Actor, ActorType,
+    Renderable, SpatialKnowledge, Spawner, SpawnerType, Tree, Vision, Actor, ActorType,
 };
 use crate::map::{Map, TileType};
 use crate::palette::Palette;
@@ -19,55 +19,9 @@ use shipyard::{AllStoragesViewMut, EntityId, UniqueView};
 
 const MAX_MONSTERS: i32 = 4;
 
-pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
-    store.add_entity((
-        Position {
-            ps: vec![Point { x: pos.0, y: pos.1 }],
-        },
-        Renderable {
-            glyph: rltk::to_cp437('@'),
-            fg: Palette::COLOR_PURPLE,
-            bg: Palette::MAIN_BG,
-            order: RenderOrder::Player,
-            ..Default::default()
-        },
-        Player {},
-        Actor {
-            faction: Faction::Player,
-            atype: ActorType::Player,
-            behaviors: Vec::new(),
-        },
-        Locomotive {
-            mtype: LocomotionType::Ground,
-            speed: 1,
-        },
-        Viewshed {
-            visible_tiles: Vec::new(),
-            range: 20,
-            dirty: true,
-        },
-        Name {
-            name: "Blabinou".to_string(),
-        },
-        CombatStats {
-            max_hp: 30,
-            hp: 30,
-            defense: 2,
-            power: 5,
-            regen_rate: 1,
-        },
-        SpatialKnowledge {
-            tiles: HashMap::new(),
-        },
-        Inventory {
-            capacity: 20,
-            items: Vec::new(),
-        },
-    ))
-}
-
 pub fn room_table(depth: i32) -> WeightedTable {
     WeightedTable::new()
+        .add("Wolf", 10)
         .add("Goblin", 10)
         .add("Orc", 1 + depth)
         .add("Health Potion", 7)
@@ -138,6 +92,7 @@ fn spawn_entity(store: &mut AllStoragesViewMut, spawn: &(&usize, &String)) {
     });
 
     match spawn.1.as_ref() {
+        "Wolf" => wolf(store, x, y),
         "Goblin" => goblin(store, x, y),
         "Orc" => orc(store, x, y),
         "Health Potion" => health_potion(store, x, y),
@@ -150,6 +105,53 @@ fn spawn_entity(store: &mut AllStoragesViewMut, spawn: &(&usize, &String)) {
         "Tower Shield" => tower_shield(store, x, y),
         _ => unreachable!(),
     };
+}
+
+pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
+    store.add_entity((
+        Position {
+            ps: vec![Point { x: pos.0, y: pos.1 }],
+        },
+        Renderable {
+            glyph: rltk::to_cp437('@'),
+            fg: Palette::COLOR_PURPLE,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::Player,
+            ..Default::default()
+        },
+        Player {},
+        Actor {
+            faction: Faction::Player,
+            atype: ActorType::Player,
+            behaviors: Vec::new(),
+        },
+        Locomotive {
+            mtype: LocomotionType::Ground,
+            speed: 1,
+        },
+        Vision {
+            visible_tiles: Vec::new(),
+            range: 20,
+            dirty: true,
+        },
+        Name {
+            name: "Player".to_string(),
+        },
+        CombatStats {
+            max_hp: 30,
+            hp: 30,
+            defense: 2,
+            power: 5,
+            regen_rate: 1,
+        },
+        SpatialKnowledge {
+            tiles: HashMap::new(),
+        },
+        Inventory {
+            capacity: 20,
+            items: Vec::new(),
+        },
+    ))
 }
 
 /// Monsters
@@ -166,7 +168,7 @@ pub fn villager(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             order: RenderOrder::NPC,
             ..Default::default()
         },
-        Viewshed {
+        Vision {
             visible_tiles: Vec::new(),
             range: 20,
             dirty: true,
@@ -206,7 +208,7 @@ pub fn fish(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             order: RenderOrder::NPC,
             ..Default::default()
         },
-        Viewshed {
+        Vision {
             visible_tiles: Vec::new(),
             range: 2,
             dirty: true,
@@ -255,7 +257,7 @@ pub fn monster(
             order: RenderOrder::NPC,
             ..Default::default()
         },
-        Viewshed {
+        Vision {
             visible_tiles: Vec::new(),
             range: 8,
             dirty: true,
@@ -285,6 +287,50 @@ pub fn monster(
     ))
 }
 
+pub fn wolf(
+    store: &mut AllStoragesViewMut,
+    x: i32,
+    y: i32,
+) -> EntityId {
+    store.add_entity((
+        Position {
+            ps: vec![Point { x, y }],
+        },
+        Renderable {
+            glyph: rltk::to_cp437('w'),
+            fg: Palette::COLOR_RED,
+            bg: Palette::MAIN_BG,
+            order: RenderOrder::NPC,
+            ..Default::default()
+        },
+        Vision {
+            visible_tiles: Vec::new(),
+            range: 5,
+            dirty: true,
+        },
+        Actor {
+            faction: Faction::Nature,
+            atype: ActorType::Wolf,
+            behaviors: vec![AIBehaviors::AttackEnemies],
+        },
+        Locomotive {
+            mtype: LocomotionType::Ground,
+            speed: 1,
+        },
+        Name { 
+            name: "Wolf".to_string() 
+        },
+        BlocksTile {},
+        CombatStats {
+            max_hp: 8,
+            hp: 8,
+            defense: 1,
+            power: 4,
+            regen_rate: 1,
+        },
+    ))
+}
+
 #[allow(dead_code)]
 pub fn big_monster(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
     store.add_entity((
@@ -303,7 +349,7 @@ pub fn big_monster(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             order: RenderOrder::NPC,
             ..Default::default()
         },
-        Viewshed {
+        Vision {
             visible_tiles: Vec::new(),
             range: 8,
             dirty: true,

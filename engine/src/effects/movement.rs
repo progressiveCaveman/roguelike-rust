@@ -5,7 +5,7 @@ use super::*;
 use crate::{
     components::{
         BlocksTile, CombatStats, Fire, IsCamera, LocomotionType, Locomotive, Player, Position,
-        SpatialKnowledge, Viewshed, WantsToAttack,
+        SpatialKnowledge, Vision, WantsToAttack,
     },
     map::{Map, TileType},
     utils::{dijkstra_backtrace, normalize, point_plus, PPoint},
@@ -15,7 +15,7 @@ pub fn try_move_or_attack(store: &AllStoragesViewMut, effect: &EffectSpawner, at
     let mut map = store.borrow::<UniqueViewMut<Map>>().unwrap();
 
     let mut vpos = store.borrow::<ViewMut<Position>>().unwrap();
-    let mut vvs = store.borrow::<ViewMut<Viewshed>>().unwrap();
+    let mut vvs = store.borrow::<ViewMut<Vision>>().unwrap();
     let mut vwantsattack = store.borrow::<ViewMut<WantsToAttack>>().unwrap();
 
     let entity = effect.creator.unwrap();

@@ -3,7 +3,7 @@ use shipyard::{EntityId, Get, UniqueView, View, AllStorages};
 
 use crate::{
     components::{
-        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType, Viewshed,
+        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType, Vision,
     },
     map::{Map, TileType},
     utils::Turn,
@@ -618,7 +618,7 @@ pub fn get_attack_options(store: &AllStorages, id: EntityId) -> Vec<Action> {
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
     let vactors = store.borrow::<View<Actor>>().unwrap(); // Used to find fish
-    let vvs = store.borrow::<View<Viewshed>>().unwrap();
+    let vvs = store.borrow::<View<Vision>>().unwrap();
 
     let pos = if let Ok(pos) = vpos.get(id) {
         pos

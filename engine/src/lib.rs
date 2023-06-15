@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-use components::{Equipped, InBackpack, IsCamera, Player, Position, Viewshed};
+use components::{Equipped, InBackpack, IsCamera, Player, Position, Vision};
 use gamelog::GameLog;
 use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use map::{Map, TileType};
@@ -52,6 +52,7 @@ pub struct GameSettings {
     pub mapsize: (i32, i32),
     pub follow_player: bool,
     pub use_player_los: bool,
+    pub show_player: bool,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -162,7 +163,7 @@ impl Engine {
                 map_builders::rl_builder(new_depth, settings.mapsize)
             }
             GameMode::OrcHalls => {
-                map_builders::random_builder(new_depth, settings.mapsize)
+                map_builders::orc_halls_builder(new_depth, settings.mapsize)
             }
         };
 
@@ -190,7 +191,7 @@ impl Engine {
             |mut ppos: UniqueViewMut<PPoint>,
              player_id: UniqueView<PlayerID>,
              mut vpos: ViewMut<Position>,
-             mut vvs: ViewMut<Viewshed>| {
+             mut vvs: ViewMut<Vision>| {
                 *ppos = PPoint(Point::new(start_pos.x, start_pos.y));
                 if let Ok(pos) = (&mut vpos).get(player_id.0) {
                     pos.ps[0] = ppos.0;

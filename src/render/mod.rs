@@ -1,7 +1,7 @@
 use crate::gamelog::GameLog;
 use crate::{WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
-use engine::components::{CombatStats, Fire, Inventory, Name, Position, Viewshed};
+use engine::components::{CombatStats, Fire, Inventory, Name, Position, Vision};
 use engine::map::Map;
 use engine::palette::Palette;
 use engine::player::get_player_map_knowledge;
@@ -361,7 +361,7 @@ pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResu
     let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx, (map.width, map.height));
 
     let mut valid_cells: Vec<Point> = Vec::new();
-    let vvs = world.borrow::<View<Viewshed>>().unwrap();
+    let vvs = world.borrow::<View<Vision>>().unwrap();
     match vvs.get(player_id) {
         Err(_e) => return (ItemMenuResult::Cancel, None),
         Ok(player_vs) => {
