@@ -26,7 +26,6 @@ impl MapBuilder for DrunkardsBombingRunBuilder {
     }
 
     fn build_map(&mut self) {
-        dbg!("build_map");
         self.rooms_and_corridors(20, 4, 8);
     }
 

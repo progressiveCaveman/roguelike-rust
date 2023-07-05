@@ -3,7 +3,6 @@ extern crate lazy_static;
 
 use components::{Equipped, InBackpack, IsCamera, Player, Position, Vision};
 use gamelog::GameLog;
-use item_system::{run_drop_item_system, run_item_use_system, run_unequip_item_system};
 use map::{Map, TileType};
 use rltk::Point;
 
@@ -46,6 +45,8 @@ pub const SCALE: f32 = 1.0;
 pub const OFFSET_X: usize = 31;
 pub const OFFSET_Y: usize = 11;
 
+pub const DISABLE_AI: bool = false;
+
 #[derive(Copy, Clone, PartialEq, Unique)]
 pub struct GameSettings {
     pub mode: GameMode,
@@ -76,15 +77,15 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn run_systems(world: &mut World, player_turn: bool, ai_turn: bool) {
-        if player_turn {
+    pub fn run_systems(world: &mut World, _player_turn: bool, ai_turn: bool) {
+        // if player_turn {
             world.run(system_fire::run_fire_system);
-        }
+        // }
         world.run(system_visibility::run_visibility_system);
 
         world.run(effects::run_effects_queue);
 
-        if ai_turn {
+        if ai_turn && !DISABLE_AI {
             world.run(system_pathfinding::run_pathfinding_system);
             world.run(system_ai_fish::run_fish_ai);
             world.run(system_ai::run_ai_system);
@@ -97,9 +98,9 @@ impl Engine {
         world.run(system_melee_combat::run_melee_combat_system);
         world.run(item_system::run_inventory_system);
         world.run(system_dissasemble::run_dissasemble_system);
-        world.run(run_drop_item_system);
-        world.run(run_unequip_item_system);
-        world.run(run_item_use_system);
+        world.run(item_system::run_drop_item_system);
+        world.run(item_system::run_unequip_item_system);
+        world.run(item_system::run_item_use_system);
         world.run(system_particle::spawn_particles);
 
         world.run(effects::run_effects_queue);
