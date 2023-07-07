@@ -14,8 +14,7 @@ pub fn pick_up(store: &AllStoragesViewMut, effect: &EffectSpawner) {
     let mut vwantspickup = store.borrow::<ViewMut<WantsToPickupItem>>().unwrap();
     let mut vpacks = store.borrow::<ViewMut<InBackpack>>().unwrap();
 
-    if let (Some(id), EffectType::PickUp { entity: target }) = (effect.creator, &effect.effect_type)
-    {
+    if let (Some(id), EffectType::PickUp { entity: target }) = (effect.creator, &effect.effect_type) {
         let mut log = store.borrow::<UniqueViewMut<GameLog>>().unwrap();
         let player_id = store.borrow::<UniqueView<PlayerID>>().unwrap().0;
 

@@ -12,11 +12,7 @@ use crate::ai::decisions::{Intent, Target, Task};
 use crate::components::{Inventory, WantsToPickupItem};
 use crate::effects::{add_effect, EffectType};
 
-pub fn run_inventory_system(
-    vinv: View<Inventory>,
-    vwants: View<WantsToPickupItem>,
-    mut vintent: ViewMut<Intent>,
-) {
+pub fn run_inventory_system(vinv: View<Inventory>, vwants: View<WantsToPickupItem>, mut vintent: ViewMut<Intent>) {
     let to_remove_intent = vec![];
 
     for (id, (_, wants_pickup)) in (&vinv, &vwants).iter().with_id() {

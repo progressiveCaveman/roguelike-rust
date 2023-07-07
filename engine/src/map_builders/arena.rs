@@ -1,7 +1,10 @@
 use rltk::Point;
 use shipyard::{AllStoragesViewMut, World};
 
-use crate::{components::{SpawnerType, Faction}, entity_factory, SHOW_MAPGEN_ANIMATION};
+use crate::{
+    components::{Faction, SpawnerType},
+    entity_factory, SHOW_MAPGEN_ANIMATION,
+};
 
 use super::{Map, MapBuilder, Position, TileType};
 
@@ -25,7 +28,14 @@ impl MapBuilder for AernaBuilder {
 
     fn spawn_entities(&mut self, world: &mut World) {
         world.run(|mut store: AllStoragesViewMut| {
-            entity_factory::spawner(&mut store, 4, self.map.height / 2, Faction::Wizard1, SpawnerType::Orc, 10)
+            entity_factory::spawner(
+                &mut store,
+                4,
+                self.map.height / 2,
+                Faction::Wizard1,
+                SpawnerType::Orc,
+                10,
+            )
         });
         world.run(|mut store: AllStoragesViewMut| {
             entity_factory::spawner(

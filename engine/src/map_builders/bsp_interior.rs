@@ -90,10 +90,7 @@ impl BspInteriorBuilder {
 
         let start = self.rooms[0].center();
         self.starting_position = Position {
-            ps: vec![Point {
-                x: start.0,
-                y: start.1,
-            }],
+            ps: vec![Point { x: start.0, y: start.1 }],
         };
 
         // Now we want corridors
@@ -102,10 +99,8 @@ impl BspInteriorBuilder {
             let next_room = self.rooms[i + 1];
             let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2)) - 1);
             let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2)) - 1);
-            let end_x =
-                next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2)) - 1);
-            let end_y =
-                next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2)) - 1);
+            let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2)) - 1);
+            let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2)) - 1);
             self.draw_corridor(start_x, start_y, end_x, end_y);
             self.take_snapshot();
         }

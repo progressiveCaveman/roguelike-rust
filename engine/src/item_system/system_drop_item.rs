@@ -16,8 +16,7 @@ pub fn run_drop_item_system(
 
         if let Ok(_) = vplayer.get(id) {
             if let Ok(item_name) = vname.get(wants_drop.item) {
-                log.messages
-                    .push(format!("You drop the {}", item_name.name));
+                log.messages.push(format!("You drop the {}", item_name.name));
             }
         }
     }

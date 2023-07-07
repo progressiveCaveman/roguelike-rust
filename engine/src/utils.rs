@@ -4,12 +4,7 @@ use shipyard::{EntityId, Unique};
 use crate::map::Map;
 
 /// returns the point adjacent to origin that will lead to target
-pub fn dijkstra_backtrace(
-    dijkstra: DijkstraMap,
-    map: &mut Map,
-    origin: usize,
-    mut target: usize,
-) -> usize {
+pub fn dijkstra_backtrace(dijkstra: DijkstraMap, map: &mut Map, origin: usize, mut target: usize) -> usize {
     // dbg!("dijkstra_backtrace");
     for _ in 0..1000 {
         // dbg!("How many times does this run?");

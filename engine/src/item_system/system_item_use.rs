@@ -1,6 +1,6 @@
 use crate::components::{
-    AreaOfEffect, CombatStats, Confusion, Consumable, DealsDamage, Equippable, Equipped, Fire,
-    InBackpack, Inventory, Name, ProvidesHealing, WantsToUseItem,
+    AreaOfEffect, CombatStats, Confusion, Consumable, DealsDamage, Equippable, Equipped, Fire, InBackpack, Inventory,
+    Name, ProvidesHealing, WantsToUseItem,
 };
 use crate::effects::add_effect;
 use crate::effects::{EffectType, Targets};
@@ -9,8 +9,8 @@ use crate::palette::Palette;
 use crate::utils::PlayerID;
 use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
 use shipyard::{
-    AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueView,
-    UniqueViewMut, View, ViewMut,
+    AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueView, UniqueViewMut, View,
+    ViewMut,
 };
 
 pub fn run_item_use_system(store: AllStoragesViewMut) {
@@ -62,9 +62,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                     Ok(aoe) => {
                         // AOE
                         let mut affected_tiles = rltk::field_of_view(t, aoe.radius, &*map);
-                        affected_tiles.retain(|p| {
-                            p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1
-                        });
+                        affected_tiles.retain(|p| p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1);
                         for pt in affected_tiles.iter() {
                             let idx = map.xy_idx(pt.x, pt.y);
                             target_tiles.push(idx);
@@ -100,9 +98,7 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                     Some(id),
                     EffectType::Fire {
                         turns: fire.turns,
-                        target: Targets::Tiles {
-                            tiles: target_tiles,
-                        },
+                        target: Targets::Tiles { tiles: target_tiles },
                     },
                 );
                 used_item = true;
@@ -130,10 +126,8 @@ pub fn run_item_use_system(store: AllStoragesViewMut) {
                             if id == player_id.0 {
                                 // todo should this code be in /effects?
                                 let name = vname.get(use_item.item).unwrap();
-                                log.messages.push(format!(
-                                    "You use the {}, healing {} hp",
-                                    name.name, healer.heal
-                                ));
+                                log.messages
+                                    .push(format!("You use the {}, healing {} hp", name.name, healer.heal));
                             }
                             used_item = true;
 

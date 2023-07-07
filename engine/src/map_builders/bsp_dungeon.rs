@@ -87,10 +87,7 @@ impl BspDungeonBuilder {
         }
         let start = self.rooms[0].center();
         self.starting_position = Position {
-            ps: vec![Point {
-                x: start.0,
-                y: start.1,
-            }],
+            ps: vec![Point { x: start.0, y: start.1 }],
         };
 
         // Sort rooms by left coord
@@ -102,10 +99,8 @@ impl BspDungeonBuilder {
             let next_room = self.rooms[i + 1];
             let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2)) - 1);
             let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2)) - 1);
-            let end_x =
-                next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2)) - 1);
-            let end_y =
-                next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2)) - 1);
+            let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2)) - 1);
+            let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2)) - 1);
             self.draw_corridor(start_x, start_y, end_x, end_y);
             self.take_snapshot();
         }
@@ -122,20 +117,11 @@ impl BspDungeonBuilder {
         let half_width = i32::max(width / 2, 1);
         let half_height = i32::max(height / 2, 1);
 
+        self.rects.push(Rect::new(rect.x1, rect.y1, half_width, half_height));
         self.rects
-            .push(Rect::new(rect.x1, rect.y1, half_width, half_height));
-        self.rects.push(Rect::new(
-            rect.x1,
-            rect.y1 + half_height,
-            half_width,
-            half_height,
-        ));
-        self.rects.push(Rect::new(
-            rect.x1 + half_width,
-            rect.y1,
-            half_width,
-            half_height,
-        ));
+            .push(Rect::new(rect.x1, rect.y1 + half_height, half_width, half_height));
+        self.rects
+            .push(Rect::new(rect.x1 + half_width, rect.y1, half_width, half_height));
         self.rects.push(Rect::new(
             rect.x1 + half_width,
             rect.y1 + half_height,

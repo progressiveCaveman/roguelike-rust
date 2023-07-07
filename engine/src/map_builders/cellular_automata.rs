@@ -135,13 +135,7 @@ impl CellularAutomataBuilder {
 
         // Find all tiles we can reach from the starting point
         let map_starts: Vec<usize> = vec![start_idx];
-        let dijkstra_map = rltk::DijkstraMap::new(
-            self.map.width,
-            self.map.height,
-            &map_starts,
-            &self.map,
-            200.0,
-        );
+        let dijkstra_map = rltk::DijkstraMap::new(self.map.width, self.map.height, &map_starts, &self.map, 200.0);
         let mut exit_tile = (0, 0.0f32);
         for (i, tile) in self.map.tiles.iter_mut().enumerate() {
             if *tile == TileType::Floor {

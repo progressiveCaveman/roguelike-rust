@@ -70,43 +70,32 @@ pub fn render_game(world: &World, ctx: &mut Rltk) {
     // ctx.set_active_console(1);
 
     // draw entities
-    world.run(
-        |vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>| {
-            for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
-                if let Ok(_) = vplayer.get(id) {
-                    if !settings.show_player {
-                        continue;
-                    }
+    world.run(|vpos: View<Position>, vrend: View<Renderable>, vplayer: View<Player>| {
+        for (id, (pos, render)) in (&vpos, &vrend).iter().with_id() {
+            if let Ok(_) = vplayer.get(id) {
+                if !settings.show_player {
+                    continue;
                 }
+            }
 
-                for pos in pos.ps.iter() {
-                    let idx = map.xy_idx(pos.x, pos.y);
-                    if pos.y > min_y - 1
-                        && pos.x > min_x - 1
-                        && (!settings.use_player_los || player_vs.is_visible(*pos))
+            for pos in pos.ps.iter() {
+                let idx = map.xy_idx(pos.x, pos.y);
+                if pos.y > min_y - 1 && pos.x > min_x - 1 && (!settings.use_player_los || player_vs.is_visible(*pos)) {
+                    let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
+
+                    let entity_screen_x = xoff as i32 + pos.x - min_x;
+                    let entity_screen_y = yoff as i32 + pos.y - min_y;
+                    if entity_screen_x > -1
+                        && entity_screen_x < size.0 as i32
+                        && entity_screen_y > 0
+                        && entity_screen_y < size.1 as i32
                     {
-                        let (_, _, bgcolor) = get_tile_glyph(idx, &*map);
-
-                        let entity_screen_x = xoff as i32 + pos.x - min_x;
-                        let entity_screen_y = yoff as i32 + pos.y - min_y;
-                        if entity_screen_x > -1
-                            && entity_screen_x < size.0 as i32
-                            && entity_screen_y > 0
-                            && entity_screen_y < size.1 as i32
-                        {
-                            ctx.set(
-                                entity_screen_x,
-                                entity_screen_y,
-                                render.fg,
-                                bgcolor,
-                                render.glyph,
-                            );
-                        }
+                        ctx.set(entity_screen_x, entity_screen_y, render.fg, bgcolor, render.glyph);
                     }
                 }
             }
-        },
-    );
+        }
+    });
 
     ctx.set_active_console(0);
 }

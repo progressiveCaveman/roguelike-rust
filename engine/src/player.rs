@@ -44,9 +44,7 @@ pub fn reveal_map(world: &World) {
     if let Ok(mut vspace) = world.borrow::<ViewMut<SpatialKnowledge>>() {
         if let Ok(space) = (&mut vspace).get(player_id) {
             for i in 0..map.tiles.len() {
-                space
-                    .tiles
-                    .insert(i, (map.tiles[i], map.tile_content[i].clone()));
+                space.tiles.insert(i, (map.tiles[i], map.tile_content[i].clone()));
             }
         }
     }

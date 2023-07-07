@@ -4,8 +4,7 @@ use shipyard::{AllStoragesViewMut, World};
 use crate::{entity_factory, SHOW_MAPGEN_ANIMATION};
 
 use super::{
-    apply_horizontal_corridor, apply_room_to_map, apply_vertical_corridor, Map, MapBuilder,
-    Position, Rect, TileType,
+    apply_horizontal_corridor, apply_room_to_map, apply_vertical_corridor, Map, MapBuilder, Position, Rect, TileType,
 };
 
 pub struct SimpleMapBuilder {

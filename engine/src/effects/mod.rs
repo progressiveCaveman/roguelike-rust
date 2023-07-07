@@ -56,11 +56,11 @@ pub struct EffectSpawner {
     pub effect_type: EffectType,
 }
 
-pub fn add_effect(creator: Option<EntityId>, effect_type: EffectType) {    
-    EFFECT_QUEUE.lock().unwrap().push_back(EffectSpawner {
-        creator,
-        effect_type,
-    });
+pub fn add_effect(creator: Option<EntityId>, effect_type: EffectType) {
+    EFFECT_QUEUE
+        .lock()
+        .unwrap()
+        .push_back(EffectSpawner { creator, effect_type });
 }
 
 pub fn run_effects_queue(mut store: AllStoragesViewMut) {

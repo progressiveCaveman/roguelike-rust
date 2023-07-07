@@ -128,10 +128,7 @@ impl Map {
     }
 
     pub fn mouse_in_bounds(&self, mouse_pos: (i32, i32)) -> bool {
-        mouse_pos.0 >= 0
-            && mouse_pos.0 <= self.width
-            && mouse_pos.1 >= 0
-            && mouse_pos.1 <= self.height
+        mouse_pos.0 >= 0 && mouse_pos.0 <= self.width && mouse_pos.1 >= 0 && mouse_pos.1 <= self.height
     }
 
     fn is_exit_valid(&self, x: i32, y: i32) -> bool {

@@ -87,17 +87,8 @@ impl BspFarmBuilder {
             self.rooms.push(room);
 
             // if room is on edge
-            if room.x1 == 1
-                || room.y1 == 1
-                || room.x2 > self.map.width - 5
-                || room.y2 > self.map.height - 5
-            {
-                let new_rect = Rect::new(
-                    room.x1 + 1,
-                    room.y1 + 1,
-                    room.width() - 2,
-                    room.height() - 2,
-                );
+            if room.x1 == 1 || room.y1 == 1 || room.x2 > self.map.width - 5 || room.y2 > self.map.height - 5 {
+                let new_rect = Rect::new(room.x1 + 1, room.y1 + 1, room.width() - 2, room.height() - 2);
                 apply_room_to_map(&mut self.map, &new_rect, TileType::Wheat, true);
             } else {
                 if room.width() > MIN_BUILDING_SIZE + 1 && room.height() > MIN_BUILDING_SIZE + 1 {
@@ -115,10 +106,7 @@ impl BspFarmBuilder {
 
         let start = self.rooms[0].center();
         self.starting_position = Position {
-            ps: vec![Point {
-                x: start.0,
-                y: start.1,
-            }],
+            ps: vec![Point { x: start.0, y: start.1 }],
         };
 
         // Don't forget the stairs

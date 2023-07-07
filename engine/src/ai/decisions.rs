@@ -77,7 +77,7 @@ pub enum Task {
     DepositItemToInventory,
     Attack,
     Idle,
-    Spawn
+    Spawn,
 }
 
 #[derive(Component, Clone, Debug)]
@@ -113,9 +113,7 @@ impl Consideration {
 
         let score = match t {
             ResponseCurveType::Const => m * self.input,
-            ResponseCurveType::Quadratic | ResponseCurveType::Linear => {
-                m * (self.input - c).powf(k) + b
-            }
+            ResponseCurveType::Quadratic | ResponseCurveType::Linear => m * (self.input - c).powf(k) + b,
             ResponseCurveType::Logistic => {
                 let e = std::f64::consts::E as f32;
                 k * 1. / (1. + (1000. * e * m).powf(-1. * self.input + c)) + b

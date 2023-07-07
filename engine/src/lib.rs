@@ -24,13 +24,11 @@ pub mod map_builders;
 
 pub mod systems;
 use shipyard::{
-    AllStoragesViewMut, EntitiesView, EntityId, Get, Unique, UniqueView, UniqueViewMut, View,
-    ViewMut, World,
+    AllStoragesViewMut, EntitiesView, EntityId, Get, Unique, UniqueView, UniqueViewMut, View, ViewMut, World,
 };
 use systems::{
-    system_ai_fish, system_dissasemble,
-    system_fire, system_map_indexing, system_melee_combat, system_particle, system_pathfinding,
-    system_visibility, system_ai,
+    system_ai, system_ai_fish, system_dissasemble, system_fire, system_map_indexing, system_melee_combat,
+    system_particle, system_pathfinding, system_visibility,
 };
 use utils::{FrameTime, PPoint, PlayerID, Turn, RNG};
 
@@ -59,7 +57,7 @@ pub struct GameSettings {
 #[derive(Copy, Clone, PartialEq)]
 pub enum GameMode {
     RL, // trad roguelike, basically bracketlib tutorial in caves
-    VillageSim, 
+    VillageSim,
     OrcHalls, // Orcs spawn in groups, for testing group tactics
 }
 
@@ -79,7 +77,7 @@ pub struct Engine {
 impl Engine {
     pub fn run_systems(world: &mut World, _player_turn: bool, ai_turn: bool) {
         // if player_turn {
-            world.run(system_fire::run_fire_system);
+        world.run(system_fire::run_fire_system);
         // }
         world.run(system_visibility::run_visibility_system);
 
@@ -157,15 +155,9 @@ impl Engine {
         // Generate map
         // TODO eventually this should not look at mode, but use map vonfig info from settings
         let mut map_builder = match settings.mode {
-            GameMode::VillageSim => {
-                map_builders::village_builder(new_depth, settings.mapsize)
-            }
-            GameMode::RL => {
-                map_builders::rl_builder(new_depth, settings.mapsize)
-            }
-            GameMode::OrcHalls => {
-                map_builders::orc_halls_builder(new_depth, settings.mapsize)
-            }
+            GameMode::VillageSim => map_builders::village_builder(new_depth, settings.mapsize),
+            GameMode::RL => map_builders::rl_builder(new_depth, settings.mapsize),
+            GameMode::OrcHalls => map_builders::orc_halls_builder(new_depth, settings.mapsize),
         };
 
         map_builder.build_map();
@@ -176,12 +168,7 @@ impl Engine {
         {
             let mut map = world.borrow::<UniqueViewMut<Map>>().unwrap();
             *map = map_builder.get_map();
-            start_pos = map_builder
-                .get_starting_position()
-                .ps
-                .first()
-                .unwrap()
-                .clone();
+            start_pos = map_builder.get_starting_position().ps.first().unwrap().clone();
         }
 
         // Spawn monsters and items
@@ -216,8 +203,7 @@ impl Engine {
 
         // Notify player
         let mut log = world.borrow::<UniqueViewMut<GameLog>>().unwrap();
-        log.messages
-            .push("You descend in the staircase".to_string());
+        log.messages.push("You descend in the staircase".to_string());
     }
 
     pub fn reset_engine(&mut self, settings: GameSettings) {
@@ -226,16 +212,14 @@ impl Engine {
         self.world = World::new();
 
         // Re-add defaults for all uniques
-        self.world.add_unique(Map::new(
-            1,
-            TileType::Wall,
-            settings.mapsize,
-        ));
+        self.world.add_unique(Map::new(1, TileType::Wall, settings.mapsize));
         self.world.add_unique(PPoint(Point::new(0, 0)));
         self.world.add_unique(Turn(0));
         self.world.add_unique(RNG(rltk::RandomNumberGenerator::new()));
 
-        let player_id = self.world.run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
+        let player_id = self
+            .world
+            .run(|mut store: AllStoragesViewMut| entity_factory::player(&mut store, (0, 0)));
         self.world.add_unique(PlayerID(player_id));
 
         self.world.add_unique(settings);
@@ -247,7 +231,7 @@ impl Engine {
             GameMode::VillageSim => {
                 self.world.add_component(player_id, IsCamera {});
             }
-            _ => { }
+            _ => {}
         }
 
         // Generate new map

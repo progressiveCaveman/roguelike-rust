@@ -1,17 +1,15 @@
 use rltk::Point;
-use shipyard::{EntityId, Get, UniqueView, View, AllStorages};
+use shipyard::{AllStorages, EntityId, Get, UniqueView, View};
 
 use crate::{
     components::{
-        FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Actor, ActorType, Vision,
+        Actor, ActorType, FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Vision,
     },
     map::{Map, TileType},
     utils::Turn,
 };
 
-use super::decisions::{
-    Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task, AI,
-};
+use super::decisions::{Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task, AI};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AIBehaviors {
@@ -19,7 +17,7 @@ pub enum AIBehaviors {
     GatherFish,
     AttackEnemies,
     Confused,
-    Wander
+    Wander,
 }
 
 pub fn get_action(store: &AllStorages, id: EntityId) -> Action {
@@ -49,8 +47,7 @@ pub fn get_action(store: &AllStorages, id: EntityId) -> Action {
                 AIBehaviors::GatherWood => potential_actions.append(&mut get_gather_wood_actions(&store, id)),
                 AIBehaviors::GatherFish => potential_actions.append(&mut get_gather_fish_actions(&store, id)),
                 AIBehaviors::AttackEnemies => potential_actions.append(&mut get_attack_actions(&store, id)),
-                _ => {}
-                // AIBehaviors::Wander => ,
+                _ => {} // AIBehaviors::Wander => ,
             }
         }
     }
@@ -392,7 +389,7 @@ pub fn get_gather_fish_actions(store: &AllStorages, id: EntityId) -> Vec<Action>
     let mut inventory_fish: EntityId = id; // initialization is messy here but correct as long as logs_in_inv > 0
     for e in inv.items.iter() {
         if let Ok(actor) = vactors.get(*e) {
-            if actor.atype == ActorType::Fish{
+            if actor.atype == ActorType::Fish {
                 fish_in_inv += 1;
                 inventory_fish = *e;
             }
@@ -625,13 +622,13 @@ pub fn get_attack_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
     } else {
         return vec![];
     };
-    
+
     let actor = if let Ok(actor) = vactors.get(id) {
         actor
     } else {
         return vec![];
     };
-    
+
     let viewshed = if let Ok(vs) = vvs.get(id) {
         vs
     } else {
@@ -647,7 +644,8 @@ pub fn get_attack_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
         let idx = map.point_idx(*point);
         for entity in map.tile_content[idx].iter() {
             if let Ok(eactor) = vactors.get(*entity) {
-                if actor.faction != eactor.faction { // TODO need more complex faction relations at some point
+                if actor.faction != eactor.faction {
+                    // TODO need more complex faction relations at some point
                     enemies.push((*entity, *point));
                 }
             }
@@ -664,19 +662,17 @@ pub fn get_attack_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
                 target: vec![Target::from(*epoint)],
                 turn: *turn,
             },
-            cons: vec![
-                Consideration::new(
-                    "Distance".to_string(),
-                    map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
-                    ConsiderationParam {
-                        t: ResponseCurveType::Linear,
-                        m: -1.0 / 100.0,
-                        k: 1.0,
-                        c: 2.0,
-                        b: 1.0,
-                    },
-                ),
-            ],
+            cons: vec![Consideration::new(
+                "Distance".to_string(),
+                map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
+                ConsiderationParam {
+                    t: ResponseCurveType::Linear,
+                    m: -1.0 / 100.0,
+                    k: 1.0,
+                    c: 2.0,
+                    b: 1.0,
+                },
+            )],
             priority: 1.0,
         });
 
@@ -687,19 +683,17 @@ pub fn get_attack_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
                 target: vec![Target::from(*epoint)],
                 turn: *turn,
             },
-            cons: vec![
-                Consideration::new(
-                    "Distance".to_string(),
-                    map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
-                    ConsiderationParam {
-                        t: ResponseCurveType::LessThan,
-                        m: 1.5,
-                        k: 1.0,
-                        c: 1.0,
-                        b: 1.0,
-                    },
-                ),
-            ],
+            cons: vec![Consideration::new(
+                "Distance".to_string(),
+                map.distance(&vpos, Target::from(pos), Target::from(*epoint)),
+                ConsiderationParam {
+                    t: ResponseCurveType::LessThan,
+                    m: 1.5,
+                    k: 1.0,
+                    c: 1.0,
+                    b: 1.0,
+                },
+            )],
             priority: 2.0,
         });
     }

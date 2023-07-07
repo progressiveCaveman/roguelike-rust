@@ -32,10 +32,7 @@ impl MapBuilder for VillageWorldBuilder {
             let x = rng.roll_dice(1, self.map.width - 1);
             let y = rng.roll_dice(1, self.map.height - 1);
             let idx = self.map.xy_idx(x, y);
-            if !self.map.is_wall(x, y)
-                && self.map.tiles[idx] != TileType::Water
-                && !used_idx.contains(&idx)
-            {
+            if !self.map.is_wall(x, y) && self.map.tiles[idx] != TileType::Water && !used_idx.contains(&idx) {
                 used_idx.push(idx);
                 world.run(|mut store: AllStoragesViewMut| {
                     entity_factory::villager(&mut store, x, y);

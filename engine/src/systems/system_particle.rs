@@ -1,7 +1,6 @@
 use rltk::{FontCharType, Point, RGBA};
 use shipyard::{
-    AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Unique, UniqueView, UniqueViewMut,
-    View, ViewMut,
+    AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Unique, UniqueView, UniqueViewMut, View, ViewMut,
 };
 
 use crate::{
@@ -30,9 +29,7 @@ pub struct ParticleBuilder {
 
 impl ParticleBuilder {
     pub fn new() -> ParticleBuilder {
-        ParticleBuilder {
-            requests: Vec::new(),
-        }
+        ParticleBuilder { requests: Vec::new() }
     }
 
     pub fn request(
@@ -80,10 +77,7 @@ pub fn spawn_particles(mut store: AllStoragesViewMut) {
                 Position {
                     ps: vec![Point { x: p.x, y: p.y }],
                 },
-                Velocity {
-                    x: p.vel_x,
-                    y: p.vel_y,
-                },
+                Velocity { x: p.vel_x, y: p.vel_y },
                 Lifetime { ms: p.lifetime_ms },
                 Particle {
                     float_x: p.x as f32,

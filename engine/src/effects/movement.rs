@@ -4,8 +4,8 @@ use shipyard::{AddComponent, Get, UniqueViewMut, View, ViewMut};
 use super::*;
 use crate::{
     components::{
-        BlocksTile, CombatStats, Fire, IsCamera, LocomotionType, Locomotive, Player, Position,
-        SpatialKnowledge, Vision, WantsToAttack,
+        BlocksTile, CombatStats, Fire, IsCamera, LocomotionType, Locomotive, Player, Position, SpatialKnowledge,
+        Vision, WantsToAttack,
     },
     map::{Map, TileType},
     utils::{dijkstra_backtrace, normalize, point_plus, PPoint},
@@ -170,13 +170,7 @@ pub fn skip_turn(store: &AllStoragesViewMut, effect: &EffectSpawner) {
     }
 }
 
-pub fn can_move(
-    store: &AllStoragesViewMut,
-    map: &Map,
-    entity: EntityId,
-    pos: &Position,
-    dp: Point,
-) -> bool {
+pub fn can_move(store: &AllStoragesViewMut, map: &Map, entity: EntityId, pos: &Position, dp: Point) -> bool {
     let vloco = store.borrow::<View<Locomotive>>().unwrap();
     let vblocks = store.borrow::<View<BlocksTile>>().unwrap();
 

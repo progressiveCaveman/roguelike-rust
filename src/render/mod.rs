@@ -58,13 +58,7 @@ pub fn draw_gui(world: &World, ctx: &mut Rltk) {
 
     // player stats
     ctx.print_color(1, 1, Palette::MAIN_FG, Palette::MAIN_BG, hp_gui);
-    ctx.print_color(
-        1,
-        2,
-        Palette::MAIN_FG,
-        Palette::MAIN_BG,
-        &format!("Turn: {:?}", *turn),
-    );
+    ctx.print_color(1, 2, Palette::MAIN_FG, Palette::MAIN_BG, &format!("Turn: {:?}", *turn));
     ctx.print_color(
         1,
         9,
@@ -122,11 +116,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
     let mut map_mouse_pos = map.transform_mouse_pos(mouse_pos);
     map_mouse_pos.0 += min_x;
     map_mouse_pos.1 += min_y;
-    if map_mouse_pos.0 >= map.width
-        || map_mouse_pos.1 >= map.height
-        || map_mouse_pos.0 < 0
-        || map_mouse_pos.1 < 0
-    {
+    if map_mouse_pos.0 >= map.width || map_mouse_pos.1 >= map.height || map_mouse_pos.0 < 0 || map_mouse_pos.1 < 0 {
         return;
     }
 
@@ -195,13 +185,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
 
         if let Ok(pos) = vpos.get(*e) {
             ypos += 1;
-            ctx.print_color(
-                2,
-                ypos,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                format!("{:?}", pos.ps[0]),
-            );
+            ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("{:?}", pos.ps[0]));
         }
 
         if let Ok(stats) = vstats.get(*e) {
@@ -240,13 +224,7 @@ pub fn draw_tooltips(world: &World, ctx: &mut Rltk) {
         if let Ok(inv) = vinv.get(*e) {
             if inv.items.len() > 0 {
                 ypos += 1;
-                ctx.print_color(
-                    2,
-                    ypos,
-                    Palette::MAIN_FG,
-                    Palette::MAIN_BG,
-                    format!("Inventory:"),
-                );
+                ctx.print_color(2, ypos, Palette::MAIN_FG, Palette::MAIN_BG, format!("Inventory:"));
 
                 for item in inv.items.iter() {
                     if let Ok(name) = vname.get(*item) {
@@ -350,13 +328,7 @@ pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResu
     let map = world.borrow::<UniqueView<Map>>().unwrap();
     let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;
     let player_pos = world.borrow::<UniqueView<PPoint>>().unwrap().0;
-    ctx.print_color(
-        5,
-        12,
-        Palette::COLOR_PURPLE,
-        Palette::MAIN_BG,
-        "Select a target",
-    );
+    ctx.print_color(5, 12, Palette::COLOR_PURPLE, Palette::MAIN_BG, "Select a target");
 
     let (min_x, max_x, min_y, max_y) = get_map_coords_for_screen(player_pos, ctx, (map.width, map.height));
 
@@ -370,10 +342,7 @@ pub fn ranged_target(world: &World, ctx: &mut Rltk, range: i32) -> (ItemMenuResu
                 if dist as i32 <= range {
                     let screen_x = pt.x - min_x + OFFSET_X as i32;
                     let screen_y = pt.y - min_y + OFFSET_Y as i32; // TODO why is offset needed here??
-                    if screen_x > 1
-                        && screen_x < (max_x - min_x) - 1
-                        && screen_y > 1
-                        && screen_y < (max_y - min_y) - 1
+                    if screen_x > 1 && screen_x < (max_x - min_x) - 1 && screen_y > 1 && screen_y < (max_y - min_y) - 1
                     {
                         ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));
                         valid_cells.push(*pt);

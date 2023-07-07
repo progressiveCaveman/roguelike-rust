@@ -1,9 +1,7 @@
 use crate::components::{CombatStats, Equipped, InBackpack, Inventory, Name, Player};
 use crate::effects::{add_effect, EffectType};
 use crate::gamelog::GameLog;
-use shipyard::{
-    Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut,
-};
+use shipyard::{Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut};
 
 pub fn run_cleanup_system(
     mut log: UniqueViewMut<GameLog>,

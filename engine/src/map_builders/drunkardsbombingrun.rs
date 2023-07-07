@@ -230,9 +230,7 @@ impl DrunkardsBombingRunBuilder {
                     // println!("bomb check {tx} {ty} {x} {y}");
 
                     // check if tile is within the circle
-                    if (x - tx) * (x - tx) + (y - ty) * (y - ty)
-                        < bomb_radius * bomb_radius + bomb_radius
-                    {
+                    if (x - tx) * (x - tx) + (y - ty) * (y - ty) < bomb_radius * bomb_radius + bomb_radius {
                         if use_borders {
                             if x < 0 {
                                 continue;

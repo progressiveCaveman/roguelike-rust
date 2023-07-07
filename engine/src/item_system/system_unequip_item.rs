@@ -1,6 +1,4 @@
-use shipyard::{
-    AddComponent, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut,
-};
+use shipyard::{AddComponent, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut};
 
 use crate::{
     components::{Equipped, InBackpack, Inventory, Name, Player, WantsToUnequipItem},
@@ -25,8 +23,7 @@ pub fn run_unequip_item_system(
 
         if let Ok(_) = vplayer.get(id) {
             if let Ok(item_name) = vname.get(wants_unequip.item) {
-                log.messages
-                    .push(format!("You unequip the {}", item_name.name));
+                log.messages.push(format!("You unequip the {}", item_name.name));
             }
         }
     }

@@ -1,4 +1,4 @@
-use crate::components::{Position, Actor, ActorType};
+use crate::components::{Actor, ActorType, Position};
 use crate::effects::{add_effect, EffectType};
 use crate::map::{Map, TileType};
 use rand::prelude::SliceRandom;
@@ -35,10 +35,7 @@ pub fn run_fish_ai(map: UniqueView<Map>, vpos: View<Position>, vactor: View<Acto
 
     for (e, pos) in to_try_move {
         let mut potential_spaces = vec![
-            Point {
-                x: pos.x + 1,
-                y: pos.y,
-            },
+            Point { x: pos.x + 1, y: pos.y },
             Point {
                 x: pos.x + 1,
                 y: pos.y + 1,

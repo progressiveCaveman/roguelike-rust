@@ -5,8 +5,9 @@ use serde::{Deserialize, Serialize};
 use shipyard::{Component, EntityId, IntoIter, View};
 
 use crate::{
+    ai::labors::AIBehaviors,
     map::{Map, TileType},
-    RenderOrder, ai::labors::AIBehaviors,
+    RenderOrder,
 };
 
 /// Basic UI components
@@ -107,7 +108,7 @@ pub enum Faction {
     Orcs,
     Villager,
     Wizard1,
-    Wizard2
+    Wizard2,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -117,7 +118,7 @@ pub enum ActorType {
     Villager,
     Fish,
     Spawner,
-    Wolf
+    Wolf,
 }
 
 /// Structures

@@ -1,5 +1,5 @@
-pub mod system_ai_fish;
 pub mod system_ai;
+pub mod system_ai_fish;
 pub mod system_cleanup;
 pub mod system_dissasemble;
 pub mod system_fire;

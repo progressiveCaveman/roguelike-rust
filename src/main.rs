@@ -59,13 +59,7 @@ impl GameState for State {
         let (x, y) = ctx.get_char_size();
         for ix in 0..x {
             for iy in 0..y {
-                ctx.set(
-                    ix,
-                    iy,
-                    RGBA::from_u8(0, 0, 0, 0),
-                    RGBA::from_u8(0, 0, 0, 0),
-                    32,
-                )
+                ctx.set(ix, iy, RGBA::from_u8(0, 0, 0, 0), RGBA::from_u8(0, 0, 0, 0), 32)
             }
         }
 
@@ -160,32 +154,16 @@ impl GameState for State {
                         }
                     }
                     gui_menus::ItemActionSelection::Dropped => {
-                        let player_id = self
-                            .engine
-                            .world
-                            .borrow::<UniqueViewMut<PlayerID>>()
-                            .unwrap()
-                            .0;
-                        self.engine
-                            .world
-                            .add_component(player_id, WantsToDropItem { item });
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine.world.add_component(player_id, WantsToDropItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
                     gui_menus::ItemActionSelection::Unequipped => {
-                        let player_id = self
-                            .engine
-                            .world
-                            .borrow::<UniqueViewMut<PlayerID>>()
-                            .unwrap()
-                            .0;
-                        self.engine
-                            .world
-                            .add_component(player_id, WantsToUnequipItem { item });
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine.world.add_component(player_id, WantsToUnequipItem { item });
                         new_runstate = RunState::PlayerTurn;
                     }
-                    gui_menus::ItemActionSelection::Cancel => {
-                        new_runstate = RunState::ShowInventory
-                    }
+                    gui_menus::ItemActionSelection::Cancel => new_runstate = RunState::ShowInventory,
                 }
             }
             RunState::ShowTargeting { range, item } => {
@@ -194,19 +172,10 @@ impl GameState for State {
                     render::ItemMenuResult::Cancel => new_runstate = RunState::AwaitingInput,
                     render::ItemMenuResult::NoResponse => {}
                     render::ItemMenuResult::Selected => {
-                        let player_id = self
-                            .engine
+                        let player_id = self.engine.world.borrow::<UniqueViewMut<PlayerID>>().unwrap().0;
+                        self.engine
                             .world
-                            .borrow::<UniqueViewMut<PlayerID>>()
-                            .unwrap()
-                            .0;
-                        self.engine.world.add_component(
-                            player_id,
-                            WantsToUseItem {
-                                item,
-                                target: res.1,
-                            },
-                        );
+                            .add_component(player_id, WantsToUseItem { item, target: res.1 });
                         new_runstate = RunState::PlayerTurn;
                     }
                 }
@@ -283,9 +252,7 @@ impl GameState for State {
 
         self.state = new_runstate;
 
-        self.engine
-            .world
-            .run(system_visibility::run_visibility_system);
+        self.engine.world.run(system_visibility::run_visibility_system);
         self.engine.world.run(system_cleanup::run_cleanup_system);
 
         //now render

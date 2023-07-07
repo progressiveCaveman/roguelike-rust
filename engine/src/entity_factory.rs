@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 use crate::ai::labors::AIBehaviors;
 use crate::components::{
-    AreaOfEffect, BlocksTile, ChiefHouse, CombatStats, Confusion, Consumable, DealsDamage,
-    DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, FishCleaner, Flammable,
-    Inventory, Item, ItemType, LocomotionType, Locomotive, LumberMill, MeleeDefenseBonus,
-    MeleePowerBonus, Name, PlankHouse, Player, Position, ProvidesHealing, Ranged,
-    Renderable, SpatialKnowledge, Spawner, SpawnerType, Tree, Vision, Actor, ActorType,
+    Actor, ActorType, AreaOfEffect, BlocksTile, ChiefHouse, CombatStats, Confusion, Consumable, DealsDamage,
+    DijkstraMapToMe, EquipmentSlot, Equippable, Faction, Fire, FishCleaner, Flammable, Inventory, Item, ItemType,
+    LocomotionType, Locomotive, LumberMill, MeleeDefenseBonus, MeleePowerBonus, Name, PlankHouse, Player, Position,
+    ProvidesHealing, Ranged, Renderable, SpatialKnowledge, Spawner, SpawnerType, Tree, Vision,
 };
 use crate::map::{Map, TileType};
 use crate::palette::Palette;
@@ -87,9 +86,7 @@ pub fn spawn_region(store: &mut AllStoragesViewMut, area: &[usize], map_depth: i
 
 /// Spawns a named entity (name in tuple.1) at the location in (tuple.0)
 fn spawn_entity(store: &mut AllStoragesViewMut, spawn: &(&usize, &String)) {
-    let (x, y) = store.run(|map: UniqueView<Map>| {
-        map.idx_xy(*spawn.0)
-    });
+    let (x, y) = store.run(|map: UniqueView<Map>| map.idx_xy(*spawn.0));
 
     match spawn.1.as_ref() {
         "Wolf" => wolf(store, x, y),
@@ -144,9 +141,7 @@ pub fn player(store: &mut AllStoragesViewMut, pos: (i32, i32)) -> EntityId {
             power: 5,
             regen_rate: 1,
         },
-        SpatialKnowledge {
-            tiles: HashMap::new(),
-        },
+        SpatialKnowledge { tiles: HashMap::new() },
         Inventory {
             capacity: 20,
             items: Vec::new(),
@@ -185,14 +180,12 @@ pub fn villager(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             capacity: 5,
             items: Vec::new(),
         },
-        SpatialKnowledge {
-            tiles: HashMap::new(),
-        },
+        SpatialKnowledge { tiles: HashMap::new() },
         Actor {
             faction: Faction::Villager,
             atype: ActorType::Villager,
             behaviors: vec![AIBehaviors::GatherWood, AIBehaviors::GatherFish, AIBehaviors::Wander],
-        }
+        },
     ))
 }
 
@@ -225,9 +218,7 @@ pub fn fish(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
             atype: ActorType::Fish,
             behaviors: Vec::new(),
         },
-        Item {
-            typ: ItemType::Fish,
-        },
+        Item { typ: ItemType::Fish },
     ))
 }
 
@@ -239,13 +230,7 @@ pub fn goblin(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
     monster(store, x, y, rltk::to_cp437('g'), "Goblin".to_string())
 }
 
-pub fn monster(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-    glyph: rltk::FontCharType,
-    name: String,
-) -> EntityId {
+pub fn monster(store: &mut AllStoragesViewMut, x: i32, y: i32, glyph: rltk::FontCharType, name: String) -> EntityId {
     store.add_entity((
         Position {
             ps: vec![Point { x, y }],
@@ -287,11 +272,7 @@ pub fn monster(
     ))
 }
 
-pub fn wolf(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-) -> EntityId {
+pub fn wolf(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
     store.add_entity((
         Position {
             ps: vec![Point { x, y }],
@@ -317,8 +298,8 @@ pub fn wolf(
             mtype: LocomotionType::Ground,
             speed: 1,
         },
-        Name { 
-            name: "Wolf".to_string() 
+        Name {
+            name: "Wolf".to_string(),
         },
         BlocksTile {},
         CombatStats {
@@ -394,9 +375,7 @@ pub fn health_potion(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId
         Name {
             name: "Health potion".to_string(),
         },
-        Item {
-            typ: ItemType::Potion,
-        },
+        Item { typ: ItemType::Potion },
         ProvidesHealing { heal: 8 },
         Consumable {},
     ))
@@ -417,9 +396,7 @@ pub fn magic_missile_scroll(store: &mut AllStoragesViewMut, x: i32, y: i32) -> E
         Name {
             name: "Magic missile scroll".to_string(),
         },
-        Item {
-            typ: ItemType::Scroll,
-        },
+        Item { typ: ItemType::Scroll },
         Consumable {},
         DealsDamage { damage: 8 },
         Ranged { range: 6 },
@@ -441,9 +418,7 @@ pub fn fireball_scroll(store: &mut AllStoragesViewMut, x: i32, y: i32) -> Entity
         Name {
             name: "Fireball scroll".to_string(),
         },
-        Item {
-            typ: ItemType::Scroll,
-        },
+        Item { typ: ItemType::Scroll },
         Consumable {},
         DealsDamage { damage: 20 },
         Ranged { range: 6 },
@@ -466,9 +441,7 @@ pub fn confusion_scroll(store: &mut AllStoragesViewMut, x: i32, y: i32) -> Entit
         Name {
             name: "Confusion scroll".to_string(),
         },
-        Item {
-            typ: ItemType::Scroll,
-        },
+        Item { typ: ItemType::Scroll },
         Consumable {},
         Ranged { range: 6 },
         Confusion { turns: 4 },
@@ -492,9 +465,7 @@ pub fn dagger(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Name {
             name: "Dagger".to_string(),
         },
-        Item {
-            typ: ItemType::Weapon,
-        },
+        Item { typ: ItemType::Weapon },
         Equippable {
             slot: EquipmentSlot::RightHand,
         },
@@ -517,9 +488,7 @@ pub fn longsword(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Name {
             name: "Dagger".to_string(),
         },
-        Item {
-            typ: ItemType::Shield,
-        },
+        Item { typ: ItemType::Shield },
         Equippable {
             slot: EquipmentSlot::RightHand,
         },
@@ -542,9 +511,7 @@ pub fn shield(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
         Name {
             name: "Shield".to_string(),
         },
-        Item {
-            typ: ItemType::Shield,
-        },
+        Item { typ: ItemType::Shield },
         Equippable {
             slot: EquipmentSlot::LeftHand,
         },
@@ -567,9 +534,7 @@ pub fn tower_shield(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId 
         Name {
             name: "Shield".to_string(),
         },
-        Item {
-            typ: ItemType::Shield,
-        },
+        Item { typ: ItemType::Shield },
         Equippable {
             slot: EquipmentSlot::LeftHand,
         },
@@ -626,7 +591,7 @@ pub fn spawner(
             atype: ActorType::Spawner,
             faction,
             behaviors: Vec::new(),
-        }
+        },
     ))
 }
 
@@ -650,20 +615,11 @@ pub fn tree(store: &mut AllStoragesViewMut, x: i32, y: i32) -> EntityId {
     ))
 }
 
-pub fn plank_house(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-) -> EntityId {
+pub fn plank_house(store: &mut AllStoragesViewMut, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
-            ps.push(Point {
-                x: x + xi,
-                y: y + yi,
-            });
+            ps.push(Point { x: x + xi, y: y + yi });
         }
     }
 
@@ -690,20 +646,11 @@ pub fn plank_house(
     ))
 }
 
-pub fn chief_house(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-) -> EntityId {
+pub fn chief_house(store: &mut AllStoragesViewMut, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
-            ps.push(Point {
-                x: x + xi,
-                y: y + yi,
-            });
+            ps.push(Point { x: x + xi, y: y + yi });
         }
     }
 
@@ -727,20 +674,11 @@ pub fn chief_house(
     ))
 }
 
-pub fn fish_cleaner(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-) -> EntityId {
+pub fn fish_cleaner(store: &mut AllStoragesViewMut, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
-            ps.push(Point {
-                x: x + xi,
-                y: y + yi,
-            });
+            ps.push(Point { x: x + xi, y: y + yi });
         }
     }
 
@@ -771,20 +709,11 @@ pub fn fish_cleaner(
     ))
 }
 
-pub fn lumber_mill(
-    store: &mut AllStoragesViewMut,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-) -> EntityId {
+pub fn lumber_mill(store: &mut AllStoragesViewMut, x: i32, y: i32, width: i32, height: i32) -> EntityId {
     let mut ps = vec![];
     for xi in 0..width {
         for yi in 0..height {
-            ps.push(Point {
-                x: x + xi,
-                y: y + yi,
-            });
+            ps.push(Point { x: x + xi, y: y + yi });
         }
     }
 
@@ -822,15 +751,11 @@ pub fn tmp_fireball(store: &mut AllStoragesViewMut) -> EntityId {
         Name {
             name: "Fireball".to_string(),
         },
-        Item {
-            typ: ItemType::Scroll,
-        },
+        Item { typ: ItemType::Scroll },
         Consumable {},
         DealsDamage { damage: 20 },
         Ranged { range: 6 },
         AreaOfEffect { radius: 3 },
-        Fire {
-            turns: NEW_FIRE_TURNS,
-        },
+        Fire { turns: NEW_FIRE_TURNS },
     ))
 }

@@ -45,12 +45,7 @@ pub fn main_menu(ctx: &mut Rltk, runstate: RunState) -> MainMenuResult {
         }
     };
 
-    ctx.print_color_centered(
-        15,
-        Palette::COLOR_GREEN_DARK,
-        Palette::MAIN_BG,
-        "Select a mode",
-    );
+    ctx.print_color_centered(15, Palette::COLOR_GREEN_DARK, Palette::MAIN_BG, "Select a mode");
 
     if let RunState::MainMenu {
         menu_selection: selection,
@@ -74,19 +69,10 @@ pub fn main_menu(ctx: &mut Rltk, runstate: RunState) -> MainMenuResult {
             Palette::MAIN_BG,
             "Orc Halls",
         );
-        ctx.print_color_centered(
-            40,
-            get_fg(selection, MainMenuSelection::Exit),
-            Palette::MAIN_BG,
-            "Exit",
-        );
+        ctx.print_color_centered(40, get_fg(selection, MainMenuSelection::Exit), Palette::MAIN_BG, "Exit");
 
         match ctx.key {
-            None => {
-                return MainMenuResult::NoSelection {
-                    selected: selection,
-                }
-            }
+            None => return MainMenuResult::NoSelection { selected: selection },
             Some(key) => {
                 match key {
                     VirtualKeyCode::Escape => {
@@ -97,27 +83,17 @@ pub fn main_menu(ctx: &mut Rltk, runstate: RunState) -> MainMenuResult {
                     VirtualKeyCode::Up => {
                         let sel: i8 = selection.into();
                         // TODO: use len of menu selections instead of hard coded 3
-                        let new_sel =
-                            MainMenuSelection::try_from((sel - 1i8).rem_euclid(4)).unwrap();
+                        let new_sel = MainMenuSelection::try_from((sel - 1i8).rem_euclid(4)).unwrap();
                         return MainMenuResult::NoSelection { selected: new_sel };
                     }
                     VirtualKeyCode::Down => {
                         let sel: i8 = selection.into();
                         // TODO: use len of menu selections instead of hard coded 3
-                        let new_sel =
-                            MainMenuSelection::try_from((sel + 1i8).rem_euclid(4)).unwrap();
+                        let new_sel = MainMenuSelection::try_from((sel + 1i8).rem_euclid(4)).unwrap();
                         return MainMenuResult::NoSelection { selected: new_sel };
                     }
-                    VirtualKeyCode::Return => {
-                        return MainMenuResult::Selection {
-                            selected: selection,
-                        }
-                    }
-                    _ => {
-                        return MainMenuResult::NoSelection {
-                            selected: selection,
-                        }
-                    }
+                    VirtualKeyCode::Return => return MainMenuResult::Selection { selected: selection },
+                    _ => return MainMenuResult::NoSelection { selected: selection },
                 }
             }
         }
@@ -151,14 +127,7 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
     let inventory = vinv.get(player_id).unwrap(); //world.get::<Inventory>(player_id).unwrap();//query.iter().filter(|item| item.1.0.owner == *player_id);
     let backpack_count = inventory.items.len();
     let mut y = 25 - (backpack_count / 2);
-    ctx.draw_box(
-        10,
-        y - 2,
-        31,
-        backpack_count + 3,
-        Palette::MAIN_FG,
-        Palette::MAIN_BG,
-    );
+    ctx.draw_box(10, y - 2, 31, backpack_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);
 
     let title = "Inventory";
     ctx.print_color(13, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
@@ -171,13 +140,7 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
             .filter(|item| item.1 .0.owner == player_id)
             .enumerate()
         {
-            ctx.set(
-                12,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                rltk::to_cp437('('),
-            );
+            ctx.set(12, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
             ctx.set(
                 13,
                 y,
@@ -185,21 +148,9 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
                 Palette::MAIN_BG,
                 97 + j as rltk::FontCharType,
             );
-            ctx.set(
-                14,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                rltk::to_cp437(')'),
-            );
+            ctx.set(14, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
 
-            ctx.print_color(
-                16,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                &name.name.to_string(),
-            );
+            ctx.print_color(16, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
             useable.push(id);
             y += 1;
         }
@@ -218,14 +169,7 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
         // let equipped_count = equipped_items.count();
 
     let mut y = 25 - (equipped_count / 2);
-    ctx.draw_box(
-        45,
-        y - 2,
-        31,
-        equipped_count + 3,
-        Palette::MAIN_FG,
-        Palette::MAIN_BG,
-    );
+    ctx.draw_box(45, y - 2, 31, equipped_count + 3, Palette::MAIN_FG, Palette::MAIN_BG);
 
     let title = "Equipment";
     ctx.print_color(48, y - 2, Palette::MAIN_FG, Palette::MAIN_BG, title);
@@ -239,13 +183,7 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
             .enumerate()
         {
             let offset = j + backpack_count;
-            ctx.set(
-                47,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                rltk::to_cp437('('),
-            );
+            ctx.set(47, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437('('));
             ctx.set(
                 48,
                 y,
@@ -253,21 +191,9 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
                 Palette::MAIN_BG,
                 97 + offset as rltk::FontCharType,
             );
-            ctx.set(
-                49,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                rltk::to_cp437(')'),
-            );
+            ctx.set(49, y, Palette::MAIN_FG, Palette::MAIN_BG, rltk::to_cp437(')'));
 
-            ctx.print_color(
-                51,
-                y,
-                Palette::MAIN_FG,
-                Palette::MAIN_BG,
-                &name.name.to_string(),
-            );
+            ctx.print_color(51, y, Palette::MAIN_FG, Palette::MAIN_BG, &name.name.to_string());
             equipped.push(id);
             y += 1;
         }
@@ -282,9 +208,7 @@ pub fn show_inventory(world: &World, ctx: &mut Rltk) -> (ItemMenuResult, Option<
                 let selection = rltk::letter_to_option(key);
                 if selection > -1 && selection < backpack_count as i32 {
                     return (ItemMenuResult::Selected, Some(useable[selection as usize]));
-                } else if selection >= backpack_count as i32
-                    && selection < (backpack_count + equipped_count) as i32
-                {
+                } else if selection >= backpack_count as i32 && selection < (backpack_count + equipped_count) as i32 {
                     return (
                         ItemMenuResult::Selected,
                         Some(equipped[selection as usize - backpack_count]),
@@ -304,13 +228,7 @@ pub fn show_item_actions(world: &World, item: EntityId, ctx: &mut Rltk) -> ItemA
 
     let item_name = vname.get(item).unwrap();
     ctx.draw_box(15, 23, 31, 5, Palette::MAIN_FG, Palette::MAIN_BG);
-    ctx.print_color(
-        18,
-        23,
-        Palette::MAIN_FG,
-        Palette::MAIN_BG,
-        item_name.name.to_string(),
-    );
+    ctx.print_color(18, 23, Palette::MAIN_FG, Palette::MAIN_BG, item_name.name.to_string());
 
     let mut in_backpack = false;
     let mut in_equip = false;

@@ -22,9 +22,7 @@ pub fn run_visibility_system(
         if let Ok(space) = (&mut vspace).get(id) {
             for vis in vs.visible_tiles.iter() {
                 let idx = map.xy_idx(vis.x, vis.y);
-                space
-                    .tiles
-                    .insert(idx, (map.tiles[idx], map.tile_content[idx].clone()));
+                space.tiles.insert(idx, (map.tiles[idx], map.tile_content[idx].clone()));
             }
         }
         // }
