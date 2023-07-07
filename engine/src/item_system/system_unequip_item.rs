@@ -2,7 +2,7 @@ use shipyard::{AddComponent, EntityId, Get, IntoIter, IntoWithId, Remove, Unique
 
 use crate::{
     components::{Equipped, InBackpack, Inventory, Name, Player, WantsToUnequipItem},
-    gamelog::GameLog,
+    uniques::GameLog,
 };
 
 pub fn run_unequip_item_system(

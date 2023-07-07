@@ -6,8 +6,8 @@ use crate::effects::add_effect;
 use crate::effects::{EffectType, Targets};
 use crate::map::Map;
 use crate::palette::Palette;
-use crate::utils::PlayerID;
-use crate::{components::Position, gamelog::GameLog, systems::system_particle::ParticleBuilder};
+use crate::uniques::PlayerID;
+use crate::{components::Position, systems::system_particle::ParticleBuilder, uniques::GameLog};
 use shipyard::{
     AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, Remove, UniqueView, UniqueViewMut, View,
     ViewMut,

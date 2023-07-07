@@ -3,8 +3,8 @@ use shipyard::{AddComponent, Get, Remove, UniqueView, UniqueViewMut, View, ViewM
 use super::*;
 use crate::{
     components::{Equipped, InBackpack, Inventory, Name, Position, WantsToPickupItem},
-    gamelog::GameLog,
-    utils::PlayerID,
+    uniques::GameLog,
+    uniques::PlayerID,
 };
 
 pub fn pick_up(store: &AllStoragesViewMut, effect: &EffectSpawner) {

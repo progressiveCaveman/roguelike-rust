@@ -1,11 +1,11 @@
-use crate::gamelog::GameLog;
+use crate::uniques::GameLog;
 use crate::{WINDOWHEIGHT, WINDOWWIDTH};
 use engine::ai::decisions::Intent;
 use engine::components::{CombatStats, Fire, Inventory, Name, Position, Vision};
 use engine::map::Map;
 use engine::palette::Palette;
 use engine::player::get_player_map_knowledge;
-use engine::utils::{FrameTime, PPoint, PlayerID, Turn};
+use engine::uniques::{FrameTime, PPoint, PlayerID, Turn};
 use engine::{GameSettings, OFFSET_X, OFFSET_Y, SCALE};
 use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use shipyard::{Get, UniqueView, View, World};

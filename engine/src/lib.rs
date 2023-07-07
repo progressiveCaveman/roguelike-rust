@@ -2,9 +2,9 @@
 extern crate lazy_static;
 
 use components::{Equipped, InBackpack, IsCamera, Player, Position, Vision};
-use gamelog::GameLog;
 use map::{Map, TileType};
 use rltk::Point;
+use uniques::GameLog;
 
 mod item_system;
 
@@ -12,11 +12,11 @@ pub mod ai;
 
 pub mod components;
 pub mod entity_factory;
-pub mod gamelog;
 pub mod map;
 pub mod palette;
 pub mod player;
 pub mod rect;
+pub mod uniques;
 pub mod utils;
 pub mod weighted_table;
 
@@ -30,7 +30,7 @@ use systems::{
     system_ai, system_ai_fish, system_dissasemble, system_fire, system_map_indexing, system_melee_combat,
     system_particle, system_pathfinding, system_visibility,
 };
-use utils::{FrameTime, PPoint, PlayerID, Turn, RNG};
+use uniques::{FrameTime, PPoint, PlayerID, Turn, RNG};
 
 pub mod effects;
 
@@ -223,7 +223,7 @@ impl Engine {
         self.world.add_unique(PlayerID(player_id));
 
         self.world.add_unique(settings);
-        self.world.add_unique(gamelog::GameLog { messages: vec![] });
+        self.world.add_unique(GameLog { messages: vec![] });
         self.world.add_unique(system_particle::ParticleBuilder::new());
         self.world.add_unique(FrameTime(0.));
 

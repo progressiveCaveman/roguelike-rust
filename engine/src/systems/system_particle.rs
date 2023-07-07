@@ -6,7 +6,7 @@ use shipyard::{
 use crate::{
     components::{Lifetime, Particle, Position, Renderable, Velocity},
     effects::{add_effect, EffectType},
-    utils::FrameTime,
+    uniques::FrameTime,
     RenderOrder,
 };
 

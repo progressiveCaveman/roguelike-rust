@@ -1,7 +1,7 @@
 use engine::components::{Ranged, WantsToDropItem, WantsToUnequipItem, WantsToUseItem};
 use engine::systems::{system_cleanup, system_particle, system_visibility};
-use engine::utils::{FrameTime, PlayerID, Turn};
-use engine::{effects, gamelog, Engine, GameMode, GameSettings};
+use engine::uniques::{FrameTime, PlayerID, Turn};
+use engine::{effects, uniques, Engine, GameMode, GameSettings};
 use engine::{map_builders::MapGenData, SCALE, TILE_SIZE};
 use render::{camera, gui_menus};
 use rltk::{GameState, Rltk, RltkBuilder, RGBA};

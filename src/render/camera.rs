@@ -3,7 +3,8 @@ use engine::{
     map::TileType,
     palette::Palette,
     player::{get_player_map_knowledge, get_player_viewshed},
-    utils::{PPoint, Scale},
+    uniques::PPoint,
+    utils::Scale,
     GameSettings, SCALE,
 };
 

@@ -1,10 +1,7 @@
 use rltk::Point;
 use shipyard::{Component, EntityId, Get, View};
 
-use crate::{
-    components::Position,
-    utils::{InvalidPoint, Turn},
-};
+use crate::{components::Position, uniques::Turn, utils::InvalidPoint};
 
 pub struct AI {}
 

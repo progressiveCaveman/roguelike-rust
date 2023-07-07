@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use shipyard::{EntityId, Get, UniqueView, UniqueViewMut, ViewMut, World};
 
 use crate::components::{SpatialKnowledge, Vision};
-use crate::gamelog::GameLog;
 use crate::map::{Map, TileType};
-use crate::utils::{PPoint, PlayerID};
+use crate::uniques::{GameLog, PPoint, PlayerID};
 
 pub fn get_player_map_knowledge(world: &World) -> HashMap<usize, (TileType, Vec<EntityId>)> {
     let player_id = world.borrow::<UniqueView<PlayerID>>().unwrap().0;

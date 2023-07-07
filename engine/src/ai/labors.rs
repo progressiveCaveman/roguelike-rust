@@ -6,7 +6,7 @@ use crate::{
         Actor, ActorType, FishCleaner, Inventory, Item, ItemType, LumberMill, Position, SpatialKnowledge, Tree, Vision,
     },
     map::{Map, TileType},
-    utils::Turn,
+    uniques::Turn,
 };
 
 use super::decisions::{Action, Consideration, ConsiderationParam, Intent, ResponseCurveType, Target, Task, AI};

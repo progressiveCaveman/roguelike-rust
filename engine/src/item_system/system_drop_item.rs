@@ -1,6 +1,6 @@
 use crate::components::{Name, Player, WantsToDropItem};
 use crate::effects::{add_effect, EffectType};
-use crate::gamelog::GameLog;
+use crate::uniques::GameLog;
 use shipyard::{EntityId, Get, IntoIter, IntoWithId, Remove, UniqueViewMut, View, ViewMut};
 
 pub fn run_drop_item_system(

@@ -1,7 +1,7 @@
 use crate::RunState;
 use engine::components::{Equippable, Equipped, InBackpack, Inventory, Name, Player};
 use engine::palette::Palette;
-use engine::utils::PlayerID;
+use engine::uniques::PlayerID;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rltk::{Rltk, VirtualKeyCode};
 use shipyard::{EntityId, Get, IntoIter, IntoWithId, UniqueView, View, World};

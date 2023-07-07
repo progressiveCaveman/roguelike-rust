@@ -1,5 +1,4 @@
 use rltk::{BaseMap, DijkstraMap, NavigationPath, Point, RGBA};
-use shipyard::{EntityId, Unique};
 
 use crate::map::Map;
 
@@ -151,21 +150,6 @@ impl InvalidPoint for Point {
         Point { x: -1, y: -1 }
     }
 }
-
-#[derive(Debug, Clone, Unique, Copy)]
-pub struct PlayerID(pub EntityId);
-
-#[derive(Clone, Debug, Unique, Copy)]
-pub struct Turn(pub i32);
-
-#[derive(Clone, Unique)]
-pub struct RNG(pub rltk::RandomNumberGenerator);
-
-#[derive(Clone, Debug, Unique, Copy)]
-pub struct PPoint(pub Point);
-
-#[derive(Clone, Debug, Unique, Copy)]
-pub struct FrameTime(pub f32);
 
 pub fn get_path(map: &Map, from: Point, tp: Point) -> NavigationPath {
     let path = rltk::a_star_search(map.point_idx(from) as i32, map.point_idx(tp) as i32, map);

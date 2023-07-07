@@ -4,7 +4,8 @@ use crate::components::{Actor, ActorType, DijkstraMapToMe, Faction, Position, Sp
 use crate::effects::{add_effect, EffectType};
 use crate::entity_factory;
 use crate::map::{Map, TileType};
-use crate::utils::{get_neighbors, get_path, Turn};
+use crate::uniques::Turn;
+use crate::utils::{get_neighbors, get_path};
 use rltk;
 use rltk::{BaseMap, Point};
 use shipyard::{AddComponent, AllStoragesViewMut, EntityId, Get, IntoIter, IntoWithId, UniqueView, View, ViewMut};

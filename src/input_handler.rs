@@ -5,7 +5,8 @@ use engine::{
     effects::{add_effect, EffectType},
     map::Map,
     player,
-    utils::{dir_to_point, PPoint, PlayerID},
+    uniques::{PPoint, PlayerID},
+    utils::dir_to_point,
     GameMode, GameSettings,
 };
 use rltk::{Rltk, VirtualKeyCode};
