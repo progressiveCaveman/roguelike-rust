@@ -48,7 +48,7 @@ pub fn get_action(store: &AllStorages, id: EntityId) -> Action {
             match b {
                 AIBehaviors::GatherWood => potential_actions.append(&mut get_gather_wood_actions(&store, id)),
                 AIBehaviors::GatherFish => potential_actions.append(&mut get_gather_fish_actions(&store, id)),
-                AIBehaviors::AttackEnemies => potential_actions.append(&mut get_attack_options(&store, id)),
+                AIBehaviors::AttackEnemies => potential_actions.append(&mut get_attack_actions(&store, id)),
                 _ => {}
                 // AIBehaviors::Wander => ,
             }
@@ -613,7 +613,7 @@ pub fn get_gather_fish_actions(store: &AllStorages, id: EntityId) -> Vec<Action>
     potential_actions
 }
 
-pub fn get_attack_options(store: &AllStorages, id: EntityId) -> Vec<Action> {
+pub fn get_attack_actions(store: &AllStorages, id: EntityId) -> Vec<Action> {
     let turn = store.borrow::<UniqueView<Turn>>().unwrap();
     let map = store.borrow::<UniqueView<Map>>().unwrap();
     let vpos = store.borrow::<View<Position>>().unwrap();
